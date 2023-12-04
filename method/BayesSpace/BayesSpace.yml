@@ -1,0 +1,7 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r=4.3.1
+  - r-optparse=1.7.3
+  - bioconductor-bayesspace=1.10.1
