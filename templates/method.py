@@ -12,7 +12,7 @@ parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
 )
 parser.add_argument(
-    "-m", "--matrix", help="Path to (transformed) counts (as mtx).", required=True
+    "-m", "--matrix", help="Path to (transformed) counts (as mtx).", required=False
 )
 parser.add_argument(
     "-f", "--features", help="Path to features (as tsv).", required=True
@@ -63,12 +63,13 @@ embedding_file = out_dir / "embedding.tsv"
 
 # Use these filepaths as input ...
 coord_file = args.coordinates
-matrix_file = args.matrix
 feature_file = args.features
 observation_file = args.observations
 
 if args.neighbors is not None:
     neighbors_file = args.neighbors
+if args.matrix is not None:
+    matrix_file = args.matrix
 if args.dim_red is not None:
     dimred_file = args.dim_red
 if args.image is not None:
@@ -89,10 +90,6 @@ def get_anndata(args):
     import scipy as sp
     from PIL import Image
 
-    X = sp.io.mmread(args.matrix)
-    if sp.sparse.issparse(X):
-        X = X.tocsr()
-
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
 
@@ -102,9 +99,13 @@ def get_anndata(args):
         .to_numpy()
     )
 
-    adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial": coordinates}
-    )
+    adata = ad.AnnData(obs=observations, var=features, obsm={"spatial": coordinates})
+
+    if args.matrix is not None:
+        X = sp.io.mmread(args.matrix)
+        if sp.sparse.issparse(X):
+            X = X.tocsr()
+        adata.X = X
 
     if args.neighbors is not None:
         adata.obsp["spatial_connectivities"] = sp.io.mmread(args.neighbors).T.tocsr()

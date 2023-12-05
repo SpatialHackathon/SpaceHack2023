@@ -13,7 +13,7 @@ option_list <- list(
   ),
   make_option(
     c("-m", "--matrix"),
-    type = "character", default = NULL,
+    type = "character", default = NA,
     help = "Path to (transformed) counts (as mtx)."
   ),
   make_option(
@@ -86,12 +86,14 @@ embedding_file <- file.path(out_dir, "embedding.tsv")
 
 # Use these filepaths as input ...
 coord_file <- opt$coordinates
-matrix_file <- opt$matrix
 feature_file <- opt$features
 observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
+}
+if (!is.na(opt$matrix)) {
+  matrix_file <- opt$matrix
 }
 if (!is.na(opt$dim_red)) {
   dimred_file <- opt$dim_red
@@ -107,36 +109,40 @@ technology <- opt$technology
 n_clusters <- opt$n_clusters
 
 # You can get SpatialExperiment directly
-get_SpatialExperiment <- function(feature_file, observation_file, matrix_file, coord_file, dimred_file) {
+get_SpatialExperiment <- function(
+    feature_file,
+    observation_file,
+    coord_file,
+    matrix_file = NA,
+    reducedDim_file = NA,
+    assay_name = "counts",
+    reducedDim_name = "reducedDim") {
   rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
   colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
-  counts <- Matrix::t(Matrix::readMM(matrix_file))
 
-  # Filter features and samples
-  if ("selected" %in% colnames(rowData)) {
-    keep_rows <- as.logical(rowData$selected)
-    counts <- counts[keep_rows, ]
-    rowData <- rowData[keep_rows, ]
-  }
-  if ("selected" %in% colnames(colData)) {
-    keep_cols <- as.logical(colData$selected)
-    counts <- counts[, keep_cols]
-    colData <- colData[, keep_cols]
-  }
-
-  dimRed <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
-  dimRed <- as.matrix(dimRed[rownames(colData), ])
-
-  coordinates <- read.delim(file.path(test_path, "coordinates.tsv"), sep = "\t", row.names = 1)
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
   coordinates <- as.matrix(coordinates[rownames(colData), ])
 
-  spe <- SpatialExperiment(
-    assays = list("counts" = as(counts, "CsparseMatrix")),
-    rowData = rowData,
-    colData = colData,
-    reducedDims = list("dimRed" = dimRed),
-    spatialCoords = coordinates
+  spe <- SpatialExperiment::SpatialExperiment(
+    rowData = rowData, colData = colData, spatialCoords = coordinates
   )
+
+  if (!is.na(matrix_file)) {
+    assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+  }
+
+  # Filter features and samples
+  if ("selected" %in% colnames(rowData(spe))) {
+    spe <- spe[as.logical(rowData(spe)$selected), ]
+  }
+  if ("selected" %in% colnames(colData(spe))) {
+    spe <- spe[, as.logical(colData(spe)$selected)]
+  }
+
+  if (!is.na(reducedDim_file)) {
+    dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
+    reducedDim(spe, reducedDim_name) <- as.matrix(dimRed[colnames(spe), ])
+  }
   return(spe)
 }
 

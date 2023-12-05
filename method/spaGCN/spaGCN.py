@@ -13,7 +13,7 @@ parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
 )
 parser.add_argument(
-    "-m", "--matrix", help="Path to (transformed) counts (as mtx).", required=True
+    "-m", "--matrix", help="Path to (transformed) counts (as mtx).", required=False
 )
 parser.add_argument(
     "-f", "--features", help="Path to features (as tsv).", required=True

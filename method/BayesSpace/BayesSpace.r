@@ -12,7 +12,7 @@ option_list <- list(
   ),
   make_option(
     c("-m", "--matrix"),
-    type = "character", default = NULL,
+    type = "character", default = NA,
     help = "Path to (transformed) counts (as mtx)."
   ),
   make_option(
@@ -116,25 +116,19 @@ suppressPackageStartupMessages(library(BayesSpace))
 get_SingleCellExperiment <- function(feature_file, observation_file, matrix_file, dimred_file) {
   rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
   colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
-  counts <- Matrix::t(Matrix::readMM(matrix_file))
 
   # Filter features and samples
   if ("selected" %in% colnames(rowData)) {
-    keep_rows <- as.logical(rowData$selected)
-    counts <- counts[keep_rows, ]
-    rowData <- rowData[keep_rows, ]
+    rowData <- rowData[as.logical(rowData$selected), ]
   }
   if ("selected" %in% colnames(colData)) {
-    keep_cols <- as.logical(colData$selected)
-    counts <- counts[, keep_cols]
-    colData <- colData[, keep_cols]
+    colData <- colData[as.logical(colData$selected), ]
   }
 
   dimRed <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
   dimRed <- as.matrix(dimRed[rownames(colData), ])
 
   sce <- SingleCellExperiment(
-    assays = list("counts" = as(counts, "CsparseMatrix")),
     rowData = rowData,
     colData = colData,
     reducedDims = list("dimRed" = dimRed)
@@ -148,8 +142,7 @@ sce <- spatialPreprocess(
   sce,
   platform = technology,
   skip.PCA = TRUE,
-  log.normalize = FALSE,
-  assay.type = "counts"
+  log.normalize = FALSE
 )
 
 n_components <- ncol(reducedDim(sce, "dimRed"))
