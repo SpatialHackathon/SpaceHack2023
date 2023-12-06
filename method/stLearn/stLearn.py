@@ -84,7 +84,7 @@ if args.image is not None:
     image_dir = args.image
     positions_dir = os.path.join(image_dir, 'tissue_positions_list.csv')
     scale_dir = os.path.join(image_dir, 'scalefactors_json.json')
-    image_lowers_dir = os.path.join(image_dir, '/tissue_lowres_image.png')
+    image_lowers_dir = os.path.join(image_dir, 'tissue_lowres_image.png')
 
 
 seed = args.seed
