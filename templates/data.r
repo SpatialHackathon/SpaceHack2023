@@ -49,7 +49,7 @@ out_dir <- opt$out_dir
 # counts = ...  # matrix with #observations rows x #features columns
 # labels_df = None  # optional, data.frame with rownames (cell-id/barcode) and 1 column (label)
 # img = None  # optional
-# technology = ...  # "Visium", "ST", "imaging-based"
+# technology = ...  # i.e. "Visium", "ST", "MERSCOPE", "MERFISH", "Stereo-seq", "Slide-seq", "Xenium", "STARmap", "STARmap+", "osmFISH", "seqFISH"
 # samples_df = ...  # data.frame with information on samples. columns: (patient, sample, position, replicate, directory, n_clusters), columns can be NA
 
 # Make sure to use consistent indexes for the data.frames
