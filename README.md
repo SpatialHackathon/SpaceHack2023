@@ -32,3 +32,7 @@ git checkout method_x_naveedishaque
  7. Code review (by whom?) and merge your contributed module into the GitHub main branch!
 
 Easy!
+
+### License
+
+We have adopted the "MIT No Attribution" (MIT-0) License. It is currently attributed to the "SpaceHack organizers", but please also make sure to add your name to your contributions. More on MIT-0 [here](https://github.com/aws/mit-0)https://github.com/aws/mit-0.
