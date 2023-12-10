@@ -22,6 +22,8 @@ For an example have a look [here](libd_dlpfc/).
 
 ### Dataset module layout and interface
 
+Please define a conda recipe as a `yml` file for all the dependencies required for your script. This should list all the dependencies and also explicitly define the versions.
+
 Input:
  - Output directory
 
