@@ -20,7 +20,7 @@ git checkout data_x_naveedishaque
 
 For an example have a look [here](libd_dlpfc/).
 
-### Dataset module layout
+### Dataset module layout and interface
 
 Input:
  - Output directory
