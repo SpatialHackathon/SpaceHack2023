@@ -22,7 +22,7 @@ For examples have a look [here for a method in Python](spaGCN/) or [here for a m
 
 ### Method module layout and interface
 
-Please define a conda recipe as a `yml` file. This should list all the dependencies and also explicitly define the versions.
+Please define a conda recipe as a `yml` file for all the dependencies required for your methods script. This should list all the dependencies and also explicitly define the versions.
 
 Input:
  - Coordinates
