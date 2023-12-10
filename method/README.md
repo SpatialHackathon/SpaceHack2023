@@ -18,9 +18,11 @@ git checkout method_SpaGCN_naveedishaque
  6. Create a [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request?tool=cli)
  7. Code review (by whom?) and merge your contributed module into the GitHub main branch!
 
-For examples have a look [here](spaGCN/) or [here](BayesSpace/).
+For examples have a look [here for a method in Python](spaGCN/) or [here for a method in R](BayesSpace/).
 
 ### Method module layout and interface
+
+Please define a conda recipe as a `yml` file. This should list all the dependencies and also explicitly define the versions.
 
 Input:
  - Coordinates
