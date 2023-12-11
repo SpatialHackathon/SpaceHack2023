@@ -1,59 +1,33 @@
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: Thomas Chartrand; wrote initial versions of thalamus
-#                                            subsetting functions
+# Author_and_contribution: Thomas Chartrand; co-wrote initial versions of 
+#                                            thalamus subsetting functions
 # Author_and_contribution: Meghan Turner; wrote code in file
 
 import argparse
 from pathlib import Path
-import os
 import json
 
 import numpy as np
 import pandas as pd
 import anndata as ad
 import scipy
-# other packages are imported before the relevant functions below
+# additional packages are imported before the functions in which they are used
 
-if __name__=='__main__':
-    # parse output directory from user
-    parser = argparse.ArgumentParser(
-        description="Load data for ABC Atlas Mouse Brain - Thalamus dataset"
-    )
-    parser.add_argument(
-        "-o", "--out_dir", help="Output directory to write files to.", required=True
-    )
-    args = parser.parse_args()
-    out_dir = Path(args.out_dir)
-    os.makedirs(out_dir, exist_ok=True)
+'''
+This file Contains code for loading ABC Atlas WMB TH dataset for SpaceHack2.0,
+including functions to:
+- Manually curate labels
+- Subset the ABC Whole Mouse Brain (WMB) Atlas to a thalamus (TH) subset
+- Download the ABC Atlas WMB data from the AWS S3 bucket
+and executable code to write the dataset to disk in the SpaceHack2.0 directory
+structure.
+'''
 
 # versions for downloading ABC Atlas WMB data
+DATASET_LABEL = 'ABC_Atlas_WMB_TH'
 CURRENT_VERSION = '20230830'
 BRAIN_LABEL = 'C57BL6J-638850'
 CCF_VERSION = '20230630'
-
-'''
-----------------------------------------------------------------------------
-FUNCTIONS ------------------------------------------------------------------
-----------------------------------------------------------------------------
-'''
-def write_sample(path, sample, coordinates_df, observations_df, features_df,
-                 counts, labels_df=None, img=None):
-    
-    sample_path = Path(path) / sample
-    os.makedirs(sample_path, exist_ok=True)
-
-    coordinates_df.to_csv(sample_path / 'coordinates.tsv', sep='\t', index_label='')
-    features_df.to_csv(sample_path / 'features.tsv', sep='\t', index_label='')
-    observations_df.to_csv(sample_path / 'observations.tsv', sep='\t', index_label='')
-    scipy.io.mmwrite(sample_path / 'counts.mtx', counts)
-
-    if labels_df is not None:
-        labels_df.to_csv(sample_path / 'labels.tsv', sep='\t', index_label='')
-
-    if img is not None:
-        # TODO write to image_file
-        # H_E.json must contain the scale
-        pass
 
 
 '''
@@ -61,7 +35,11 @@ def write_sample(path, sample, coordinates_df, observations_df, features_df,
 MANUAL LABEL CURATION FUNCTION ---------------------------------------------
 ----------------------------------------------------------------------------
 '''
-def curate_parcellation_labels(cell_md_df):
+def curate_parcellation_labels(adata):
+    '''Curates the parcellation labels for the ABC Atlas MERFISH dataset.
+    Limits labels to only those that have good alignment to CCFv3 substructures.
+    '''
+    cell_md_df = adata.obs.copy()
     # manual mapping of sections and CCFv3 substructures pairs that have 
     # good alignment
     good_sections_substructures_dict = {
@@ -539,8 +517,51 @@ def get_ccf_terms_df(version=CCF_VERSION):
     return ccf_terms_df
 
 
+'''
+--------------------------------------------------------------------------------
+SPACEHACK2.0 WRITE FUNCTION ----------------------------------------------------
+--------------------------------------------------------------------------------
+'''
+def write_sample(path, sample, coordinates_df, observations_df, features_df,
+                 counts, labels_df=None, img=None):
+    '''Write a sample to disk in the SpaceHack2.0 directory structure.
+    '''
+    sample_path = Path(path) / sample
+    Path.mkdir(sample_path, exist_ok=True)
+
+    coordinates_df.to_csv(sample_path / 'coordinates.tsv', sep='\t', index_label='')
+    features_df.to_csv(sample_path / 'features.tsv', sep='\t', index_label='')
+    observations_df.to_csv(sample_path / 'observations.tsv', sep='\t', index_label='')
+    scipy.io.mmwrite(sample_path / 'counts.mtx', counts)
+
+    if labels_df is not None:
+        labels_df.to_csv(sample_path / 'labels.tsv', sep='\t', index_label='')
+
+    if img is not None:
+        # TODO write to image_file
+        # H_E.json must contain the scale
+        pass
+
+
+'''
+--------------------------------------------------------------------------------
+EXECUTED CODE ------------------------------------------------------------------
+--------------------------------------------------------------------------------
+'''
 if __name__=='__main__':
-    # Load ABC Atlas WMB, thalamus subset, dataset
+    # Parse output directory from user -----------------------------------------
+    parser = argparse.ArgumentParser(
+        description="Load data for ABC Atlas Mouse Brain - Thalamus dataset"
+    )
+    parser.add_argument(
+        "-o", "--out_dir", help="Output directory to write files to.", required=True
+    )
+    args = parser.parse_args()
+    out_dir = Path(args.out_dir)#+DATASET_LABEL)
+    out_dir = (out_dir / DATASET_LABEL)
+    Path.mkdir(out_dir, exist_ok=True)
+    
+    # Load ABC Atlas WMB, thalamus subset, dataset -----------------------------
     adata = load_th_subset_adata(counts_transform='raw') # can also load 'log2' counts
     features_df = adata.var.loc[:,:]
     observations_df = adata.obs.loc[
@@ -561,7 +582,7 @@ if __name__=='__main__':
     labels_df_all = adata.obs.loc[:, ['parcellation_substructure']]
     labels_df_all.rename(columns={'parcellation_substructure':'label'}, 
                          inplace=True)
-    labels_df_curated = curate_parcellation_labels(adata.obs)
+    labels_df_curated = curate_parcellation_labels(adata)
     technology = 'MERSCOPE'
     samples_df = pd.DataFrame(data={'patient':[BRAIN_LABEL, BRAIN_LABEL], 
                                     'sample':['all_labels', 'curated_labels'], 
@@ -573,16 +594,36 @@ if __name__=='__main__':
                                    })
     # img = None  # optional
     
-    # Write datasets to file
+    # Write datasets to file ---------------------------------------------------
     write_sample(out_dir, BRAIN_LABEL+'_all_labels', coordinates_df, 
                  observations_df, features_df, counts, labels_df=labels_df_all)
     write_sample(out_dir, BRAIN_LABEL+'_curated_labels', coordinates_df, 
                  observations_df, features_df, counts, labels_df=labels_df_curated)
     
-    ## Write metadata files
+    # Write metadata files -----------------------------------------------------
     samples_df.to_csv(out_dir / "samples.tsv", sep='\t', index_label='')
     
     with open(out_dir / 'experiment.json', 'w') as f:
         exp_info = {'technology': technology,
                     'species': 'mouse'}
         json.dump(exp_info, f)
+
+    # Write license file -------------------------------------------------------
+    license_text = (
+        'ABC Atlas - Mouse Whole Brain by Allen Institute for Brain Science'+'\n'+
+        'ABC Atlas - Mouse Whole Brain'+'\n'+ 
+        '(https://knowledge.brain-map.org/data/LVDBJAW8BI5YSS1QUBG/collections)'+'\n'+ 
+        'MERSCOPE v1 whole brain Data Collection is licensed under a'+'\n'+ 
+        'Creative Commons Attribution 4.0 International License, and'+'\n'+ 
+        '10x scRNAseq whole brain Data Collection is licensed under a'+'\n'+ 
+        'Creative Commons Attribution-NonCommercial 4.0 International License.'+'\n'+
+        ' '+'\n'+
+        'See https://alleninstitute.org/citation-policy/ for the Allen Institute Citation'+'\n'+ 
+        'Policy and https://alleninstitute.org/terms-of-use/ for the Allen Institute'+'\n'+ 
+        'Terms of Use.'+'\n'+
+        ' '+'\n'+
+        'See https://creativecommons.org/licenses/by/4.0/ and'+'\n'+
+        'https://creativecommons.org/licenses/by-nc/4.0/ for a copy of each license.'
+        )
+    with open(out_dir / 'LICENSE.txt', "w") as f:
+        f.write(license_text)
