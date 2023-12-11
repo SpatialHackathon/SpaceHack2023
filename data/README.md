@@ -64,6 +64,9 @@ AAAA 1   1   true
 ATAC 2   3   true
 CAAG 5   2   false
 ```
+The column `selected` is used for subsetting but is optional. `row` and `col` is needed in `observations.tsv` for bead-array based methods (Visium/ST).
+
+
 head `labels.tsv` (annotations of the ground truth domain cluster annotations)
 ```
      label
@@ -73,6 +76,6 @@ CAAG Domain2
 ```
 `image.tiff`. Images can be added in any format as appropriate (does not have to be tiff). If an image is available, please also add a json with relevant metadata (e.g. scale, but this might evolve during the hackathon)
 
-`experiment.json`. Currently only technology (Visium/ST/...) but more might be added
+`experiment.json`. Currently only technology; e.g. Visium, ST, MERSCOPE, MERFISH, Stereo-seq, Slide-seq, Xenium, STARmap, STARmap+, osmFISH, seqFISH, ... (more might be added)
 
 `samples.tsv`. Sample directory and all relevant metadata, e.g. patient, replicate, slice, … and if applicable #clusters
