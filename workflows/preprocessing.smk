@@ -3,7 +3,7 @@ from shared.functions import get_sample_dirs, check_files_in_folder
 
 configfile: "config.yaml"
 
-GIT_DIR = "/mnt/hack_scratch/SpaceHack2/git_template"
+GIT_DIR = os.getenv("GIT_DIR", "/mnt/hack_data/code/SpaceHack2023")
 
 def create_input(file_list, input_file_name):
     input_files = []
