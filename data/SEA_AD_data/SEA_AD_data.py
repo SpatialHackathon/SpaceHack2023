@@ -146,7 +146,7 @@ if __name__=='__main__':
     n_clusters=[]
 
 
-    for donor in list(group_anndata.obs["Donor ID"].unique())[:2]:
+    for donor in list(group_anndata.obs["Donor ID"].unique()):
         print(donor)
         replicate_counter = 0
         for donor_section in list(
