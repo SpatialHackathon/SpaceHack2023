@@ -36,12 +36,12 @@ opt <- parse_args(opt_parser)
 # Use these filepaths as input
 label_file <- opt$labels
 
-
 # Seed
 seed <- opt$seed
 set.seed(seed)
 
 ## Your code goes here
+df <- read.delim(label_file, sep = "\t", row.names = 1)
 if (!("label" %in% colnames(df))){
      stop("Label column not present in the file. Check your file.")
 }
