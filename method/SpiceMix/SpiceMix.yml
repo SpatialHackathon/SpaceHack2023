@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8.18
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu117
+    - torch==1.13.1+cu117 
+    - popari
