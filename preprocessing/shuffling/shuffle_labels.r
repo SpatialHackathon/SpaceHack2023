@@ -52,6 +52,4 @@ rownames(df_randomized) <- rownames(df)
 
 ## Write output
 outfile <- file(opt$out_file)
-dir.create(dirname(outfile), showWarnings = FALSE, recursive = TRUE)
-
-write.table(df_randomized, outfile, sep = "\t", col.names = NA, quote = "FALSE")
+write.table(df_randomized, outfile, sep = "\t", col.names = NA, quote = FALSE)
