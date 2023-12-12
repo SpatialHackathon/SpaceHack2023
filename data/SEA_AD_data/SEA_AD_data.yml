@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+  # - bioconda
+dependencies:
+  - numpy
+  - pandas
+  - anndata
+  - scipy
+  - boto3
