@@ -1,0 +1,3 @@
+script: "/mnt/hack_scratch/SpaceHack2/git_template/data/libd_dlpfc/libd_dlpfc.r"
+env: "/mnt/hack_scratch/SpaceHack2/git_template/data/libd_dlpfc/libd_dlpfc.yml"
+data_dir: "/home/ubuntu/tmp_data/libd_dlpfc"
