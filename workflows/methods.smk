@@ -3,13 +3,14 @@ from shared.functions import get_sample_dirs
 
 configfile: "config.yaml"
 
-GIT_DIR = "/mnt/hack_scratch/SpaceHack2/git_template"
+GIT_DIR = os.getenv("GIT_DIR", "/mnt/hack_data/code/SpaceHack2023")
 
 def create_spaGCN_input(wildcards):
     input_files = []
     sample_dirs = get_sample_dirs(config["data_dir"])
     for sample_dir in sample_dirs:
-        input_files.append(sample_dir + "/spaGCN/domains.tsv")
+        for config_file_name in config["config_files"]["spaGCN"].keys():
+            input_files.append(sample_dir + "/spaGCN/" + config_file_name + "/domains.tsv")
     return input_files
 
 def create_BayesSpace_input(wildcards):
@@ -30,12 +31,13 @@ rule method_spaGCN:
         observations = config["data_dir"] + "/{sample}/observations.tsv",
         image = config["data_dir"] + "/{sample}/H_E.tiff",
     output:
-        dir = directory(config["data_dir"] + "/{sample}/spaGCN"),
-        file = config["data_dir"] + "/{sample}/spaGCN/domains.tsv",
+        dir = directory(config["data_dir"] + "/{sample}/spaGCN/{config_file_name}"),
+        file = config["data_dir"] + "/{sample}/spaGCN/{config_file_name}/domains.tsv",
     params:
         n_clusters = "7",
         technology = "Visium",
-        seed = "42"
+        seed = "42",
+        configfile = lambda wildcards: config["config_files"]["spaGCN"][wildcards.config_file_name]
     conda:
         GIT_DIR + "/method/spaGCN/spaGCN.yml"
     shell:
@@ -50,7 +52,7 @@ rule method_spaGCN:
             --n_clusters {params.n_clusters} \
             --technology {params.technology} \
             --seed {params.seed} \
-            --config {GIT_DIR}/method/spaGCN/config/config_5.json
+            --config {GIT_DIR}/method/spaGCN/{params.configfile}
         """
 
 
