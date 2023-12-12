@@ -7,5 +7,5 @@ dependencies:
   - r-remotes=2.4.2
   - r-mclust=6.0.1
   - r-purrr=1.0.2
-  - bioconductor-SpatialExperiment=1.12.0
+  - bioconductor-SpatialExperiment
 #  - SC.MEB=0.99.1; remotes::install_github("Shufeyangyi2015310117/SC.MEB",ref="92d92d4b043a47827c7f5960d91ee0c83ab5d9ba")

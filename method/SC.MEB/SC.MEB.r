@@ -95,7 +95,8 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
-  neighbors <- Matrix::readMM(neighbors_file)#, stringsAsFactors = FALSE, row.names = 1)
+  #neighbors <- Matrix::readMM(neighbors_file)#, stringsAsFactors = FALSE, row.names = 1)
+    neighbors <- as(Matrix::t(Matrix::readMM(neighbors_file)), "CsparseMatrix")
 }
 if (!is.na(opt$matrix)) {
   matrix_file <- opt$matrix
@@ -115,42 +116,30 @@ technology <- opt$technology
 n_clusters <- opt$n_clusters
 
 # You can get SpatialExperiment directly
-get_SpatialExperiment <- function(
-    feature_file,
-    observation_file,
-    coord_file,
-    matrix_file = NA,
-    reducedDim_file = NA,
-    assay_name = "counts",
-    reducedDim_name = "reducedDim") {
+get_SingleCellExperiment <- function(feature_file, observation_file, matrix_file, dimred_file) {
   rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
   colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
 
-  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
-  coordinates <- as.matrix(coordinates[rownames(colData), ])
-
-  spe <- SpatialExperiment::SpatialExperiment(
-    rowData = rowData, colData = colData, spatialCoords = coordinates
-  )
-
-  if (!is.na(matrix_file)) {
-    assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-  }
-
   # Filter features and samples
-  if ("selected" %in% colnames(rowData(spe))) {
-    spe <- spe[as.logical(rowData(spe)$selected), ]
+  if ("selected" %in% colnames(rowData)) {
+    rowData <- rowData[as.logical(rowData$selected), ]
   }
-  if ("selected" %in% colnames(colData(spe))) {
-    spe <- spe[, as.logical(colData(spe)$selected)]
+  if ("selected" %in% colnames(colData)) {
+    colData <- colData[as.logical(colData$selected), ]
   }
 
-  if (!is.na(reducedDim_file)) {
-    dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
-    reducedDim(spe, reducedDim_name) <- as.matrix(dimRed[colnames(spe), ])
-  }
-  return(spe)
+  dimRed <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
+  dimRed <- as.matrix(dimRed[rownames(colData), ])
+
+  sce <- SingleCellExperiment(
+    rowData = rowData,
+    colData = colData,
+    reducedDims = list("dimRed" = dimRed)
+  )
+  return(sce)
 }
+
+sce <- get_SingleCellExperiment(feature_file, observation_file, matrix_file, dimred_file)
 
 
 # Seed
@@ -158,23 +147,16 @@ seed <- opt$seed
 set.seed(seed)
 # TODO if the method requires the seed elsewhere please pass it on
 
-# You can use the data as SpatialExperiment
-#spe <- get_SpatialExperiment(feature_file, observation_file, matrix_file, coord_file, dimred_file)
-
-
 ## Your code goes here
 # TODO
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
-#print(head(sparseMatrix(neighbors)))
-#nbr <- find_neighbors2(spe, technology)
-#print(nbr)
+nbr <- find_neighbors2(sce, technology)
 
-fit <- SC.MEB(as.matrix(dimred), neighbors, K_set = n_clusters, num_core = 2)
-label_df <- data.frame("label" = unlist(fit["x", ], row.names = rownames(dimred))
-  #as.data.frame() # data.frame with row.names (cell-id/barcode) and 1 column (label)
+fit <- SC.MEB(as.matrix(dimred), nbr, K_set = n_clusters, num_core = 2)
+label_df <- data.frame("label" = unlist(fit["x", ]), row.names = rownames(dimred))
+#as.data.frame() # data.frame with row.names (cell-id/barcode) and 1 column (label)
 # embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
-print(label_df)
 
 ## Write output
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
