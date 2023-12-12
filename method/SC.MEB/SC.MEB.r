@@ -3,7 +3,11 @@
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
 # Author_and_contribution: Søren Helweg Dam; ported from Omnibenchmark, where Helena Crowell and I implemented the method
 
-suppressPackageStartupMessages(library(optparse))
+suppressPackageStartupMessages({
+    library(optparse)
+    library(SpatialExperiment)
+    library(SC.MEB)
+})
 
 option_list <- list(
   make_option(
@@ -69,7 +73,7 @@ option_list <- list(
 )
 
 # TODO adjust description
-description <- "Method ..."
+description <- "Spatial clustering with hidden Markov random field using empirical Bayes"
 
 opt_parser <- OptionParser(
   usage = description,
@@ -155,18 +159,20 @@ set.seed(seed)
 # TODO if the method requires the seed elsewhere please pass it on
 
 # You can use the data as SpatialExperiment
-# spe <- get_SpatialExperiment(feature_file, observation_file, matrix_file, coord_file, dimred_file)
+#spe <- get_SpatialExperiment(feature_file, observation_file, matrix_file, coord_file, dimred_file)
 
 
 ## Your code goes here
 # TODO
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
-fit <- SC.MEB(dimred, neighbors, K_set = n_clusters, num_core = 1)
-label_df <- unlist(fit["x", ]) |>
-  as.data.frame() # data.frame with row.names (cell-id/barcode) and 1 column (label)
+#nbr <- find_neighbors2(spe, technology)
+#print(nbr)
+fit <- SC.MEB(as.matrix(dimred), sparseMatrix(neighbors), K_set = n_clusters, num_core = 2)
+label_df <- data.frame("label" = unlist(fit["x", ], row.names = rownames(dimred))
+  #as.data.frame() # data.frame with row.names (cell-id/barcode) and 1 column (label)
 # embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
-
+print(label_df)
 
 ## Write output
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)

@@ -4,4 +4,8 @@ channels:
 dependencies:
   - r-base=4.3.1
   - r-optparse=1.7.3
-  - git+git://github.com/Shufeyangyi2015310117/SC.MEB.git@92d92d4b043a47827c7f5960d91ee0c83ab5d9ba#egg=SC.MEB
+  - r-remotes=2.4.2
+  - r-mclust=6.0.1
+  - r-purrr=1.0.2
+  - bioconductor-SpatialExperiment=1.12.0
+#  - SC.MEB=0.99.1; remotes::install_github("Shufeyangyi2015310117/SC.MEB",ref="92d92d4b043a47827c7f5960d91ee0c83ab5d9ba")
