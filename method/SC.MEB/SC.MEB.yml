@@ -4,6 +4,4 @@ channels:
 dependencies:
   - r-base=4.3.1
   - r-optparse=1.7.3
-  - r-remotes
-  - bioconductor-SingleCellExperiment
-  - git+git://github.com/Shufeyangyi2015310117/SC.MEB.git
+  - git+git://github.com/Shufeyangyi2015310117/SC.MEB.git@92d92d4b043a47827c7f5960d91ee0c83ab5d9ba#egg=SC.MEB

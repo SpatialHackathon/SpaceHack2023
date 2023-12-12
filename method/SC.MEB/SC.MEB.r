@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: ENTER YOUR NAME AND CONTRIBUTION HERE
+# Author_and_contribution: Søren Helweg Dam; ported from Omnibenchmark, where Helena Crowell and I implemented the method
 
 suppressPackageStartupMessages(library(optparse))
 
@@ -91,12 +91,14 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
+  neighbors <- read.delim(neighbors_file, stringsAsFactors = FALSE, row.names = 1)
 }
 if (!is.na(opt$matrix)) {
   matrix_file <- opt$matrix
 }
 if (!is.na(opt$dim_red)) {
   dimred_file <- opt$dim_red
+  dimred <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
 }
 if (!is.na(opt$image)) {
   image_file <- opt$image
@@ -153,14 +155,14 @@ set.seed(seed)
 # TODO if the method requires the seed elsewhere please pass it on
 
 # You can use the data as SpatialExperiment
-spe <- get_SpatialExperiment(feature_file, observation_file, matrix_file, coord_file, dimred_file)
+# spe <- get_SpatialExperiment(feature_file, observation_file, matrix_file, coord_file, dimred_file)
 
 
 ## Your code goes here
 # TODO
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
-fit <- SC.MEB(mtx, nbr, K_set = n_clusters, num_core = 1)
+fit <- SC.MEB(dimred, neighbors, K_set = n_clusters, num_core = 1)
 label_df <- unlist(fit["x", ]) |>
   as.data.frame() # data.frame with row.names (cell-id/barcode) and 1 column (label)
 # embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
