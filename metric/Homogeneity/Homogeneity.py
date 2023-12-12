@@ -5,8 +5,7 @@
 
 import argparse
 
-# TODO adjust description
-parser = argparse.ArgumentParser(description="Calculate metric ...")
+parser = argparse.ArgumentParser(description="Calculate Homogeneity Score (scikit-learn)")
 
 parser.add_argument(
     "-l", "--labels", help="Labels from domain clustering.", required=True
