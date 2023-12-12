@@ -2,10 +2,12 @@ import os
 
 configfile: "config.yaml"
 
+GIT_DIR = os.getenv("GIT_DIR", "/mnt/hack_data/code/SpaceHack2023")
+
 rule all:
     output:
         dir=directory(config['data_dir'])
     conda:
-        config["env"]
+        GIT_DIR + "/data/" + config["env"]
     shell:
-        "{config[script]} -o {output.dir}"
+        "{GIT_DIR}/data/{config[script]} -o {output.dir}"
