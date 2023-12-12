@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-# Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: ENTER YOUR NAME AND CONTRIBUTION HERE
+# Author_and_contribution: 
+# Niklas Mueller-Boetticher; created template
+# Jieran Sun; Implement SEDR method
 
 import argparse
 
 # TODO adjust description
-parser = argparse.ArgumentParser(description="Method ...")
+parser = argparse.ArgumentParser(
+    description="Method SEDR – Unsupervised spatially embedded deep representation of spatial transcriptomics.")
 
 parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
@@ -50,39 +52,9 @@ parser.add_argument(
     required=False,
 )
 
-args = parser.parse_args()
+## Session for code
 
-from pathlib import Path
-
-out_dir = Path(args.out_dir)
-
-# Output files
-label_file = out_dir / "domains.tsv"
-embedding_file = out_dir / "embedding.tsv"
-# if additional output files are required write it also to out_dir
-
-# Use these filepaths as input ...
-coord_file = args.coordinates
-feature_file = args.features
-observation_file = args.observations
-
-if args.neighbors is not None:
-    neighbors_file = args.neighbors
-if args.matrix is not None:
-    matrix_file = args.matrix
-if args.dim_red is not None:
-    dimred_file = args.dim_red
-if args.image is not None:
-    image_file = args.image
-if args.config is not None:
-    config_file = args.config
-
-n_clusters = args.n_clusters
-technology = args.technology
-seed = args.seed
-
-
-# ... or AnnData if you want
+# anndata input
 def get_anndata(args):
     import anndata as ad
     import numpy as np
@@ -128,26 +100,79 @@ def get_anndata(args):
 
     return adata
 
+# Import packages for SEDR
+import scanpy as sc
+import torch
+import SEDR
 
-adata = get_anndata(args)
+import os
+import warnings
+warnings.filterwarnings('ignore')
 
+# Get args
+args = parser.parse_args()
 
-# TODO set the seed, if the method requires the seed elsewhere please pass it on
+# Def config
+import json
+with open(args.config, "r") as f:
+    config = json.load(f)
+
+# Set up output files
+from pathlib import Path
+out_dir = Path(args.out_dir)
+label_file = out_dir / "domains.tsv"
+embedding_file = out_dir / "embedding.tsv"
+
+# Def vars
+n_clusters = args.n_clusters
+technology = args.technology
+seed = args.seed
+
+# Set SEED for SEDR
 import random
-
 random.seed(seed)
-# np.random.seed(seed)
-# torch.manual_seed(seed)
+SEDR.fix_seed(seed)
 
-## Your code goes here
-# TODO
-# label_df = ...  # DataFrame with index (cell-id/barcode) and 1 column (label)
-# embedding_df = None  # optional, DataFrame with index (cell-id/barcode) and n columns
+# Load data
+adata = get_anndata(args)
+adata.var_names_make_unique()
 
+# if dim-red is not provided, use default PCA dimRed
+if "reduced_dimensions" not in adata.obsm_keys():
+    from sklearn.decomposition import PCA 
+    adata_X = PCA(n_components=200, random_state=seed).fit_transform(adata.X)
+    adata.obsm['reduced_dimensions'] = adata_X
+
+# Constructing neighborhood graphs if neighbors not provided
+if "spatial_connectivities" in adata.obsp_keys():
+    graph_dict = adata.obsp["spatial_connectivities"]
+else: 
+    graph_dict = SEDR.graph_construction(adata, 12)
+
+# Training SEDR
+# device: using cpu or gpu (if avaliable)
+# using_dec: boolean, 
+sedr_net = SEDR.Sedr(adata.obsm['reduced_dimensions'], 
+                     graph_dict, 
+                     mode='clustering', 
+                     device=config["device"])
+
+if config["using_dec"]:
+    sedr_net.train_with_dec(N=1)
+else:
+    sedr_net.train_without_dec(N=1)
+sedr_feat, _, _, _ = sedr_net.process()
+adata.obsm['SEDR'] = sedr_feat
+
+# Clustering 
+SEDR.mclust_R(adata, n_clusters, use_rep='SEDR', key_added='SEDR')
+
+# Output dataframes
+label_df = adata.obs[["mclust"]]
+embedding_df = adata.obsm['SEDR']
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)
-
 label_df.columns = ["label"]
 label_df.to_csv(label_file, sep="\t", index_label="")
 
