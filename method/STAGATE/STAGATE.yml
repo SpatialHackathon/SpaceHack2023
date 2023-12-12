@@ -1,0 +1,19 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.5
+  - scanpy>=1.6.1
+  - tensorflow>=1.15.0
+  - anndata=0.9.2
+  - numpy=1.24.4
+  - pandas=2.0.3
+  - scikit-learn==1.2.1
+  - tqdm>=4.61.0
+  - python-igraph
+  - louvain
+  - r-base=4.3.1
+  - pip
+  - pip:
+    - rpy2
+    - torch
+    - git+https://github.com/QIFEIDKN/STAGATE@main
