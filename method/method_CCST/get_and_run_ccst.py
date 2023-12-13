@@ -93,22 +93,43 @@ seed = args.seed
 # Since CCST is not really a package, but a command line tool, we generate a temporary directory and clone the CCST repo from github into it. Info: https://github.com/xiaoyeye/CCST
 import tempfile
 import subprocess
+import os
 
-def clone_and_process_repo(git_url, release_tag):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        print(f"Created temporary directory at {tmpdirname}")
+def clone_and_process_repo(git_url, release_tag, output_dir):
+    with tempfile.TemporaryDirectory() as tmpdir:
+
+        gitdir = Path(tmpdir) / "CCST"
+        
+        print(f"Created temporary directory at {tmpdir} to store the CCST repo")
 
         # Clone the repository
-        subprocess.run(["git", "clone", git_url, tmpdirname], check=True)
+        subprocess.run(["git", "clone", git_url, gitdir], check=True)
 
         # Change to the repository directory
-        subprocess.run(["git", "-C", tmpdirname, "checkout", release_tag], check=True)
+        subprocess.run(["git", "-C", gitdir, "checkout", release_tag], check=True)
 
         # Perform your actions here
-        print(f"Performing actions in the repository at tag {release_tag}...")
+        print(f"Got the ccst repo {release_tag}...")
 
-        # Perform your actions here
-        print("Running the run_CCST script with the parameters...")
+        # Get the path
+        script_path = gitdir / "run_CCST.py"
+
+        # Ensure the script file still exists in the ccst repo
+        if os.path.exists(script_path):
+            # Run the Python script run_CCST.py from the CCST repo
+            print("Running the run_CCST script with the parameters...")
+            
+            command = ["python", script_path,
+                    "--data_path", config["data_path"],
+                   "--data_type", config["data_type"],
+                   "--data_name", config["data_name"],
+                   "--result_path", output_dir,
+                   "--embedding_data_path", output_dir]
+
+            subprocess.run(command, check=True)
+            
+        else:
+            print(f"Script not found: {script_path}")
 
     print('Temporary directory and file have been deleted.')
 
@@ -123,22 +144,27 @@ random.seed(seed)
 # torch.manual_seed(seed)
 
 ## Your code goes here
-# TODO
+import json
+with open (args.config, "r") as c:
+    config = json.load(c)
 # label_df = ...  # DataFrame with index (cell-id/barcode) and 1 column (label)
 # embedding_df = None  # optional, DataFrame with index (cell-id/barcode) and n columns
 
 ######## Testing area #########
 if __name__ == "__main__":
-    git_url = "https://github.com/xiaoyeye/CCST.git"  # The CCST repo
-    release_tag = "v1.0.1"  # Version used during SpaceHack2.0
-    clone_and_process_repo(git_url, release_tag)
+    # git_url = "https://github.com/xiaoyeye/CCST.git"  # The CCST repo
+    # release_tag = "v1.0.1"  # Version used during SpaceHack2.0
+    out_dir.mkdir(parents=True, exist_ok=True)
+    clone_and_process_repo(git_url, release_tag, out_dir)
+
+    
 ##############################
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)
 
-label_df.columns = ["label"]
-label_df.to_csv(label_file, sep="\t", index_label="")
+# label_df.columns = ["label"]
+# label_df.to_csv(label_file, sep="\t", index_label="")
 
-if embedding_df is not None:
-    embedding_df.to_csv(embedding_file, sep="\t", index_label="")
+# if embedding_df is not None:
+    # embedding_df.to_csv(embedding_file, sep="\t", index_label="")
