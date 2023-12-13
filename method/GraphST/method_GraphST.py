@@ -5,10 +5,10 @@
 # Peiying Cai; implemented method
 
 import argparse
-
+from ast import If
 
 parser = argparse.ArgumentParser(
-    description="""STAGATE (https://www.nature.com/articles/s41467-022-29439-6)
+    description="""GraphST (https://www.nature.com/articles/s41467-023-36796-3)
 """
 )
 
@@ -42,8 +42,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--technology",
-    help="The technology of the dataset (Visium, ST, ...).",
-    required=False,
+    help="GraphST supports 10X Visium ('10X'), Stereo-seq ('Stereo'), and Slide-seq/Slide-seqV2 ('Slide').",
+    required=True,
 )
 parser.add_argument(
     "--seed", help="Seed to use for random operations.", required=True, type=int
@@ -53,6 +53,7 @@ parser.add_argument(
     help="Optional config file used to pass additional parameters.",
     required=False,
 )
+
 
 args = parser.parse_args()
 
@@ -65,8 +66,13 @@ label_file = out_dir / "domains.tsv"
 embedding_file = out_dir / "embedding.tsv"
 
 n_clusters = args.n_clusters
+technology = str(args.technology)
 seed = args.seed
 
+# TODO use the default settings or place it into the config.
+# start=0.1
+# end=3.0
+# increment=0.01
 
 ## Your code goes here
 import json
@@ -75,24 +81,34 @@ with open(args.config, "r") as f:
     config = json.load(f)
 
 import random
+
 import numpy as np
 import pandas as pd
 import scanpy as sc
-import sys
+from sklearn import metrics
 import torch
-# Use tensorflow or pyG
-import tensorflow.compat.v1 as tf
-tf.compat.v1.disable_eager_execution()
-# the location of R (used for the mclust clustering)
+from GraphST import GraphST
+
+# Run device, by default, the package is implemented on 'cpu'. The author recommend using GPU.
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+import os
+
+if technology not in ['10X', 'Stereo', 'Slide']:
+    raise Exception(
+        f"The model only supports 10X Visium ('10X'), Stereo-seq ('Stereo'), and Slide-seq/Slide-seqV2 ('Slide')."
+        )
 
 def get_anndata(args):
     import anndata as ad
     import scipy as sp
+
     X = sp.io.mmread(args.matrix)
     if sp.sparse.issparse(X):
-        X = sp.sparse.csr_matrix(X, dtype= 'float32')
+        X = X.tocsr()
+
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
+
     # Filter
     if "selected" in observations.columns:
         X = X[observations["selected"].to_numpy().nonzero()[0], :]
@@ -100,14 +116,18 @@ def get_anndata(args):
     if "selected" in features.columns:
         X = X[:, features["selected"].to_numpy().nonzero()[0]]
         features = features.loc[lambda df: df["selected"]]
+
     coordinates = (
         pd.read_table(args.coordinates, index_col=0)
         .loc[observations.index, :]
         .to_numpy()
     )
+
     adata = ad.AnnData(
         X=X, obs=observations, var=features, obsm={"spatial": coordinates}
     )
+
+
     return adata
 
 
@@ -119,40 +139,45 @@ random.seed(seed)
 torch.manual_seed(seed)
 np.random.seed(seed)
 
-import STAGATE as sg
-# Construct the spatial network
-if config["model"] == 'Radius':
-    sg.Cal_Spatial_Net(adata, rad_cutoff=config["rad_cutoff"], model=config["model"])
-elif config["model"] == 'KNN':
-    sg.Cal_Spatial_Net(adata, k_cutoff=config["k_cutoff"], model=config["model"])
-  
-sg.Stats_Spatial_Net(adata)
+# Train
+# define model
+model = GraphST.GraphST(adata, datatype=technology, device=device)
+
+# train model
+adata = model.train()
+
+# Refinement:
+# This step is not recommended for ST data with fine-grained domains, Stereo-seq, and Slide-seqV2
+# Radius: speficy the number of neighbors considered during refinement
+# If not refinement is intended, set it as the default setting in GraphST, but it is not going to be used. 
+if config["refine"]:
+    radius = config["radius"]
+else:
+    radius = 50
+    
 
 # Run
-# alpha: the weight of the cell type-aware spatial network
-# pre-resolution: the resolution parameter of pre-clustering
-# with cell type-aware module:
-# adata = sg.train_STAGATE(adata, alpha=0.5, pre_resolution=0.2,
-#                              n_epochs=1000, save_attention=True)
-adata = sg.train_STAGATE(adata, alpha=0, random_seed=seed)
-sc.pp.neighbors(adata, use_rep='STAGATE')
-sc.tl.umap(adata)
+from GraphST.utils import clustering
 
 if config["method"] == "mclust":
-    import os
-    adata = sg.mclust_R(adata, used_obsm='STAGATE', num_cluster=n_clusters, random_seed=seed)
-    label_df = adata.obs[["mclust"]]
-elif config["method"] == "louvain":
-    sc.tl.louvain(adata, resolution=config["res"])
-    label_df = adata.obs[["louvain"]]
+    clustering(adata, 
+               n_clusters=n_clusters, 
+               radius=radius, 
+               method=config["method"], 
+               refinement=config["refine"],
+               random_seed=seed)
+elif config["method"] in ['leiden', 'louvain']:
+    clustering(adata, 
+               n_clusters=n_clusters, 
+               radius=radius, 
+               method=config["method"], 
+               refinement=config["refine"]
+               )
+
+label_df = adata.obs[["domain"]]
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)
 
 label_df.columns = ["label"]
 label_df.to_csv(label_file, sep="\t", index_label="")
-
-# Convert the NumPy array to Pandas DataFrame with row names
-embedding_df = pd.DataFrame(adata.obsm['STAGATE'], index=adata.obs_names)
-if embedding_df is not None:
-    embedding_df.to_csv(embedding_file, sep="\t", index_label="")
