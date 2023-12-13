@@ -64,8 +64,8 @@ library(clue)
 library(jsonlite)
 
 # # for testing - start
-# label_file <- "results/libd_dlpfc/Br8100_151675/BayesSpace/domains.tsv"
-# groundtruth_file <- "data/libd_dlpfc/Br8100_151675/labels.tsv"
+# label_file <- "results/libd_dlpfc/Br5595_151670/SpaGCN/domains.tsv"
+# groundtruth_file <- "data/libd_dlpfc/Br5595_151670/labels.tsv"
 # outfile <- "./domain-specific-f1.json"
 # # for testing - stop
 
@@ -78,7 +78,25 @@ rn <- intersect(rownames(domains), rownames(groundtruth))
 domains <- domains[rn,,drop = FALSE]
 groundtruth <- groundtruth[rn,,drop = FALSE]
 
-(tb <- table(domains$label, groundtruth$label))
+n_gt_labels <- length(unique(groundtruth$label))
+n_clust_labels <- length(unique(domains$label))
+
+
+tb <- table(domains$label, groundtruth$label)
+
+# hungarian solver will fail, pad with 0 columns
+if( n_clust_labels > n_gt_labels ) {
+  n_cols <- n_clust_labels - n_gt_labels
+  for(i in seq_len(n_cols)) {
+    tb <- cbind(tb,0)
+    colnames(tb)[ncol(tb)] <- paste0("dummy",i)
+  }
+}
+
+print(tb)
+
+# for the case that there are more clusters than true labels, need to 
+# add dummy variables
 
 hg <- clue::solve_LSAP(tb, maximum = TRUE)
 sa <- seq_along(hg)
@@ -98,7 +116,8 @@ mapping$recall <- with(mapping, tp/domain_size)
 mapping$precision <- with(mapping, tp/cluster_size)
 mapping$f1 <- with(mapping, 2/(1/recall+1/precision))
 
-# rownames(mapping) <- NULL
+# remove dummy labels
+(mapping <- mapping[!grepl("dummy", mapping$label),])
 
 ## Write output
 outfile <- file(opt$out_file)
