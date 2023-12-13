@@ -46,12 +46,7 @@ coord_file = args.coordinates
 matrix_file = args.matrix
 feature_file = args.features
 observation_file = args.observations
-
-
-if args.n_top_genes is not None:
-    n_top_genes = int(args.n_top_genes)
-    
-    
+        
 if args.config is not None:
     config_file = args.config
 
