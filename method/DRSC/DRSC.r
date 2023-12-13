@@ -1,11 +1,12 @@
 #!/usr/bin/env Rscript
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: Søren Helweg Dam; ported from Omnibenchmark, where Helena Crowell and I implemented the method
+# Author_and_contribution: Søren Helweg Dam; implemented method
 
 suppressPackageStartupMessages({
     library(optparse)
     library(SpatialExperiment)
+    library(Seurat)
     library(DR.SC)
 })
 
@@ -72,8 +73,7 @@ option_list <- list(
   )
 )
 
-# TODO adjust description
-description <- "Method ..."
+description <- "DR.SC: Joint dimension reduction and spatial clustering for single-cell/spatial transcriptomics data"
 
 opt_parser <- OptionParser(
   usage = description,
@@ -110,6 +110,7 @@ if (!is.na(opt$config)) {
 }
 
 technology <- opt$technology
+if(!(technology %in% c("Visium", "ST"))) technology <- "Other_SRT"
 n_clusters <- opt$n_clusters
 
 # You can get SpatialExperiment directly
@@ -126,6 +127,7 @@ get_SpatialExperiment <- function(
 
   coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
   coordinates <- as.matrix(coordinates[rownames(colData), ])
+  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
 
   spe <- SpatialExperiment::SpatialExperiment(
     rowData = rowData, colData = colData, spatialCoords = coordinates
@@ -133,6 +135,7 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(spe, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
   }
 
   # Filter features and samples
@@ -151,23 +154,25 @@ get_SpatialExperiment <- function(
 }
 
 
+
 # Seed
 seed <- opt$seed
 set.seed(seed)
-# TODO if the method requires the seed elsewhere please pass it on
 
 # You can use the data as SpatialExperiment
-spe <- get_SpatialExperiment(feature_file, observation_file, matrix_file, coord_file, dimred_file)
+spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
+                                    coord_file = coord_file,matrix_file = matrix_file)
 
 
 ## Your code goes here
 seurat_obj <- as.Seurat(spe)
-seu_drsc <- DR.SC::DR.SC(seurat_obj, K = k, verbose = T, platform = md$platform)
+seurat_obj <- NormalizeData(seurat_obj, verbose=FALSE)
+seurat_obj <- FindSVGs(seurat_obj, verbose=FALSE)
+seu_drsc <- DR.SC::DR.SC(seurat_obj, K = n_clusters, verbose = T, platform = technology)
 
-# TODO
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
-label_df = data.frame("label" = seu_drsc$spatial.drsc.cluster, row.names=rownames(seurat_obj))
+label_df <- data.frame("label" = seu_drsc$spatial.drsc.cluster, row.names=rownames(seu_drsc))
 # data.frame with row.names (cell-id/barcode) and 1 column (label)
 # embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
 

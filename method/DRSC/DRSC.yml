@@ -1,9 +1,13 @@
+name: drsc_env
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - r-base=4.3.1
+  - r-base=4.3.2
   - r-optparse=1.7.3
-  - bioconductor-SpatialExperiment=1.12.0
-  - r-matrixStats=0.58.0
-  - r-DR.SC
+  - r-biocmanager
+  - bioconductor-spatialexperiment=1.12.0
+  - r-crayon=1.5.2
+  - r-Matrix=1.6.3
+  - r-seurat=4.4.0
+  - r-remotes=2.4.2
