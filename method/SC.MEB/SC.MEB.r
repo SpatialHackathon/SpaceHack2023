@@ -1,11 +1,11 @@
 #!/usr/bin/env Rscript
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: Søren Helweg Dam; ported from Omnibenchmark, where Helena Crowell and I implemented the method
+# Author_and_contribution: Søren Helweg Dam; implemented method
 
 suppressPackageStartupMessages({
     library(optparse)
-    library(SpatialExperiment)
+    library(SingleCellExperiment)
     library(SC.MEB)
 })
 
@@ -72,7 +72,6 @@ option_list <- list(
   )
 )
 
-# TODO adjust description
 description <- "Spatial clustering with hidden Markov random field using empirical Bayes"
 
 opt_parser <- OptionParser(
@@ -95,8 +94,6 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
-  #neighbors <- Matrix::readMM(neighbors_file)#, stringsAsFactors = FALSE, row.names = 1)
-    neighbors <- as(Matrix::t(Matrix::readMM(neighbors_file)), "CsparseMatrix")
 }
 if (!is.na(opt$matrix)) {
   matrix_file <- opt$matrix
@@ -145,18 +142,16 @@ sce <- get_SingleCellExperiment(feature_file, observation_file, matrix_file, dim
 # Seed
 seed <- opt$seed
 set.seed(seed)
-# TODO if the method requires the seed elsewhere please pass it on
 
 ## Your code goes here
-# TODO
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
-nbr <- find_neighbors2(sce, technology)
+# I used their neighbor method because I couldn't get the input neighbors to work. Feel free to give it a go.
+neighbors <- find_neighbors2(sce, technology)
 
-fit <- SC.MEB(as.matrix(dimred), nbr, K_set = n_clusters, num_core = 2)
+fit <- SC.MEB(as.matrix(dimred), neighbors, K_set = n_clusters, num_core = 2)
 label_df <- data.frame("label" = unlist(fit["x", ]), row.names = rownames(dimred))
-#as.data.frame() # data.frame with row.names (cell-id/barcode) and 1 column (label)
-# embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
+
 
 ## Write output
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
