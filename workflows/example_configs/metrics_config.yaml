@@ -3,3 +3,15 @@ ARI:
   methods:
     - BayesSpace
     - spaGCN
+Completeness:
+  methods:
+    - BayesSpace
+    - spaGCN
+V_measure:
+  methods:
+    - BayesSpace
+    - spaGCN
+  configfiles:
+    config_1: "config_1.json"
+    config_2: "config_2.json"
+    config_3: "config_3.json"
