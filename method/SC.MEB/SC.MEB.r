@@ -5,7 +5,6 @@
 
 suppressPackageStartupMessages({
     library(optparse)
-    library(SingleCellExperiment)
     library(SC.MEB)
 })
 
@@ -94,10 +93,9 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
+  neighbors <- as(Matrix::t(Matrix::readMM(neighbors_file)), "CsparseMatrix")
 }
-if (!is.na(opt$matrix)) {
-  matrix_file <- opt$matrix
-}
+
 if (!is.na(opt$dim_red)) {
   dimred_file <- opt$dim_red
   dimred <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
@@ -112,43 +110,12 @@ if (!is.na(opt$config)) {
 technology <- opt$technology
 n_clusters <- opt$n_clusters
 
-# You can get SpatialExperiment directly
-get_SingleCellExperiment <- function(feature_file, observation_file, matrix_file, dimred_file) {
-  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
-  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
-
-  # Filter features and samples
-  if ("selected" %in% colnames(rowData)) {
-    rowData <- rowData[as.logical(rowData$selected), ]
-  }
-  if ("selected" %in% colnames(colData)) {
-    colData <- colData[as.logical(colData$selected), ]
-  }
-
-  dimRed <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
-  dimRed <- as.matrix(dimRed[rownames(colData), ])
-
-  sce <- SingleCellExperiment(
-    rowData = rowData,
-    colData = colData,
-    reducedDims = list("dimRed" = dimRed)
-  )
-  return(sce)
-}
-
-sce <- get_SingleCellExperiment(feature_file, observation_file, matrix_file, dimred_file)
-
 
 # Seed
 seed <- opt$seed
 set.seed(seed)
 
 ## Your code goes here
-# The data.frames with observations may contain a column "selected" which you need to use to
-# subset and also use to subset coordinates, neighbors, (transformed) count matrix
-# I used their neighbor method because I couldn't get the input neighbors to work. Feel free to give it a go.
-neighbors <- find_neighbors2(sce, technology)
-
 fit <- SC.MEB(as.matrix(dimred), neighbors, K_set = n_clusters, num_core = 2)
 label_df <- data.frame("label" = unlist(fit["x", ]), row.names = rownames(dimred))
 
