@@ -69,11 +69,16 @@ The column `selected` is used for subsetting but is optional. `row` and `col` is
 
 head `labels.tsv` (annotations of the ground truth domain cluster annotations)
 ```
-     label
-AAAA Domain1
-ATAC Domain1
-CAAG Domain2
+     label   label_confidence
+AAAA Domain1 True
+ATAC Domain1 True
+CAAG Domain2 False
 ```
+The column `label_confidence` is optional and used to indicate those cells 
+and/or labels that are ground truth, if not all labels are high enough
+confidence to be considered ground truth.
+
+
 `image.tiff`. Images can be added in any format as appropriate (does not have to be tiff). If an image is available, please also add a json with relevant metadata (e.g. scale, but this might evolve during the hackathon)
 
 `experiment.json`. Currently only technology (e.g. Visium, ST, MERSCOPE, MERFISH, Stereo-seq, Slide-seq, Xenium, STARmap, STARmap+, osmFISH, seqFISH) but more fields might be added.

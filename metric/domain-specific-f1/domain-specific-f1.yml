@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.3.1
+  - r-mclust=6.0.0
+  - r-clue=0.3_65
+  - r-optparse=1.7.3
+  - r-jsonlite=1.8.7
