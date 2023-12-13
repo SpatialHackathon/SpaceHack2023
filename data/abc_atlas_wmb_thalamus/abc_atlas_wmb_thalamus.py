@@ -1,7 +1,9 @@
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
 # Author_and_contribution: Thomas Chartrand; co-wrote initial versions of 
 #                                            thalamus subsetting functions
-# Author_and_contribution: Meghan Turner; wrote code in file
+# Author_and_contribution: Meghan Turner; wrote code in file, co-wrote 
+#                                         initial versions of thalamus 
+#                                         subsetting functions
 
 import argparse
 from pathlib import Path
@@ -16,9 +18,10 @@ import scipy
 '''
 This file Contains code for loading ABC Atlas WMB TH dataset for SpaceHack2.0,
 including functions to:
-- Manually curate labels
 - Subset the ABC Whole Mouse Brain (WMB) Atlas to a thalamus (TH) subset
 - Download the ABC Atlas WMB data from the AWS S3 bucket
+- Add confidence flag for CCFv3/ARA annotations
+- Convert dataset to SpaceHack format
 and executable code to write the dataset to disk in the SpaceHack2.0 directory
 structure.
 '''
@@ -30,45 +33,7 @@ BRAIN_LABEL = 'C57BL6J-638850'
 CCF_VERSION = '20230630'
 
 
-'''
-----------------------------------------------------------------------------
-MANUAL LABEL CURATION FUNCTION ---------------------------------------------
-----------------------------------------------------------------------------
-'''
-def curate_parcellation_labels(adata):
-    '''Curates the parcellation labels for the ABC Atlas MERFISH dataset.
-    Limits labels to only those that have good alignment to CCFv3 substructures.
-    '''
-    cell_md_df = adata.obs.copy()
-    # manual mapping of sections and CCFv3 substructures pairs that have 
-    # good alignment
-    good_sections_substructures_dict = {
-            6.4 : ['Eth', 'LGv', 'LP', 'PF', 'PO', 'RT', 'VM', 'VPL', 'VPM', 
-                   'ZI-unassigned'],
-            6.8 : ['LGv', 'LH', 'LP', 'MH', 'PO', 'RT', 'VM','VPL', 'VPM', 
-                   'ZI-unassigned',
-                   'CL', 'CM',  'IMD', 'MD', 'PCN'],
-            8.0 : ['AD','AMd','AMv','AV','IAD','PT','RE','RT','ZI-unassigned']
-        }
 
-    # only keep annotations for good section, substructure pairs
-    def keep_only_good_annotations(row):
-        section = row['z_reconstructed']
-        annotation = row['parcellation_substructure']
-        
-        if section in good_sections_substructures_dict and annotation in good_sections_substructures_dict[section]:
-            return annotation
-        else:
-            return 'NaN'
-    
-    # Apply the function to create the new 'label_curated' column
-    cell_md_df['label_curated'] = 'NaN'
-    curated_labels = cell_md_df.apply(keep_only_good_annotations, axis=1).values
-    cell_md_df['label_curated'] = curated_labels
-    curated_labels_df = cell_md_df[['label_curated']].copy()
-    curated_labels_df.rename(columns={'label_curated':'label'}, inplace=True)
-
-    return curated_labels_df
 
 
 ''' 
@@ -407,7 +372,7 @@ def get_cell_metadata_df(version=CURRENT_VERSION, specimen=BRAIN_LABEL,
     '''
     # Load only the columns we will use (e.g. load only "reconstructed" xyz 
     # coords as they are in the same coordinate system as the CCF image 
-    # volumes; don't load color columns)
+    # volumes; only load some color columns)
     float_columns = [
         'average_correlation_score',
         'x_reconstructed', 'y_reconstructed', 'z_reconstructed', # millimeters
@@ -416,10 +381,11 @@ def get_cell_metadata_df(version=CURRENT_VERSION, specimen=BRAIN_LABEL,
         'brain_section_label', 'cluster_alias', 
         'neurotransmitter', 'class',
         'subclass', 'supertype', 'cluster', 
-        'class_color', 'subclass_color',
+        'class_color', 'subclass_color', 'supertype_color', 'cluster_color',
         'parcellation_index',  
         'parcellation_division',
-        'parcellation_structure', 'parcellation_substructure'
+        'parcellation_structure', 'parcellation_substructure',
+        'parcellation_substructure_color'
         ]
     dtype = dict(cell_label='string', 
                 **{x: 'float' for x in float_columns}, 
@@ -518,10 +484,75 @@ def get_ccf_terms_df(version=CCF_VERSION):
 
 
 '''
+----------------------------------------------------------------------------
+MANUAL LABEL CURATION FUNCTION ---------------------------------------------
+----------------------------------------------------------------------------
+'''
+def add_label_confidence_to_obs(adata):
+    adata = adata.copy()
+    '''Add confidence boolean flag for CCFv3/ARA substructure annotations.
+    Flags only cells that have good enough alignment to their ARA structures
+    such that they can be used to assess method performance.
+    CCFv3 (Common Coordinate Framework); ARA (Allen Reference Atlas)
+
+    '''
+    # cell_md_df = adata.obs.copy()
+    # manual mapping of sections and CCFv3 substructures pairs that have 
+    # good alignment
+    sec_ccf_dict = {
+            6.4 : ['LGv', 'LP', 'PF', 'PO', 'RT', 'VPL', 'VPM', 'ZI-unassigned'],
+            6.8 : ['LGv', 'LH', 'MH', 'PO', 'RT', 'VM','VPL', 'VPM', 
+                   'ZI-unassigned'],
+            8.0 : ['AD','AMd','AMv','AV','IAD','PT','RE','RT']
+        }
+
+    # only keep annotations for good section, substructure pairs
+    def keep_only_good_annotations(row):
+        section = row['z_reconstructed']
+        annotation = row['parcellation_substructure']
+        
+        if section in sec_ccf_dict and annotation in sec_ccf_dict[section]:
+            return True
+        else:
+            return False
+
+     # Apply the function to create the new 'label_curated' column
+    adata.obs['label_confidence'] = False
+    confidence_bool = adata.obs.apply(keep_only_good_annotations, axis=1)
+    adata.obs['label_confidence'] = confidence_bool
+
+    return adata
+
+
+'''
 --------------------------------------------------------------------------------
-SPACEHACK2.0 WRITE FUNCTION ----------------------------------------------------
+SPACEHACK2.0 FORMAT FUNCTIONS --------------------------------------------------
 --------------------------------------------------------------------------------
 '''
+def split_adata_into_components(adata):
+    features_df = adata.var.loc[:,:]
+    observations_df = adata.obs.loc[
+                        :, ['brain_section_label', 'average_correlation_score', 
+                            'class', 'cluster', 'cluster_alias', 'neurotransmitter',
+                            'parcellation_division', 'parcellation_structure',
+                            'parcellation_substructure', 'subclass', 'supertype'].copy()
+                      ]
+    coordinates_df = adata.obs.loc[:, ['x_reconstructed', 
+                                       'y_reconstructed', 
+                                       'z_reconstructed'].copy()
+                                  ]
+    coordinates_df.rename(columns={'x_reconstructed':'x', 
+                                   'y_reconstructed':'y', 
+                                   'z_reconstructed':'z'},
+                          inplace=True)
+    counts = adata.X  # CSR sparse matrix
+    labels_df = adata.obs[['parcellation_substructure', 'label_confidence']].copy()
+    labels_df.rename(columns={'parcellation_substructure':'label'}, 
+                     inplace=True)
+    
+    return coordinates_df, observations_df, features_df, counts, labels_df
+
+
 def write_sample(path, sample, coordinates_df, observations_df, features_df,
                  counts, labels_df=None, img=None):
     '''Write a sample to disk in the SpaceHack2.0 directory structure.
@@ -561,46 +592,36 @@ if __name__=='__main__':
     out_dir = (out_dir / DATASET_LABEL)
     Path.mkdir(out_dir, exist_ok=True)
     
-    # Load ABC Atlas WMB, thalamus subset, dataset -----------------------------
-    adata = load_th_subset_adata(counts_transform='raw') # can also load 'log2' counts
-    features_df = adata.var.loc[:,:]
-    observations_df = adata.obs.loc[
-                        :, ['brain_section_label', 'average_correlation_score', 
-                            'class', 'cluster', 'cluster_alias', 'neurotransmitter',
-                            'parcellation_division', 'parcellation_structure',
-                            'parcellation_substructure', 'subclass', 'supertype']
-                      ]
-    coordinates_df = adata.obs.loc[:, ['x_reconstructed', 
-                                       'y_reconstructed', 
-                                       'z_reconstructed']
-                                  ]
-    coordinates_df.rename(columns={'x_reconstructed':'x', 
-                                   'y_reconstructed':'y', 
-                                   'z_reconstructed':'z'},
-                          inplace=True)
-    counts = adata.X  # CSR sparse matrix
-    labels_df_all = adata.obs.loc[:, ['parcellation_substructure']]
-    labels_df_all.rename(columns={'parcellation_substructure':'label'}, 
-                         inplace=True)
-    labels_df_curated = curate_parcellation_labels(adata)
-    technology = 'MERSCOPE'
-    samples_df = pd.DataFrame(data={'patient':[BRAIN_LABEL, BRAIN_LABEL], 
-                                    'sample':['all_labels', 'curated_labels'], 
-                                    'position':[np.nan, np.nan], 
-                                    'replicate':[np.nan, np.nan],
-                                    'directory':[BRAIN_LABEL+'_all_labels', 
-                                                 BRAIN_LABEL+'_curated_labels'], 
-                                    'n_clusters':[np.nan, np.nan]
+    # Generate dataset ---------------------------------------------------------
+    # load ABC Atlas WMB, thalamus subset, dataset
+    adata_abc = load_th_subset_adata(counts_transform='raw') # can also load 'log2' counts
+
+    # add label confidence for parcellation substructures 
+    adata_abc = add_label_confidence_to_obs(adata_abc)
+
+    # split adata into SpaceHack data structures
+    (coordinates_df, 
+     observations_df, 
+     features_df, 
+     counts, 
+     labels_df) = split_adata_into_components(adata_abc)
+
+    # generate metadata
+    technology = 'MERFISH'
+    samples_df = pd.DataFrame(data={'patient':[BRAIN_LABEL], 
+                                    'sample':[None], 
+                                    'position':[np.nan], 
+                                    'replicate':[np.nan],
+                                    'directory':[BRAIN_LABEL], 
+                                    'n_clusters':[np.nan]
                                    })
     # img = None  # optional
     
-    # Write datasets to file ---------------------------------------------------
-    write_sample(out_dir, BRAIN_LABEL+'_all_labels', coordinates_df, 
-                 observations_df, features_df, counts, labels_df=labels_df_all)
-    write_sample(out_dir, BRAIN_LABEL+'_curated_labels', coordinates_df, 
-                 observations_df, features_df, counts, labels_df=labels_df_curated)
+    # Write dataset to file ----------------------------------------------------
+    write_sample(out_dir, BRAIN_LABEL, coordinates_df, 
+                 observations_df, features_df, counts, labels_df=labels_df)
     
-    # Write metadata files -----------------------------------------------------
+    # write metatdata
     samples_df.to_csv(out_dir / "samples.tsv", sep='\t', index_label='')
     
     with open(out_dir / 'experiment.json', 'w') as f:
@@ -608,9 +629,10 @@ if __name__=='__main__':
                     'species': 'mouse'}
         json.dump(exp_info, f)
 
-    # Write license file -------------------------------------------------------
+    # write license file
     license_text = (
         'ABC Atlas - Mouse Whole Brain by Allen Institute for Brain Science'+'\n'+
+        ' '+'\n'+
         'ABC Atlas - Mouse Whole Brain'+'\n'+ 
         '(https://knowledge.brain-map.org/data/LVDBJAW8BI5YSS1QUBG/collections)'+'\n'+ 
         'MERSCOPE v1 whole brain Data Collection is licensed under a'+'\n'+ 
