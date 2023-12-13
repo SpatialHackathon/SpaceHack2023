@@ -1,3 +1,4 @@
 notes.md
 .snakemake
 shared/__pycache__/
+*_requirements.info
