@@ -34,8 +34,7 @@ def convert_data(out_dir):
         
         out_dir = Path(out_dir)
         project_root = out_dir 
-        # os.makedirs(project_root,exist_ok=True)
-
+        
         # create experiment.json
         experiment_json_dict = {"technology":"Xenium"}
         with open(project_root / 'experiment.json', 'w') as f:
@@ -101,13 +100,13 @@ def main():
     )
         
     # Add arguments for input and output folders
-    parser.add_argument('-o','--output', help="Path to the output folder",required=True)
+    parser.add_argument('-o','--out_dir', help="Output directory to write files to.",required=True)
     
     # Parse the command-line arguments
     args = parser.parse_args()
     print(args)
-    print(args.output)
-    convert_data(args.output)
+    print(args.out_dir)
+    convert_data(args.out_dir)
 
 if __name__ == '__main__':
     main()
