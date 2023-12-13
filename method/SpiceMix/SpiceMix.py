@@ -21,6 +21,14 @@ parser.add_argument(
 parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
 )
+
+parser.add_argument(
+    "-n",
+    "--neighbors",
+    help="Path to neighbor definitions. Square matrix (not necessarily symmetric) where each row contains the neighbors of this observation (as mtx).",
+    required=False,
+)
+
 parser.add_argument("-d", "--out_dir", help="Output directory.", required=True)
 
 parser.add_argument(
@@ -74,7 +82,7 @@ def get_anndata(args):
 
     if issparse(counts_matrix):
         counts_matrix = counts_matrix.tocsr()
-        
+
     observations = pd.read_csv(args.observations, delimiter="\t", index_col=0)
     coordinates = pd.read_csv(args.coordinates, delimiter="\t", index_col=0)
 
@@ -87,10 +95,27 @@ def get_anndata(args):
         sc.pp.log1p(adata)
         sc.pp.highly_variable_genes(adata, n_top_genes=preprocess_parameters["hvgs"])
         
-        adata = PopariDataset(adata[:, adata.var["highly_variable"]], "processed")
+        adata = PopariDataset(adata[:, adata.var["highly_variable"]], "processed") 
+        adata.compute_spatial_neighbors()
         
-    adata = PopariDataset(adata, "raw")
-    adata.compute_spatial_neighbors()
+    else:
+        adjacency_matrix = mmread(args.neighbors)
+        if issparse(adjacency_matrix):
+            adjacency_matrix = adjacency_matrix.tocsr()
+    
+        # Symmetrize matrix
+        transpose_condition = adjacency_matrix.T > adjacency_matrix
+        adjacency_matrix = adjacency_matrix + adjacency_matrix.T.multiply(transpose_condition) - adjacency_matrix.multiply(transpose_condition)
+        
+        num_cells = adjacency_matrix.shape[0]
+        adjacency_list = [[] for _ in range(num_cells)]                                         
+        for x, y in zip(*adjacency_matrix.nonzero()):                              
+            adjacency_list[x].append(y)                                                         
+
+        adata.obsp["adjacency_matrix"] = adjacency_matrix                                                                                         
+        adata.obs["adjacency_list"] = adjacency_list 
+    
+        adata = PopariDataset(adata, "raw")
 
     return adata
 
