@@ -9,13 +9,13 @@ dependencies:
   - scikit-misc=0.1.4
   - python-igraph=0.11.3
   - rpy2=3.5.11
+  - louvain=0.8.1
   - r-base=4.3.2
   - r-mclust=6.0.1
   - pip
   - pip:
     - GraphST=1.1.1
     - pot=0.9.1
-    - louvain=0.8.1
 
 
   
