@@ -8,7 +8,7 @@ import argparse
 
 # TODO adjust description
 parser = argparse.ArgumentParser(
-    description="Method SEDR – Unsupervised spatially embedded deep representation of spatial transcriptomics.")
+    description="SEDR – Unsupervised spatially embedded deep representation of spatial transcriptomics. See https://doi.org/10.1101/2021.06.15.448542 for details")
 
 parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
@@ -102,6 +102,8 @@ def get_anndata(args):
 
 # Import packages for SEDR
 import scanpy as sc
+import numpy as np
+import scipy as sp
 import torch
 import SEDR
 
@@ -140,18 +142,48 @@ adata.var_names_make_unique()
 # if dim-red is not provided, use default PCA dimRed
 if "reduced_dimensions" not in adata.obsm_keys():
     from sklearn.decomposition import PCA 
-    adata_X = PCA(n_components=200, random_state=seed).fit_transform(adata.X)
+    adata_X = PCA(n_components=200, 
+                  random_state=seed).fit_transform(adata.X)
     adata.obsm['reduced_dimensions'] = adata_X
 
 # Constructing neighborhood graphs if neighbors not provided
 if "spatial_connectivities" in adata.obsp_keys():
-    graph_dict = adata.obsp["spatial_connectivities"]
+    # Copy from source code in order for customization
+    adj_m1 = adata.obsp["spatial_connectivities"]
+    adj_m1 = sp.coo_matrix(adj_m1)
+
+    # Store original adjacency matrix (without diagonal entries) for later
+    adj_m1 = adj_m1 - sp.dia_matrix((adj_m1.diagonal()[np.newaxis, :], [0]), shape=adj_m1.shape)
+    adj_m1.eliminate_zeros()
+
+    # Some preprocessing
+    adj_norm_m1 = SEDR.preprocess_graph(adj_m1)
+    adj_m1 = adj_m1 + sp.eye(adj_m1.shape[0])
+
+    adj_m1 = adj_m1.tocoo()
+    shape = adj_m1.shape
+    values = adj_m1.data
+    indices = np.stack([adj_m1.row, adj_m1.col])
+    adj_label_m1 = torch.sparse_coo_tensor(indices, values, shape)
+
+    norm_m1 = adj_m1.shape[0] * adj_m1.shape[0] / float((adj_m1.shape[0] * adj_m1.shape[0] - adj_m1.sum()) * 2)
+
+    graph_dict = {
+        "adj_norm": adj_norm_m1,
+        "adj_label": adj_label_m1.coalesce(),
+        "norm_value": norm_m1
+    }
+    
 else: 
-    graph_dict = SEDR.graph_construction(adata, 12)
+    graph_dict = SEDR.graph_construction(adata, 
+                                         n=12, 
+                                         dmax=50, 
+                                         mode=config['graph_mode'])
+    
 
 # Training SEDR
 # device: using cpu or gpu (if avaliable)
-# using_dec: boolean, 
+# using_dec: boolean, whether to use the unsupervised deep embedded clustering (DEC) method to improve clustering results 
 sedr_net = SEDR.Sedr(adata.obsm['reduced_dimensions'], 
                      graph_dict, 
                      mode='clustering', 
@@ -162,13 +194,35 @@ if config["using_dec"]:
 else:
     sedr_net.train_without_dec(N=1)
 sedr_feat, _, _, _ = sedr_net.process()
+# latent embedding
 adata.obsm['SEDR'] = sedr_feat
 
 # Clustering 
-SEDR.mclust_R(adata, n_clusters, use_rep='SEDR', key_added='SEDR')
-
+match config['cluster_method']:
+    case "mclust":
+        adata = SEDR.mclust_R(adata, 
+                              n_clusters = n_clusters, 
+                              use_rep='SEDR', 
+                              key_added='SEDR', 
+                              random_seed=seed
+                             )
+    case "louvain":
+         adata = SEDR.louvain(adata, 
+                              n_clusters = n_clusters, 
+                              use_rep='SEDR', 
+                              key_added='SEDR', 
+                              random_seed=seed
+                             )
+    case "leiden":
+         adata = SEDR.leiden(adata, 
+                              n_clusters = n_clusters, 
+                              use_rep='SEDR', 
+                              key_added='SEDR', 
+                              random_seed=seed
+                             )
+        
 # Output dataframes
-label_df = adata.obs[["mclust"]]
+label_df = adata.obs[["SEDR"]]
 embedding_df = adata.obsm['SEDR']
 
 ## Write output
