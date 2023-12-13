@@ -8,7 +8,8 @@ dependencies:
   - pytorch=2.1.0
   - scikit-misc=0.1.4
   - python-igraph=0.11.3
-  - r-base=4.3.1
+  - rpy2=3.5.11
+  - r-base=4.3.2
   - r-mclust=6.0.1
   - pip
   - pip:

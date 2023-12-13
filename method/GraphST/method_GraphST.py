@@ -159,20 +159,12 @@ else:
 # Run
 from GraphST.utils import clustering
 
-if config["method"] == "mclust":
-    clustering(adata, 
-               n_clusters=n_clusters, 
-               radius=radius, 
-               method=config["method"], 
-               refinement=config["refine"],
-               random_seed=seed)
-elif config["method"] in ['leiden', 'louvain']:
-    clustering(adata, 
-               n_clusters=n_clusters, 
-               radius=radius, 
-               method=config["method"], 
-               refinement=config["refine"]
-               )
+clustering(adata, 
+           n_clusters=n_clusters, 
+           radius=radius, 
+           method=config["method"], 
+           refinement=config["refine"]
+           )
 
 label_df = adata.obs[["domain"]]
 
