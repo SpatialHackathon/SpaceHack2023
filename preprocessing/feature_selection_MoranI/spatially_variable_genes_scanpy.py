@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-# Author_and_contribution: Qirong Mao; created script
+# Author_and_contribution: Niklas Mueller-Boetticher; created script
+# Author_and_contribution: Qirong Mao; Implemented feature selection with Moran's I
 
 import argparse
 
