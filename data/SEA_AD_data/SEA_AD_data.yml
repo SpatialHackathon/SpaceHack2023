@@ -1,3 +1,4 @@
+name: SEA_AD
 channels:
   - conda-forge
   # - bioconda
