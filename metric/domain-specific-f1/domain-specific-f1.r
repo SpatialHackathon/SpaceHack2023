@@ -117,7 +117,7 @@ mapping$precision <- with(mapping, tp/cluster_size)
 mapping$f1 <- with(mapping, 2/(1/recall+1/precision))
 
 # remove dummy labels
-mapping <- mapping[!grepl("dummy", mapping$label),]
+(mapping <- mapping[!grepl("dummy", mapping$label),])
 
 ## Write output
 outfile <- file(opt$out_file)
