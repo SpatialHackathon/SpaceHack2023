@@ -93,7 +93,7 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
-  neighbors <- as(Matrix::t(Matrix::readMM(neighbors_file)), "CsparseMatrix")
+  neighbors <- as(Matrix::readMM(neighbors_file), "CsparseMatrix")
 }
 
 if (!is.na(opt$dim_red)) {
