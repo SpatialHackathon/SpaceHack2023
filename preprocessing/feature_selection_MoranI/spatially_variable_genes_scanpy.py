@@ -20,8 +20,7 @@ parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
 )
 parser.add_argument(
-     "-n", "--n_top_genes", help="Number of genes to keep (Default:3000).", required=False, type=int
- )
+     "-n", "--n_top_genes", help="Number of genes to keep (Default:3000).", required=False, type=int, default=3000)
 
 parser.add_argument("-d", "--out_dir", help="Output directory.", required=True)
 
@@ -51,8 +50,6 @@ observation_file = args.observations
 
 if args.n_top_genes is not None:
     n_top_genes = int(args.n_top_genes)
-else:
-    n_top_genes= 3000  ### Default: 3000 genes
     
     
 if args.config is not None:
@@ -97,11 +94,6 @@ if n_input_features < n_top_genes:
     raise ValueError('Input data has less features than the number of genes you want to keep, please clarify the numbers of genes you need to keep (--n_top_genes)')
 
 features_df = adata.var.copy()
-
-## Log Normalization
-
-sc.pp.normalize_total(adata)
-sc.pp.log1p(adata)
 
 ## Compute the graph based from Delaunay triangulation
 sq.gr.spatial_neighbors(adata,coord_type="generic",delaunay= True)
