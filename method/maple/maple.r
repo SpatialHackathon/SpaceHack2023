@@ -169,18 +169,6 @@ spe <- get_SpatialExperiment(feature_file = feature_file,observation_file = obse
 # TODO
 seurat_obj <- as.Seurat(spe)
 
-#coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
-#coordinates <- as.matrix(coordinates[rownames(colData(spe)), ])
-#coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
-#rownames(coordinates) <- c("row", "col")
-
-    # get spatial coordinates
-#xy <- c("image_row", "image_col")
-#if (!all(xy %in% names(colData)))
-#  xy <- c("x", "y")
-#xy <- colData[xy]
-#colnames(xy) <- c("row", "col")
-
 # Insert image coordinates
 seurat_obj@images$image =  new(
   Class = 'SlideSeq',
@@ -189,8 +177,7 @@ seurat_obj@images$image =  new(
   coordinates = as.data.frame(colData(spe))
 )
 
-
-# Run spruce
+# Run maple
 maple_results <- fit_maple(
   seurat_obj, 
   K = n_clusters, 
@@ -198,13 +185,14 @@ maple_results <- fit_maple(
   covars = "sample_id" #, n_dim = d 
   )
 
-# save data
-label_df = data.frame("label" = maple_results$z, row.names=rownames(seurat_obj))
-
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
 # label_df = ...  # data.frame with row.names (cell-id/barcode) and 1 column (label)
 # embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
+
+# save data
+label_df <- data.frame("label" = maple_results$z, row.names=colnames(seurat_obj))
+embedding_df <- as.data.frame(maple_results$Y)
 
 ## Write output
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
