@@ -17,6 +17,12 @@ parser.add_argument(
     "-f", "--features", help="Path to features (as tsv).", required=True
 )
 parser.add_argument(
+    "-sc", "--spatial_connectivities", help="Path to spatial connectivities (as mtx).", required=True
+)
+parser.add_argument(
+    "-sd", "--spatial_distance", help="Path to spatial distance (as mtx).", required=True
+)
+parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
 )
 parser.add_argument(
@@ -37,7 +43,7 @@ import pandas as pd
 
 out_dir = Path(args.out_dir)
 
-# Output files
+# Output files 
 feature_selection_file = out_dir / "features_MoranI.tsv"
 # if additional output files are required write it also to out_dir
 
@@ -45,6 +51,8 @@ feature_selection_file = out_dir / "features_MoranI.tsv"
 coord_file = args.coordinates
 matrix_file = args.matrix
 feature_file = args.features
+spatial_connectivities_file = args.spatial_connectivities
+spatial_distance_file = args.spatial_distance
 observation_file = args.observations
         
 if args.config is not None:
@@ -57,9 +65,20 @@ def get_anndata(args):
     import anndata as ad
     import pandas as pd
     import scipy as sp
+    
     X = sp.io.mmread(args.matrix)
     if sp.sparse.issparse(X):
         X = X.tocsr()
+        
+    ## Output files of sq.gr.spatial_neighbors     
+    SC = sp.io.mmread(args.spatial_connectivities)
+    if sp.sparse.issparse(SC):
+        SC = SC.tocsr()
+        
+    SD = sp.io.mmread(args.spatial_distance)
+    if sp.sparse.issparse(SD):
+        SD = SD.tocsr()
+        
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
     coordinates = (
@@ -69,7 +88,7 @@ def get_anndata(args):
     )
 
     adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial": coordinates}
+        X=X, obs=observations, var=features, obsm={"spatial": coordinates},obsp={"spatial_connectivities":SC,"spatial_distances":SD}
     )
 
     return adata
@@ -90,8 +109,6 @@ if n_input_features < n_top_genes:
 
 features_df = adata.var.copy()
 
-## Compute the graph based from Delaunay triangulation
-sq.gr.spatial_neighbors(adata,coord_type="generic",delaunay= True)
 ## Calculate Moran's I score for each gene
 sq.gr.spatial_autocorr(adata, mode="moran", genes=adata.var_names,show_progress_bar=True)
 
