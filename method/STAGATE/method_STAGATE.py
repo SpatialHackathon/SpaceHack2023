@@ -79,7 +79,6 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 import sys
-import torch
 # Use tensorflow or pyG
 import tensorflow.compat.v1 as tf
 tf.compat.v1.disable_eager_execution()
@@ -116,7 +115,7 @@ adata.var_names_make_unique()
 
 # Set seed
 random.seed(seed)
-torch.manual_seed(seed)
+tf.random.get_seed(seed)
 np.random.seed(seed)
 
 import STAGATE as sg
@@ -139,7 +138,6 @@ sc.pp.neighbors(adata, use_rep='STAGATE')
 sc.tl.umap(adata)
 
 if config["method"] == "mclust":
-    import os
     adata = sg.mclust_R(adata, used_obsm='STAGATE', num_cluster=n_clusters, random_seed=seed)
     label_df = adata.obs[["mclust"]]
 elif config["method"] == "louvain":
