@@ -64,9 +64,9 @@ library(clue)
 library(jsonlite)
 
 # # for testing - start
-label_file <- "results/libd_dlpfc/Br5595_151670/SpaGCN/domains.tsv"
-groundtruth_file <- "data/libd_dlpfc/Br5595_151670/labels.tsv"
-outfile <- "./domain-specific-f1.json"
+# label_file <- "results/libd_dlpfc/Br5595_151670/SpaGCN/domains.tsv"
+# groundtruth_file <- "data/libd_dlpfc/Br5595_151670/labels.tsv"
+# outfile <- "./domain-specific-f1.json"
 # # for testing - stop
 
 domains <- read.delim(label_file, sep="\t", row.names = 1)
