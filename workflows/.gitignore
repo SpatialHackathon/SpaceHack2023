@@ -1,2 +1,3 @@
 notes.md
 .snakemake
+__pycache__*
