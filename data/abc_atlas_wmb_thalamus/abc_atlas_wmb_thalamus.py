@@ -102,6 +102,11 @@ def load_th_subset_adata(version=CURRENT_VERSION, specimen=BRAIN_LABEL,
     adata = adata[:, adata.var_names.intersection(gene_symbols)]
     # add cell metadata to obs
     adata.var = adata.var.join(gene_md_df[gene_md_df.columns.difference(adata.var.columns)])
+    # reset index back to gene_idetifier and rename columns as preferred by
+    # SpaceHack community
+    adata.var.rename(columns={'gene_identifier':'gene_id'}, inplace=True)
+    adata.var = adata.var.reset_index().set_index('gene_id')
+    adata.var.rename(columns={'gene_symbol':'gene_name'}, inplace=True)
 
     # filter out non-neuronal cells, plus non-thalamic classes
     adata = filter_adata_by_class(adata, filter_nonneuronal=True,
