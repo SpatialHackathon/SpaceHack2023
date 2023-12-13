@@ -574,6 +574,43 @@ def write_sample(path, sample, coordinates_df, observations_df, features_df,
         pass
 
 
+def generate_sample_df(adata):
+    sections = sorted(adata.obs['z_reconstructed'].unique())
+
+    # set data that's the same across sections/samples
+    patient_ls = [BRAIN_LABEL]*len(sections)
+    position_ls = [np.nan]*len(sections)
+    replicate_ls = [np.nan]*len(sections)
+
+    # generate data that needs to be set per sections/samples
+    sample_ls = []
+    directory_ls = []
+    n_clusters_ls = []
+    for sec in sections:
+        sec_adata = adata[adata.obs['z_reconstructed']==sec]
+        sec_str = str(int(sec))
+        
+        sample_ls.append(sec_str)
+        directory_ls.append(BRAIN_LABEL+'_'+sec_str)
+
+        # number of mapped subclasses should give an accruate starting point
+        # for determining the n_clusters to input into various methods, but
+        # if this fails to work, alternatives to try would be length of 
+        # unique: ['parcellation_substructure', 'supertype']
+        n_cl_sec = len(sec_adata.obs['subclass'].unique())
+        n_clusters_ls.append(n_cl_sec)
+
+    # put it all together in a df
+    sample_df = pd.DataFrame(data={'patient':patient_ls, 
+                                    'sample':sample_ls, 
+                                    'position':position_ls, 
+                                    'replicate':replicate_ls,
+                                    'directory':directory_ls, 
+                                    'n_clusters':n_clusters_ls
+                                   })
+    return sample_df
+
+
 '''
 --------------------------------------------------------------------------------
 EXECUTED CODE ------------------------------------------------------------------
@@ -599,37 +636,50 @@ if __name__=='__main__':
     # add label confidence for parcellation substructures 
     adata_abc = add_label_confidence_to_obs(adata_abc)
 
-    # split adata into SpaceHack data structures
-    (coordinates_df, 
-     observations_df, 
-     features_df, 
-     counts, 
-     labels_df) = split_adata_into_components(adata_abc)
+    # convert xyz coordinates from mm to um
+    factor = 1000
+    adata_abc.obs[['x_reconstructed', 
+                   'y_reconstructed', 
+                   'z_reconstructed']] = adata_abc.obs[['x_reconstructed', 
+                                                        'y_reconstructed', 
+                                                        'z_reconstructed']]*factor
 
-    # generate metadata
-    technology = 'MERFISH'
-    samples_df = pd.DataFrame(data={'patient':[BRAIN_LABEL], 
-                                    'sample':[None], 
-                                    'position':[np.nan], 
-                                    'replicate':[np.nan],
-                                    'directory':[BRAIN_LABEL], 
-                                    'n_clusters':[np.nan]
-                                   })
+    # no H&E images included with this dataset
     # img = None  # optional
-    
-    # Write dataset to file ----------------------------------------------------
-    write_sample(out_dir, BRAIN_LABEL, coordinates_df, 
-                 observations_df, features_df, counts, labels_df=labels_df)
-    
-    # write metatdata
+
+    # Write out each z section as a separate sample -----------------------------
+    sections = sorted(adata_abc.obs['z_reconstructed'].unique())
+    for sec in sections:
+        sec_adata = adata_abc[adata_abc.obs['z_reconstructed']==sec]
+        
+        # split adata into SpaceHack data structures
+        (coordinates_df, 
+         observations_df, 
+         features_df, 
+         counts, 
+         labels_df) = split_adata_into_components(sec_adata)
+        
+        # write section to file
+        sec_str = str(int(sec))
+        write_sample(out_dir, BRAIN_LABEL+'_'+sec_str, coordinates_df, 
+                     observations_df, features_df, counts, labels_df=labels_df)
+
+    # Generate & write experiment metadata ---------------------------------
+    # samples.tsv
+    samples_df = generate_sample_df(adata_abc)
     samples_df.to_csv(out_dir / "samples.tsv", sep='\t', index_label='')
-    
+
+    # experiment.json
+    technology = 'MERFISH'
+    species = 'mouse'
+    is_3D = True
     with open(out_dir / 'experiment.json', 'w') as f:
-        exp_info = {'technology': technology,
-                    'species': 'mouse'}
+        exp_info = {'technology':technology,
+                    'species':species,
+                    'is_3D':is_3D}
         json.dump(exp_info, f)
 
-    # write license file
+    # license file
     license_text = (
         'ABC Atlas - Mouse Whole Brain by Allen Institute for Brain Science'+'\n'+
         ' '+'\n'+
