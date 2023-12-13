@@ -77,7 +77,9 @@ def get_SEA_AD_h5ad():
         s3_client.download_file(S3_BUCKET_NAME, S3_FILE_NAME, 
                                 counts_temp_path)
         adata = ad.read_h5ad(counts_temp_path) #, backed='r')
-    
+        adata.obs["x"] =  adata.obsm["X_selected_cell_spatial_tiled"][:,0]
+        adata.obs["y"] =  adata.obsm["X_selected_cell_spatial_tiled"][:,1]
+
     return adata
 
 def subset_anndata(anndata_obj, obs_filter_key_values, combining_operation):
@@ -136,6 +138,7 @@ if __name__=='__main__':
            'Supertype','Genes detected', 'Number of spots', 'Depth from pia',
            'Normalized depth from pia',
            'Layer annotation']
+    SPATIAL_COLUMNS = ["x", "y"]
     technology = 'MERSCOPE'
 
     donors=[]
@@ -159,12 +162,12 @@ if __name__=='__main__':
                           "Section":[donor_section]},
                           np.logical_and)                     
             adata = donor_section_results["filtered_anndata"]    
-
+    
             features_df = adata.var.loc[:,:]
             observations_df = adata.obs.loc[
                                 :, COLUMNS_TO_SAVE
                               ]
-            coordinates_df = pd.DataFrame(adata.obsm["X_selected_cell_spatial_tiled"], columns = ["x","y"])
+            coordinates_df = adata.obs.loc[:,SPATIAL_COLUMNS]
 
             counts = adata.X  # CSR sparse matrix
             labels_df_all = adata.obs.loc[:, ['Layer annotation']]
