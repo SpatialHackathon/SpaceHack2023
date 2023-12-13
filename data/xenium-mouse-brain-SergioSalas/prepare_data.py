@@ -37,7 +37,7 @@ def convert_data(out_dir):
         # os.makedirs(project_root,exist_ok=True)
 
         # create experiment.json
-        experiment_json_dict = {"technology":"xenium"}
+        experiment_json_dict = {"technology":"Xenium"}
         with open(project_root / 'experiment.json', 'w') as f:
             json.dump(experiment_json_dict, f)
 
