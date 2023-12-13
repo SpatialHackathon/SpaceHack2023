@@ -42,7 +42,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--technology",
-    help="GraphST supports 10X Visium ('10X'), Stereo-seq ('Stereo'), and Slide-seq/Slide-seqV2 ('Slide').",
+    help="The technology of the dataset (Visium, ST, ...).",
     required=True,
 )
 parser.add_argument(
@@ -66,15 +66,28 @@ label_file = out_dir / "domains.tsv"
 embedding_file = out_dir / "embedding.tsv"
 
 n_clusters = args.n_clusters
-technology = str(args.technology)
 seed = args.seed
 
+# Map technology spelling
+def map_technology(input_technology):
+    technology_mapping = {
+        "Visium": "10X",
+        "Stereo-seq": "Stereo",
+        "Slide-seq": "Slide"
+    }
+    return technology_mapping.get(input_technology, None)
+
+technology = map_technology(str(args.technology))
+if technology is None:
+    raise Exception(
+        f"Invalid technology. GraphST only supports 10X Visium, Stereo-seq, and Slide-seq/Slide-seqV2 not {args.technology}. "
+        )
+    
 # TODO use the default settings or place it into the config.
 # start=0.1
 # end=3.0
 # increment=0.01
 
-## Your code goes here
 import json
 
 with open(args.config, "r") as f:
@@ -91,12 +104,6 @@ from GraphST import GraphST
 
 # Run device, by default, the package is implemented on 'cpu'. The author recommend using GPU.
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
-import os
-
-if technology not in ['10X', 'Stereo', 'Slide']:
-    raise Exception(
-        f"The model only supports 10X Visium ('10X'), Stereo-seq ('Stereo'), and Slide-seq/Slide-seqV2 ('Slide')."
-        )
 
 def get_anndata(args):
     import anndata as ad
@@ -126,7 +133,6 @@ def get_anndata(args):
     adata = ad.AnnData(
         X=X, obs=observations, var=features, obsm={"spatial": coordinates}
     )
-
 
     return adata
 
