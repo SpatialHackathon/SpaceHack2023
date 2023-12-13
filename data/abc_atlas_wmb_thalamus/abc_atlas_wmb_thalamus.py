@@ -550,7 +550,7 @@ def split_adata_into_components(adata):
                                    'y_reconstructed':'y', 
                                    'z_reconstructed':'z'},
                           inplace=True)
-    counts = adata.X  # CSR sparse matrix
+    counts = adata.X.astype('int')  # CSR sparse matrix as dtype int64
     labels_df = adata.obs[['parcellation_substructure', 'label_confidence']].copy()
     labels_df.rename(columns={'parcellation_substructure':'label'}, 
                      inplace=True)
