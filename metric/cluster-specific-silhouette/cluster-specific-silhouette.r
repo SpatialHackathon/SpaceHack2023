@@ -61,6 +61,7 @@ if (!is.na(opt$config)) {
 ## Code for calculating metric goes here
 ## --------------------------------------
 library(cluster)
+library(jsonlite)
 
 # # for testing - start
 label_file <- "~/scratch/SpaceHack2/method_results/LIBD_DLPFC/Br5292_151507/SpaGCN/domains.tsv"
