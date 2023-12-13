@@ -65,11 +65,11 @@ if (!is.na(opt$config)) {
 
 library(aricode)
 
-# for testing - start
+# # for testing - start
 # label_file <- "results/libd_dlpfc/Br5595_151670/SpaGCN/domains.tsv"
 # groundtruth_file <- "data/libd_dlpfc/Br5595_151670/labels.tsv"
-# outfile <- "./NMI.txt"
-# for testing - stop
+# outfile <- "NMI.txt"
+# # for testing - stop
 
 domains <- read.delim(label_file, sep="\t", row.names = 1)
 groundtruth <- read.delim(groundtruth_file, sep="\t", row.names = 1)
