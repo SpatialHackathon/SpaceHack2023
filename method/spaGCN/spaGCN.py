@@ -135,19 +135,28 @@ random.seed(seed)
 torch.manual_seed(seed)
 np.random.seed(seed)
 
-if adata.uns["image"] is not None:
+if technology in ["Visium", "ST"]:
+    if adata.uns["image"] is not None:
+        adj = spg.calculate_adj_matrix(
+            adata.obs["col"],
+            adata.obs["row"],
+            adata.obsm["spatial_pixel"][:, 0],
+            adata.obsm["spatial_pixel"][:, 1],
+            image=adata.uns["image"],
+            alpha=config["alpha"],
+            beta=beta,
+            histology=True,
+        )
+    else:
+        adj = spg.calculate_adj_matrix(
+            adata.obs["col"], adata.obs["row"], histology=False
+        )
+else:
     adj = spg.calculate_adj_matrix(
-        adata.obs["col"],
-        adata.obs["row"],
         adata.obsm["spatial_pixel"][:, 0],
         adata.obsm["spatial_pixel"][:, 1],
-        image=adata.uns["image"],
-        alpha=config["alpha"],
-        beta=beta,
-        histology=True,
+        histology=False,
     )
-else:
-    adj = spg.calculate_adj_matrix(adata.obs["col"], adata.obs["row"], histology=False)
 
 
 clf = spg.SpaGCN()
