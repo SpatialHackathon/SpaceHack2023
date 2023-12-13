@@ -85,8 +85,8 @@ metric <- NMI(domains$label,groundtruth$label)
 print(metric)
 
 ## Write output
-outfile <- file(opt$out_file)
+dir.create(dirname(opt$out_file), showWarnings = FALSE, recursive = TRUE)
 
-dir.create(dirname(outfile), showWarnings = FALSE, recursive = TRUE)
+outfile <- file(opt$out_file)
 writeLines(format(metric, digits = 6, scientific = TRUE), outfile)
 close(outfile)
