@@ -64,9 +64,9 @@ library(cluster)
 library(jsonlite)
 
 # # for testing - start
-label_file <- "~/scratch/SpaceHack2/method_results/LIBD_DLPFC/Br5292_151507/SpaGCN/domains.tsv"
-outfile <- "./cluster-specific-silhouette.json"
-embedding_file <- "~/scratch/SpaceHack2/method_results/LIBD_DLPFC/Br5292_151507/log1p/hvg/pca_20/dimensionality_reduction.tsv"
+# label_file <- "~/scratch/SpaceHack2/method_results/LIBD_DLPFC/Br5292_151507/SpaGCN/domains.tsv"
+# outfile <- "./cluster-specific-silhouette.json"
+# embedding_file <- "~/scratch/SpaceHack2/method_results/LIBD_DLPFC/Br5292_151507/log1p/hvg/pca_20/dimensionality_reduction.tsv"
 # groundtruth_file <- "data/libd_dlpfc/Br5595_151670/labels.tsv"
 # # for testing - stop
 
