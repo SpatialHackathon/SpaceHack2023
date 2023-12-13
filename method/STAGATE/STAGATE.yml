@@ -12,6 +12,7 @@ dependencies:
   - python-igraph=0.11.3
   - louvain=0.8.1
   - r-base=4.3.1
+  - r-mclust=6.0.1
   - pip
   - pip:
     - rpy2=3.5.14
