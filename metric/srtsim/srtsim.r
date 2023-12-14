@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: Lucie Pfeiferova; code for simulation matrix based on tissue/domain SRTsim package
+# Author_and_contribution: Lucie Pfeiferova; code for simulation matrix based on 2 methods from SRTsim package, ref data needing
 
 suppressPackageStartupMessages(library(optparse))
 
