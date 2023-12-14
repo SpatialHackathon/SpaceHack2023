@@ -56,7 +56,7 @@ if (!is.na(opt$embedding)) {
 if (!is.na(opt$config)) {
   config_file <- opt$config
 }
-
+outfile <- file(opt$out_file)
 
 ## Your code goes here
 # metric = ... #  output of the metric as float
@@ -101,9 +101,8 @@ pattern_sim <- Giotto::runPatternSimulation(my_giotto_object,pattern_colors = c(
                                             gene_names = my_spatial_genes,
                                             spat_methods_params = list(bin_method = 'rank'),
                                             spat_methods_names = c("binSpect_single" ),
-                                            spat_methods = c('binSpect_single'))
+                                            spat_methods = c('binSpect_single'),save_dir=out_file)
 
 ## Write output
-##outfile <- file(opt$out_file)
-##dir.create(dirname(outfile), showWarnings = FALSE, recursive = TRUE)
+## output is new matrix with generated data, output in out_file
 
