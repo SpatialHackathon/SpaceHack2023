@@ -101,7 +101,7 @@ samples_df <- colData(spe) %>%
 
 ## Metadata files
 row.names(samples_df) <- NULL
-write.table(samples_df, file = file.path(out_dir, "samples.tsv"), sep = "\t", col.names = NA, quote = FALSE)
+write.table(samples_df, file = file.path(out_dir, "samples.tsv"), sep = "\t", col.names = NA, quote = FALSE, na = "")
 
 json <- file(file.path(out_dir, "experiment.json"))
 writeLines(c(paste0('{"technology": "', technology, '"}')), json)
