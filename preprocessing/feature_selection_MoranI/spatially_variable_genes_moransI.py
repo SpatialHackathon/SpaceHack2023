@@ -21,9 +21,6 @@ parser.add_argument(
     "-sc", "--spatial_connectivities", help="Path to spatial connectivities (as mtx).", required=True
 )
 parser.add_argument(
-    "-sd", "--spatial_distance", help="Path to spatial distance (as mtx).", required=True
-)
-parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
 )
 parser.add_argument(
@@ -45,7 +42,7 @@ import pandas as pd
 out_dir = Path(args.out_dir)
 
 # Output files 
-feature_selection_file = out_dir / "features_MoranI.tsv"
+feature_selection_file = out_dir / "features.tsv"
 # if additional output files are required write it also to out_dir
 
 # Use these filepaths and inputs ...
@@ -53,7 +50,6 @@ coord_file = args.coordinates
 matrix_file = args.matrix
 feature_file = args.features
 spatial_connectivities_file = args.spatial_connectivities
-spatial_distance_file = args.spatial_distance
 observation_file = args.observations
         
 if args.config is not None:
@@ -75,11 +71,7 @@ def get_anndata(args):
     SC = sp.io.mmread(args.spatial_connectivities)
     if sp.sparse.issparse(SC):
         SC = SC.tocsr()
-        
-    SD = sp.io.mmread(args.spatial_distance)
-    if sp.sparse.issparse(SD):
-        SD = SD.tocsr()
-        
+           
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
     coordinates = (
@@ -89,7 +81,7 @@ def get_anndata(args):
     )
 
     adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial": coordinates},obsp={"spatial_connectivities":SC,"spatial_distances":SD}
+        X=X, obs=observations, var=features, obsm={"spatial": coordinates},obsp={"spatial_connectivities":SC}
     )
 
     return adata
@@ -114,9 +106,9 @@ features_df = adata.var.copy()
 sq.gr.spatial_autocorr(adata, mode="moran", genes=adata.var_names,show_progress_bar=True)
 
 
-## Selecting top spatially variable genes based on Moran's I score
+## Selecting n top spatially variable genes based on Moran's I score
 SVG = (
-    adata.uns["moranI"]["I"].sort_values(ascending=False).head(n_top_genes).index.tolist()
+    adata.uns["moranI"].nlargest(n_top_genes,"I").index.tolist()
 )
 
 ### Create boolean indication to specify spatially variable genes      
