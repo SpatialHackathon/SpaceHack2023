@@ -24,7 +24,6 @@ parser.add_argument(
     required=False,
 )
 parser.add_argument("-o", "--out_file", help="Output file.", required=True)
-parser.add_argument("--output_json", help="JSON output file for domain-level metrics.", required=False)
 parser.add_argument(
     "--matched_labels",
     help="Flag indicating ground-truth and clustering labels have already been matched.",
@@ -65,20 +64,16 @@ if not args.matched_labels:
 
 metric = jaccard_score(groundtruth, domains, average='weighted')
 
+domain_scores = jaccard_score(groundtruth, domains, average=None)
+domains_df = pd.DataFrame({
+    "cluster": ["all", *sorted(groundtruth.unique())],
+    "jaccard_score": [metric, *domain_scores]
+})
+
 ## Write output
 from pathlib import Path
 
 Path(args.out_file).parent.mkdir(parents=True, exist_ok=True)
 
 with open(args.out_file, "w") as file:
-    file.write(f"{metric:.5e}\n")
-
-if args.output_json is not None:
-    domain_scores = jaccard_score(groundtruth, domains, average=None)
-    domains_df = pd.DataFrame({
-        "cluster": sorted(groundtruth.unique()),
-        "jaccard_score": domain_scores
-    })
-    
-    with open(args.output_json, "w") as file:
-        file.write(domains_df.to_json(orient='records'))
+    file.write(domains_df.to_json(orient='records'))
