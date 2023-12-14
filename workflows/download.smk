@@ -57,3 +57,11 @@ rule STARmap_2018_mouse_cortex:
         GIT_DIR + "/data/STARmap-2018-mouse-cortex/environment.yml"
     shell:
         "python {GIT_DIR}/data/STARmap-2018-mouse-cortex/STARmap-2018-mouse-cortex.py -o {output.dir}"
+
+rule osmfish_Ssp:
+    output:
+        dir=directory(config['results_dir'] + "/osmfish_Ssp")
+    conda:
+        GIT_DIR + "/data/osmfish_Ssp/osmfish_Ssp.yml"
+    shell:
+        "python {GIT_DIR}/data/osmfish_Ssp/osmfish_Ssp.py -o {output.dir}"
