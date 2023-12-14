@@ -1,3 +1,2 @@
-script: "libd_dlpfc/libd_dlpfc.r"
-env: "libd_dlpfc/libd_dlpfc.yml"
-data_dir: "/home/ubuntu/tmp_data/libd_dlpfc"
+dataset: "xenium-mouse-brain-SergioSalas"
+results_dir: "/home/ubuntu/tmp_data"
