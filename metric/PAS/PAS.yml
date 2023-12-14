@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.3.1
+  - r-optparse=1.7.3
+  - r-pdist=1.2.1
