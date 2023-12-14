@@ -163,7 +163,7 @@ rule GraphST:
         GIT_DIR + "/method/GraphST/GraphST.yml"
     shell:
         """
-        python {GIT_DIR}/method/GraphST/GraphST.py \
+        python {GIT_DIR}/method/GraphST/method_GraphST.py \
             -c {input.coordinates} \
             -m {input.matrix} \
             -f {input.features} \
