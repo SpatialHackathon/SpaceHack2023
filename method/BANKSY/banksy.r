@@ -156,7 +156,6 @@ get_SpatialExperiment <- function(
 
 # Seed
 seed <- opt$seed
-set.seed(seed)
 
 # You can use the data as SpatialExperiment
 spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
@@ -170,18 +169,18 @@ npcs <- config$npcs
 resolution <- config$resolution
 method <- config$method
 assay_name <- "logcounts"
+set.seed(seed)
 spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom)
 set.seed(seed)
 spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = npcs)
-spe <- Banksy::clusterBanksy(spe, lambda = lambda, npcs = npcs, resolution = resolution, seed = seed, method = method,
-                            dimred = reducedDimNames(spe))
+spe <- Banksy::clusterBanksy(spe, lambda = lambda, use_pcs = TRUE, npcs = npcs, resolution = resolution, seed = seed, method = method)
 
 
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
 #cnames <- colnames(colData(spe))
 label_df <- data.frame("label" = colData(spe)[, clusterNames(spe)], row.names=colnames(spe))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
-embedding_df <- as.data.frame(reducedDims(spe)[[1]])  # optional, data.frame with row.names (cell-id/barcode) and n columns
+embedding_df <- as.data.frame(t(assay(spe, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 
 ## Write output
