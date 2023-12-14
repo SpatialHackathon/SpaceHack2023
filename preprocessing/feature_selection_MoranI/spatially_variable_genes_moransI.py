@@ -17,8 +17,9 @@ parser.add_argument(
 parser.add_argument(
     "-f", "--features", help="Path to features (as tsv).", required=True
 )
-parser.add_argument(
-    "-sc", "--spatial_connectivities", help="Path to spatial connectivities (as mtx).", required=True
+parser.add_argument( 
+    "-n", "--neighbors", help="Path to neighbor definitions. Square matrix (not necessarily symmetric) where each row contains the neighbors of this observation (as mtx)."
+                    , required=False 
 )
 parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
@@ -49,7 +50,7 @@ feature_selection_file = out_dir / "features.tsv"
 coord_file = args.coordinates
 matrix_file = args.matrix
 feature_file = args.features
-spatial_connectivities_file = args.spatial_connectivities
+spatial_connectivities_file = args.neighbors
 observation_file = args.observations
         
 if args.config is not None:
