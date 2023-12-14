@@ -124,7 +124,7 @@ if __name__=='__main__':
     COLUMNS_TO_SAVE = ['Section', 'Class', 'Subclass',
            'Supertype','Genes detected', 'Number of spots', 'Depth from pia',
            'Normalized depth from pia',
-           'Layer annotation']
+           'Layer annotation',"x","y"]
     SPATIAL_COLUMNS = ["x", "y"]
     technology = 'MERSCOPE'
 
