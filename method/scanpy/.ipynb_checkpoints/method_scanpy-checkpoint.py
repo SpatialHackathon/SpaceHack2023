@@ -127,6 +127,7 @@ def get_anndata(args):
 
 
 adata = get_anndata(args)
+adata.var_names_make_unique()
 
 
 # TODO set the seed, if the method requires the seed elsewhere please pass it on
@@ -148,15 +149,24 @@ with open (args.config, "r") as c:
 # sc.settings.set_figure_params(scanpy=True, dpi=80, dpi_save=500, frameon=True, vector_friendly=True, fontsize=14)
 
 if __name__ == "__main__":
+    # throw warning about not using the num_clusters as a parameter, because scanpy uses leiden or louvain and needs the resolution parameter, which is defined in the config.json. There exists a good function to perform an extensive search for the right resolution parameter to define the desired num_clusters, but we still have licensing issues. For more, see the SpaceHack2.0 GitHub issue #139
+    import warnings
+    
+    warnings.warn("Scanpy uses leiden/louvain for clustering, which relies on the resolution parameter in the config file. The parameter num_clusters will be ignored.", UserWarning)
+    
+    # scanpy starts here
+    sc.pp.normalize_total(adata)
     sc.pp.log1p(adata)
     sc.tl.pca(adata)
     sc.pp.neighbors(adata, n_neighbors = config["n_neighbors"], n_pcs=config["n_pcs"], random_state=seed)
+
+    #two options - leiden or loivain
     if config['clustering'] == "louvain":
         sc.tl.louvain(adata, resolution=config["resolution"], random_state=seed, key_added='louvain')
     elif config['clustering'] == "leiden":
         sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
     else: 
-        print("No clustering method defined, performing leiden")
+        print("No clustering method defined or your method is not available, performing leiden")
         sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
     
     label_df = adata.obs["leiden"]
