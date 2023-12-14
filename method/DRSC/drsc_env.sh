@@ -7,4 +7,4 @@ conda env create -f DRSC.yml
 conda activate drsc_env
 
 # Install the required R packages
-Rscript -e "remotes::install_github('feiyoung/DR.SC', ref = 'faac8fc57c0c36f8bcb9f125cafa7886f2f05413')"
+Rscript -e "remotes::install_version(package = 'DR.SC', version = '3.3', repos = 'https://cran.uni-muenster.de/')"

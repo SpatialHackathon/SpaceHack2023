@@ -5,7 +5,7 @@
 
 suppressPackageStartupMessages({
     library(optparse)
-    library(SpatialExperiment)
+    library(SingleCellExperiment)
     library(Seurat)
     library(DR.SC)
 })
@@ -114,12 +114,11 @@ if(!(technology %in% c("Visium", "ST"))) technology <- "Other_SRT"
 n_clusters <- opt$n_clusters
 
 # You can get SpatialExperiment directly
-get_SpatialExperiment <- function(
+get_SingleCellExperiment <- function(
     feature_file,
     observation_file,
     coord_file,
     matrix_file = NA,
-    reducedDim_file = NA,
     assay_name = "counts",
     reducedDim_name = "reducedDim") {
   rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
@@ -129,13 +128,12 @@ get_SpatialExperiment <- function(
   coordinates <- as.matrix(coordinates[rownames(colData), ])
   coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
 
-  spe <- SpatialExperiment::SpatialExperiment(
-    rowData = rowData, colData = colData, spatialCoords = coordinates
-  )
+    spe <- SingleCellExperiment::SingleCellExperiment(
+    rowData = rowData, colData = colData, metadata = list("spatialCoords" = coordinates))
 
   if (!is.na(matrix_file)) {
     assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    assay(spe, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(spe, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
   }
 
   # Filter features and samples
@@ -146,10 +144,6 @@ get_SpatialExperiment <- function(
     spe <- spe[, as.logical(colData(spe)$selected)]
   }
 
-  if (!is.na(reducedDim_file)) {
-    dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
-    reducedDim(spe, reducedDim_name) <- as.matrix(dimRed[colnames(spe), ])
-  }
   return(spe)
 }
 
@@ -159,22 +153,21 @@ get_SpatialExperiment <- function(
 seed <- opt$seed
 set.seed(seed)
 
-# You can use the data as SpatialExperiment
-spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
-                                    coord_file = coord_file,matrix_file = matrix_file)
+# You can use the data as SingleCellExperiment
+sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = observation_file,
+                                    coord_file = coord_file, matrix_file = matrix_file)
 
 
 ## Your code goes here
-seurat_obj <- as.Seurat(spe)
-seurat_obj <- NormalizeData(seurat_obj, verbose=FALSE)
-seurat_obj <- FindSVGs(seurat_obj, verbose=FALSE)
-seu_drsc <- DR.SC::DR.SC(seurat_obj, K = n_clusters, verbose = T, platform = technology)
+seurat_obj <- as.Seurat(sce)
+seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
+seu_drsc <- DR.SC::DR.SC(seurat_obj, K = n_clusters, platform = technology)
 
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
-label_df <- data.frame("label" = seu_drsc$spatial.drsc.cluster, row.names=rownames(seu_drsc))
+label_df <- data.frame("label" = seu_drsc$spatial.drsc.cluster, row.names=colnames(seu_drsc))
 # data.frame with row.names (cell-id/barcode) and 1 column (label)
-# embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
+embedding_df <- as.data.frame(Embeddings(seu_drsc, reduction = "dr-sc"))  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 
 ## Write output
