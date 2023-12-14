@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: Louis B. Kuemmerle; wrapped cellcharter's purity metric
+# Author_and_contribution: Louis B. Kuemmerle; wrote script
 # Author_and_contribution: Marco Varrone; gave input on setting hyperparameters and heuristics that generalise well and helped with debugging
 
 # At the time of development (12th Dec 2023) cellcharter doesn't have release tags. The code used for development can
@@ -10,6 +10,7 @@
 # git clone https://github.com/CSOgroup/cellcharter.git
 # cd cellcharter
 # git checkout -b [new-branch-name] 2b15549968559d9023d1fc92f9798a8c38dffcac
+# pip install -e .
 
 import argparse
 import json
@@ -19,7 +20,7 @@ import anndata as ad
 import squidpy as sq
 import cellcharter as cc
 
-# TODO: template arguments are strict. Need to readjust here.
+# TODO: The arguments don't fully follow the template right now. This needs to be adjusted after final input args decisions + tests.
 parser = argparse.ArgumentParser(description="Calculate cellcharter's purity metric that measures if cells assigned to other connected components are located within the boundaries of given components.")
 parser.add_argument("--coordinates", help="Path to coordinates (as tsv).", required=True)
 parser.add_argument("-l", "--labels", help="Labels from domain clustering.", required=True)
@@ -31,6 +32,7 @@ parser.add_argument(
 )
 parser.add_argument("-o", "--out_file", help="Output file.", required=True)
 parser.add_argument("--fig_path", help="File path for plot to check if components look reasonable.", required=False, default=False) #TODO: Delete
+parser.add_argument("--connectivity", help="Config how to calculate connectivity.", required=False, default="neighs")
 
 SUPPORTED_TECHNOLOGIES = ["CODEX", "CosMx", "MERFISH", "IMC", "Visium", "RNA + ATAC"]
 # for each technology we need to specify how to compute the graph connectivity and how to restrict connected components
@@ -142,6 +144,7 @@ def get_alpha_start(adata, factor = 0.05):
 # generalisation.
 
 def get_n_colors(n):
+    """Get a list of n different colors"""
     from random import shuffle
     
     # Generate a slightly larger list of colors to account for the removal of black and white
@@ -161,7 +164,7 @@ def get_n_colors(n):
 import matplotlib.pyplot as plt
 
 def plot_components(adata, save=False):
-    """ Plot components and their boundaries.
+    """ Plot connected components and their boundaries colored by spatial domains.
     
     """    
     n = len(adata.obs["spatial_cluster"].dropna().unique())
@@ -175,11 +178,16 @@ def plot_components(adata, save=False):
     df['color'] = 'lightgray'
     df.loc[~df['spatial_cluster'].isnull(),'color'] = df.loc[~df['spatial_cluster'].isnull(),'spatial_cluster'].map(label_to_color)
     
-    fig = plt.figure(figsize=(10,10))
+    fig, axs = plt.subplots(1,2,figsize=(20,10))
+    plt.sca(axs[0])
     for i, polygon1 in adata.uns[f"shape_component"]["boundary"].items():
         plt.plot(*polygon1.exterior.xy, color=label_to_color[component_to_spatial_cluster[i]])
-        
     plt.scatter(adata.obsm["spatial"][:,0],adata.obsm["spatial"][:,1],c=adata.obs['color'], s=1)
+
+    plt.sca(axs[1])
+    for i, polygon1 in adata.uns[f"shape_component"]["boundary"].items():
+        plt.plot(*polygon1.exterior.xy, color=label_to_color[component_to_spatial_cluster[i]])
+    plt.title(f"n components = {len(adata.uns[f'shape_component']['boundary'])}")
 
     if save:
         fig.savefig(save)
@@ -195,12 +203,13 @@ def script():
     coord_file = args.coordinates
     label_file = args.labels
     fig_path = args.fig_path #TODO: Delete?
+    connectivity = args.connectivity #TODO: Delete
     
     if args.config is not None:
         config_file = args.config
         with open(config_file) as f:
             config = json.load(f)
-        sample_file = config["sample_file"] if "sample_file" in config else None
+        sample_file = config["sample_file"] if "sample_file" in config else None #TODO: Is this the best place to define the path?
         technology = config["technology"] if "technology" in config else None
         if technology not in SUPPORTED_TECHNOLOGIES:
             raise ValueError(f"Technology {technology} not supported. Supported technologies are {SUPPORTED_TECHNOLOGIES}.")
@@ -230,18 +239,21 @@ def script():
     of all distances between connected nodes.
     """
     if technology in ["CODEX", "CosMx", "MERFISH", "IMC"]:
+        
+        #TODO: this should be reduced to one version (i.e. removing the `connectivity` param), needs to be tested on multiple datasets
+        #NOTE: One difference to the initial cellcharter implementation: we only consider cells that are assigned to a spatial domain
         adata_domains = adata[adata.obs["spatial_cluster"].notna()].copy()
-        
-        # Initial version from cellcharter
-        #sq.gr.spatial_neighbors(adata, delaunay=True, coord_type='generic')
-        #cc.gr.remove_long_links(adata, distance_percentile = 99.0)
-        
-        # Alternative cellcharter like version that should be more robust than percentiles
-        #sq.gr.spatial_neighbors(adata_domains, delaunay=True, coord_type='generic')
-        #remove_long_links(adata_domains, distance_percentile=None, mean_distance_factor=2.0)
-        
-        # Simple n neighbors version (danger: long range connections are not removed)
-        sq.gr.spatial_neighbors(adata_domains, delaunay=False, n_neighs=20, coord_type='generic')
+        if connectivity == "delaunay_perc":
+            # Initial version from cellcharter
+            sq.gr.spatial_neighbors(adata_domains, delaunay=True, coord_type='generic')
+            cc.gr.remove_long_links(adata_domains, distance_percentile = 99.0)
+        elif connectivity == "delaunay_dist":
+            # Alternative cellcharter like version that should be more robust than percentiles
+            sq.gr.spatial_neighbors(adata_domains, delaunay=True, coord_type='generic')
+            remove_long_links(adata_domains, distance_percentile=None, mean_distance_factor=2.0)
+        elif connectivity == "neighs":
+            # Simple n neighbors version (danger: long range connections are not removed)
+            sq.gr.spatial_neighbors(adata_domains, delaunay=False, n_neighs=20, coord_type='generic')
 
     elif technology in ["Visium"]:
         sq.gr.spatial_neighbors(adata, n_neighs=6, coord_type="grid")
@@ -262,6 +274,17 @@ def script():
         raise NotImplementedError(f"Min Nr of cells for connected component identification for the given technology {technology} is not implemented.")
         
     # Compute boundaries of domain clusters (saved in adata.uns[f"shape_component"]["boundary"]}
+    """
+    From cellcharter paper:
+    Shape characterization
+    To determine the boundaries of a cluster component, we developed a new technique based on alpha shapes86. For each 
+    component, we computed the alpha shape with a starting value of alpha that depends on the resolution of the data. 
+    If the alpha value was too small, the alpha shape of the component would yield multiple separated polygons. In such 
+    cases, we doubled the alpha value and recomputed the alpha shape. This procedure is iterated until an alpha shape 
+    composed of a single polygon is obtained. 
+
+    In this script we automated the setting of the minimum alpha: `get_alpha_start`
+    """
     a_start = get_alpha_start(adata)    
     cc.tl.boundaries(adata, cluster_key = "component", min_hole_area_ratio = 0.1, alpha_start = a_start, copy = False)
     
