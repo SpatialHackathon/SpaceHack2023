@@ -24,6 +24,8 @@ config_files:
     config_4: "config/config_4.json"
     config_5: "config/config_5.json"
     config_6: "config/config_6.json"
+  BANKSY:
+    config_1: "config/config_1.json"
 
 
 
