@@ -25,4 +25,4 @@ dependencies:
   - leidenalg=0.10.1
   - pip:
       - somoclu==1.7.6
-      - "--editable=git+https://github.com/zcang/SCAN-IT.git#egg=scanit"
+      - "git+https://github.com/zcang/SCAN-IT.git@ebf38949eea9348cd1791f392789a8a8c0ae1e47#egg=scanit"
