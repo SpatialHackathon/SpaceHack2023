@@ -1,2 +1,2 @@
-dataset: "STARmap_2018_mouse_cortex"
+dataset: "sotip_simulation"
 results_dir: "/home/ubuntu/tmp_data"
