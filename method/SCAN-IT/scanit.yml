@@ -24,5 +24,5 @@ dependencies:
   - networkx=2.6.3
   - leidenalg=0.10.1
   - pip:
-      - scanit==0.1
       - somoclu==1.7.6
+      - "--editable=git+https://github.com/zcang/SCAN-IT.git#egg=scanit"
