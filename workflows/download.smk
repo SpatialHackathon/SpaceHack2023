@@ -47,7 +47,7 @@ rule sotip_simulation:
     conda:
         GIT_DIR + "/data/sotip_simulation/sotip.yml"
     shell:
-        "python {GIT_DIR}/data/sotip_simulation/sotip.py -o {output.dir}"
+        "python {GIT_DIR}/data/sotip_simulation/sotip_simulation.py -o {output.dir}"
 
 
 rule STARmap_2018_mouse_cortex:
