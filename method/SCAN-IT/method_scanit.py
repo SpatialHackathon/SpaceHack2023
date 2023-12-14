@@ -112,7 +112,12 @@ def get_anndata(args):
 
 adata = get_anndata(args)
 
+# Load config file
+import json
 
+with open(args.config, "r") as f:
+    config = json.load(f)
+    
 # Set the seed
 import random
 random.seed(seed)
@@ -120,6 +125,7 @@ random.seed(seed)
 import scanit
 import scanpy as sc
 import pandas as pd
+import warnings
 
 # Construct the spatial graph
 scanit.tl.spatial_graph(adata, method='alpha shape', alpha_n_layer=2, knn_n_neighbors=5)
@@ -127,32 +133,21 @@ scanit.tl.spatial_graph(adata, method='alpha shape', alpha_n_layer=2, knn_n_neig
 # Generate low dimentional embedding (saved to X_scanit)
 scanit.tl.spatial_representation(adata, n_h=30, n_epoch=2000, lr=0.001, device='cpu', n_consensus=1, projection='mds', python_seed=seed, torch_seed=seed, numpy_seed=seed)
 
+if config is not None:
+    res = int(config['res'])
+    nn = int(config['n_neighbours'])
+else:
+    res = 0.5
+    nn = 15
+    
 # Construct a NN graph based on the embedding
-sc.pp.neighbors(adata, use_rep='X_scanit', n_neighbors=15)
+sc.pp.neighbors(adata, use_rep='X_scanit', n_neighbors=nn)
 
-# Run clustering and adjust resolution until the n_clusters is reached
-res=0.5
-step=0.1
-old_num = -1  # Set an initial value for old_num
+# Raise a warning that clustering is based on resolution and not n_clusters
+warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
 
-while old_num != n_clusters:
-    step_sign = 1 if (old_num < n_clusters) else -1
-    
-    sc.tl.leiden(adata, resolution=res)
-    new_num = adata.obs['leiden'].nunique()
-    print("Res = ", res, "Num of clusters = ", new_num)
-    
-    if new_num == n_clusters:
-        print("Recommended res = ", str(res))
-        break  # Break the loop if the desired number of clusters is reached
-    
-    if step_sign == 1:
-        res += step
-    else:
-        res -= step
-        step /= 2  # Reduce step size when changing direction
-    
-    old_num = new_num
+# Run clustering
+sc.tl.leiden(adata, resolution=res)
 
 label_df = adata.obs[['leiden']]  # DataFrame with index (cell-id/barcode) and 1 column (label)
 embedding_df = pd.DataFrame(adata.obsm['X_scanit'], index=adata.obs_names)  # DataFrame with index (cell-id/barcode) and n columns
