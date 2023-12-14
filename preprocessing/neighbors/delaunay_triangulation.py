@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created script
+# Author_and_contribution: Qirong Mao; modifying output file format
 
 import argparse
 
@@ -21,7 +22,7 @@ parser.add_argument(
 parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
 )
-parser.add_argument("-d", "--out_file", help="Output file.", required=True)
+parser.add_argument("-d", "--out_dir", help="Output directory.", required=True)
 parser.add_argument(
     "--config",
     help="Optional config file (json) used to pass additional parameters.",
@@ -33,8 +34,10 @@ args = parser.parse_args()
 # Output files
 from pathlib import Path
 
-neighbor_file = Path(args.out_file)
-# if additional output files are required write it also to out_dir
+out_dir = Path(args.out_dir)
+
+spatial_connectivities_file = out_dir / "spatial_connectivities.mtx"
+spatial_distances_file = out_dir / "spatial_distances.mtx"
 
 # Use these filepaths and inputs ...
 coord_file = args.coordinates
@@ -77,11 +80,15 @@ adata = get_anndata(args)
 import squidpy as sq
 
 sq.gr.spatial_neighbors(adata, delaunay=True, coord_type="generic")
-neighbors = adata.obsp["spatial_connectivities"].astype(int)
 
+neighbors = adata.obsp["spatial_connectivities"].astype(int)
+distance = adata.obsp["spatial_distances"].astype(int)
 
 ## Write output
 import scipy as sp
 
-neighbor_file.parent.mkdir(parents=True, exist_ok=True)
-sp.io.mmwrite(neighbor_file, neighbors)
+out_dir.mkdir(parents=True, exist_ok=True)
+
+sp.io.mmwrite(spatial_connectivities_file, neighbors)
+sp.io.mmwrite(spatial_distances_file, distance)
+             
