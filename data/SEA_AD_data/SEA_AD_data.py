@@ -18,18 +18,6 @@ from botocore.client import Config
 
 
 
-if __name__=='__main__':
-    # parse output directory from user
-    parser = argparse.ArgumentParser(
-        description="Load data for SEA-AD middle temporal gyrus dataset from AWS S3 bucket and write to file."
-    )
-    parser.add_argument(
-        "-o", "--out_dir", help="Output directory to write files to.", required=True
-    )
-    args = parser.parse_args()
-    out_dir = Path(args.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
 # download URL: https://sea-ad-spatial-transcriptomics.s3.amazonaws.com/middle-temporal-gyrus/all_donors-h5ad/MTG_Version1.h5ad
 
 def write_sample(path, sample, coordinates_df, observations_df, features_df,
@@ -104,20 +92,19 @@ def subset_anndata(anndata_obj, obs_filter_key_values, combining_operation):
 
 
 
+
+
 if __name__=='__main__':
-    
-    # Parse output directory from user -----------------------------------------
+    # parse output directory from user
     parser = argparse.ArgumentParser(
-        description="Load data from SEA-AD MTG dataset"
+        description="Load data for SEA-AD middle temporal gyrus dataset from AWS S3 bucket and write to file."
     )
     parser.add_argument(
         "-o", "--out_dir", help="Output directory to write files to.", required=True
     )
     args = parser.parse_args()
-    out_dir = Path(args.out_dir)#+DATASET_LABEL)
-    out_dir.mkdir(exist_ok=True)
-        
-    
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     
     
     ANNOTATED_LAYERS = ['L2/3', 'L5', 'L4', 'L6', 'L1']     
