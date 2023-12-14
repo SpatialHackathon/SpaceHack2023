@@ -59,7 +59,6 @@ with open(config_file) as f:
    parameters = json.load(f)
 
 radius = parameters["radius"]
-f.close()
 
 
 # ... or AnnData if you want

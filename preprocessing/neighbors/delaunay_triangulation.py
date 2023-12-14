@@ -54,7 +54,7 @@ with open(config_file) as f:
    parameters = json.load(f)
 
 delaunay = parameters["delaunay"]
-f.close()
+
 
 # ... or AnnData if you want
 def get_anndata(args):

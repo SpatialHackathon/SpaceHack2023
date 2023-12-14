@@ -61,7 +61,6 @@ with open(config_file) as f:
    parameters = json.load(f)
 
 n_rings = parameters["n_rings"]
-f.close()
 
 
 # ... or AnnData if you want

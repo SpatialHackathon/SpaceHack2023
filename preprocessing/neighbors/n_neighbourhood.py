@@ -60,7 +60,6 @@ with open(config) as f:
    parameters = json.load(f)
 
 n_neighs = data["n_neighs"]
-f.close()
 
 # ... or AnnData if you want
 def get_anndata(args):
