@@ -169,11 +169,6 @@ k_geom <- config$k_geom
 npcs <- config$npcs
 resolution <- config$resolution
 method <- config$method
-#lambda <- 0.8
-#k_geom <- 30
-#npcs <- 50
-#resolution <- 0.8
-#method <- "leiden"
 assay_name <- "counts"
 spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom)
 set.seed(seed)

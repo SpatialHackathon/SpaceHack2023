@@ -8,5 +8,5 @@ dependencies:
   - r-remotes=2.4.2
   - r-jsonlite=1.8.8
   - r-biocmanager
-  #- bioconductor-spatialexperiment=1.12.0
+  - bioconductor-spatialexperiment=1.12.0
   - leidenAlg=0.10.1
