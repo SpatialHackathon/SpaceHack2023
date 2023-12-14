@@ -65,3 +65,11 @@ rule osmfish_Ssp:
         GIT_DIR + "/data/osmfish_Ssp/osmfish_Ssp.yml"
     shell:
         "python {GIT_DIR}/data/osmfish_Ssp/osmfish_Ssp.py -o {output.dir}"
+
+rule spatialDLPFC:
+    output:
+        dir=directory(config['results_dir'] + "/spatialDLPFC")
+    conda:
+        GIT_DIR + "/data/spatialDLPFC/spatialDLPFC.yml"
+    shell:
+        "Rscript {GIT_DIR}/data/spatialDLPFC/spatialDLPFC.r -o {output.dir}"
