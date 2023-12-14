@@ -75,7 +75,7 @@ write_SpatialExperiment_to_folder <- function(spe, path, obs_col, assay_name = "
 
 spe <- fetch_data("spatialDLPFC_Visium")
 
-keep_cols <- c("sample_id", "subject", "position", "sex", "diagnosis", "age", "row", "col")
+keep_cols <- c("sample_id", "subject", "position", "sex", "age", "row", "col")
 colData(spe) <- colData(spe)[, keep_cols]
 
 keep_rows <- c("gene_name", "gene_version", "source", "gene_type")
@@ -92,9 +92,11 @@ for (sample in unique(colData(spe)$sample_id)) {
 
 samples_df <- colData(spe) %>%
   as.data.frame() %>%
-  dplyr::select(patient = subject, sample = sample_id, position, sex, diagnosis, age) %>%
+  dplyr::mutate(replicate = NA) %>%
+  dplyr::select(patient = subject, sample = sample_id, position, replicate, sex, age) %>%
   dplyr::distinct() %>%
-  dplyr::mutate(directory = sample)
+  dplyr::mutate(directory = sample) %>%
+  `row.names<-`(NULL)
 
 
 ## Metadata files
