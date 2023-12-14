@@ -171,7 +171,6 @@ method <- config$method
 assay_name <- "logcounts"
 set.seed(seed)
 spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom)
-set.seed(seed)
 spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = npcs)
 spe <- Banksy::clusterBanksy(spe, lambda = lambda, use_pcs = TRUE, npcs = npcs, resolution = resolution, seed = seed, method = method)
 
