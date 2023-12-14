@@ -136,9 +136,16 @@ device = 1 if use_cuda else 0
 # Filter genes expressed in < 3 cells
 sc.pp.filter_genes(adata, min_cells=3)
 
-# Create a SpaceFlow object and preprocess it
+# Create a SpaceFlow object 
 sf = SpaceFlow.SpaceFlow(adata=adata)
-sf.preprocessing_data(n_top_genes=3000)
+
+# Construct a geometry-aware spatial proximity graph
+spatial_locs = adata.obsm['spatial']
+spatial_graph = sf.graph_alpha(spatial_locs, n_neighbors=10)
+
+# Save all to the object
+sf.adata_preprocessed = adata
+sf.spatial_graph = spatial_graph
 
 # Train the network
 sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, edge_subset_sz=1000000, embedding_save_filepath=out_dir)
