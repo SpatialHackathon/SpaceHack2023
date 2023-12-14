@@ -124,17 +124,7 @@ if config["model"] == 'Radius':
     sg.Cal_Spatial_Net(adata, rad_cutoff=config["rad_cutoff"], model=config["model"])
 elif config["model"] == 'KNN':
     sg.Cal_Spatial_Net(adata, k_cutoff=config["k_cutoff"], model=config["model"])
-
-# To skip the neighbor computation step in GraphST
-if args.neighbors is not None:
-    adata.obsm["graph_neigh"] = sp.io.mmread(neighbors_file).T.tocsr()
-    interaction = adata.obsm["graph_neigh"].toarray()
-    # transfer adj to symmetrical adj
-    adj = interaction
-    adj = adj + adj.T
-    adj = np.where(adj>1, 1, adj)
-    adata.obsm['adj'] = adj
-
+  
 sg.Stats_Spatial_Net(adata)
 
 # Run
