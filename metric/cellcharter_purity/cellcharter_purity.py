@@ -30,9 +30,13 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument("-o", "--out_file", help="Output file.", required=True)
+parser.add_argument("--fig_path", help="File path for plot to check if components look reasonable.", required=False, default=False) #TODO: Delete
 
 SUPPORTED_TECHNOLOGIES = ["CODEX", "CosMx", "MERFISH", "IMC", "Visium", "RNA + ATAC"]
 # for each technology we need to specify how to compute the graph connectivity and how to restrict connected components
+
+
+###### helper functions ######
 
 from anndata import AnnData
 from scipy.sparse import csr_matrix
@@ -131,6 +135,58 @@ def get_alpha_start(adata, factor = 0.05):
         
     return np.min(distances) * factor
 
+
+###### functions for debug plots ######
+# It's important that reasonable connected components are identified. This needs to be checked on different 
+# technologies, tissues, and spatial domains. Potentially the adjacency graph parameters need to be adjusted for better
+# generalisation.
+
+def get_n_colors(n):
+    from random import shuffle
+    
+    # Generate a slightly larger list of colors to account for the removal of black and white
+    cmap = plt.cm.get_cmap('nipy_spectral', n + 2)  # Adjusting for potential removal
+
+    # Generate colors and convert to hex
+    colors = cmap(np.linspace(0, 1, n + 2))
+    hex_colors = ['#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)) for r, g, b, _ in colors]
+
+    # Remove black and white from the list
+    hex_colors = [color for color in hex_colors if color not in ['#000000', '#ffffff']]
+
+    # Ensure the list has exactly n colors by taking the first n colors
+    shuffle(hex_colors)
+    return hex_colors[:n]
+
+import matplotlib.pyplot as plt
+
+def plot_components(adata, save=False):
+    """ Plot components and their boundaries.
+    
+    """    
+    n = len(adata.obs["spatial_cluster"].dropna().unique())
+    colors = get_n_colors(n)
+    component_to_spatial_cluster = dict(zip(adata.obs["component"], adata.obs["spatial_cluster"]))
+    
+    # color_code strings 
+    df = adata.obs
+    color_code = df.loc[~df['spatial_cluster'].isnull(),'spatial_cluster'].unique()
+    label_to_color = dict(zip(color_code,colors))
+    df['color'] = 'lightgray'
+    df.loc[~df['spatial_cluster'].isnull(),'color'] = df.loc[~df['spatial_cluster'].isnull(),'spatial_cluster'].map(label_to_color)
+    
+    fig = plt.figure(figsize=(10,10))
+    for i, polygon1 in adata.uns[f"shape_component"]["boundary"].items():
+        plt.plot(*polygon1.exterior.xy, color=label_to_color[component_to_spatial_cluster[i]])
+        
+    plt.scatter(adata.obsm["spatial"][:,0],adata.obsm["spatial"][:,1],c=adata.obs['color'], s=1)
+
+    if save:
+        fig.savefig(save)
+
+
+###### main function ######
+
 def script():
     
     args = parser.parse_args()
@@ -138,6 +194,7 @@ def script():
     # Set paths and variables
     coord_file = args.coordinates
     label_file = args.labels
+    fig_path = args.fig_path #TODO: Delete?
     
     if args.config is not None:
         config_file = args.config
@@ -172,14 +229,20 @@ def script():
     eliminated edges between nodes if the distance between them exceeded the 99th percentile 
     of all distances between connected nodes.
     """
-    
     if technology in ["CODEX", "CosMx", "MERFISH", "IMC"]:
         adata_domains = adata[adata.obs["spatial_cluster"].notna()].copy()
-        #sq.gr.spatial_neighbors(adata_domains, delaunay=True, coord_type='generic')
-        #remove_long_links(adata_domains, distance_percentile=None, mean_distance_factor=2.0)
-        sq.gr.spatial_neighbors(adata_domains, delaunay=False, n_neighs=20, coord_type='generic')
+        
+        # Initial version from cellcharter
         #sq.gr.spatial_neighbors(adata, delaunay=True, coord_type='generic')
         #cc.gr.remove_long_links(adata, distance_percentile = 99.0)
+        
+        # Alternative cellcharter like version that should be more robust than percentiles
+        #sq.gr.spatial_neighbors(adata_domains, delaunay=True, coord_type='generic')
+        #remove_long_links(adata_domains, distance_percentile=None, mean_distance_factor=2.0)
+        
+        # Simple n neighbors version (danger: long range connections are not removed)
+        sq.gr.spatial_neighbors(adata_domains, delaunay=False, n_neighs=20, coord_type='generic')
+
     elif technology in ["Visium"]:
         sq.gr.spatial_neighbors(adata, n_neighs=6, coord_type="grid")
     elif technology in ["RNA + ATAC"]: 
@@ -197,19 +260,23 @@ def script():
         cc.gr.connected_components(adata, cluster_key='spatial_cluster',min_cells = min_cells)
     else:
         raise NotImplementedError(f"Min Nr of cells for connected component identification for the given technology {technology} is not implemented.")
-    
-    adata.write(args.out_file.replace(".tsv",".h5ad")) #TODO: DELETE
         
     # Compute boundaries of domain clusters (saved in adata.uns[f"shape_component"]["boundary"]}
     a_start = get_alpha_start(adata)    
     cc.tl.boundaries(adata, cluster_key = "component", min_hole_area_ratio = 0.1, alpha_start = a_start, copy = False)
-    print("N BOUNDARIES", len(adata.uns[f"shape_component"]["boundary"]))
     
     # Compute purities for each connected component
     purities = cc.tl.purity(adata, cluster_key="component", library_key="sample", exterior=False, copy=True)
     
     # Compute purity metric (mean over purities of all connected components)
     metric: float = np.mean([p for _,p in purities.items()]) 
+        
+    # Write files for debug purposes
+    if fig_path:
+        plot_components(adata, save=fig_path)
+    # If adata is saved for debug purposes writing fails when the polygons are still in adata
+    # del adata.uns[f"shape_component"]
+    # adata.write(args.out_file.replace(".tsv",".h5ad")) #TODO: DELETE
         
     ## Write output
     from pathlib import Path
