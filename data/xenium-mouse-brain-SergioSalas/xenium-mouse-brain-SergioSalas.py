@@ -34,6 +34,8 @@ def convert_data(out_dir):
         
         out_dir = Path(out_dir)
         project_root = out_dir 
+
+        os.makedirs(project_root, exist_ok=True)
         
         # create experiment.json
         experiment_json_dict = {"technology":"Xenium"}
@@ -84,9 +86,6 @@ def convert_data(out_dir):
         
             # Matrix
             scipy.io.mmwrite(f"{sample_output_folder}/counts.mtx",adata.X)
-        
-            # Anndata
-            adata.write_h5ad(f"{sample_output_folder}/anndata.h5ad")
     
             print(f'{sample} ready.')
     
