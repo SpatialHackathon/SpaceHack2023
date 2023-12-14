@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 
 
 def get_sample_dirs(data_dir):
@@ -56,3 +57,17 @@ def generate_metrics_results(data_dir, metrics_name, methods, file_ext, configfi
 #file_ext = "json"
 #generate_metrics_results(data_dir, metrics_name, methods, file_ext,configfiles)
 #generate_metrics_results(data_dir, metrics_name, methods, file_ext, None)
+
+def get_ncluster(file_path, sample, default_value=7):
+    if not os.path.exists(file_path):
+        return default_value
+    try:
+        df = pd.read_csv(file_path, sep='\t', index_col=0)
+        df_filtered = df[df["directory"] == sample]
+        return int(df_filtered["n_clusters"].mean())
+    except (KeyError, pd.errors.EmptyDataError):
+        return default_value
+
+#sample = "Br5595_151669"
+#file_path = "/home/ubuntu/tmp_data/xenium_mouse_brain_SergioSalas/samples.tsv"
+#get_ncluster(file_path, sample)
