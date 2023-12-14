@@ -26,14 +26,6 @@ parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
 )
 
-parser.add_argument(
-    "--coord_type", default=None, choices=['grid', 'generic', None],help="Type of coordinate system.", required=False
-)
-
-parser.add_argument(
-    "--n_neighs", type=int, default=6,help="Number of neighboring tiles (grid data) or neighborhoods (non-grid data)", required=False
-)
-
 parser.add_argument("-d", "--out_dir", help="Output directory.", required=True)
 
 parser.add_argument(
@@ -50,7 +42,6 @@ from pathlib import Path
 out_dir = Path(args.out_dir)
 
 spatial_connectivities_file = out_dir / "spatial_connectivities.mtx"
-spatial_distances_file = out_dir / "spatial_distances.mtx"
 
 # Use these filepaths and inputs ...
 coord_file = args.coordinates
@@ -58,13 +49,18 @@ matrix_file = args.matrix
 feature_file = args.features
 observation_file = args.observations
 
-## Custom parameters
-coord_type = args.coord_type
-n_neighs= args.n_neighs
+## Loading parameters from config file
 
 if args.config is not None:
     config_file = args.config
 
+import json
+
+with open(config) as f:
+   parameters = json.load(f)
+
+n_neighs = data["n_neighs"]
+f.close()
 
 # ... or AnnData if you want
 def get_anndata(args):
@@ -96,10 +92,9 @@ adata = get_anndata(args)
 ## Your code goes here
 import squidpy as sq
 
-sq.gr.spatial_neighbors(adata, coord_type=coord_type, n_neighs=n_neighs)
+sq.gr.spatial_neighbors(adata, coord_type="generic", n_neighs=n_neighs)
 
 neighbors = adata.obsp["spatial_connectivities"].astype(int)
-distance = adata.obsp["spatial_distances"].astype(int)
 
 ## Write output
 import scipy as sp
@@ -107,5 +102,4 @@ import scipy as sp
 out_dir.mkdir(parents=True, exist_ok=True)
 
 sp.io.mmwrite(spatial_connectivities_file, neighbors)
-sp.io.mmwrite(spatial_distances_file, distance)
              
