@@ -12,7 +12,7 @@ from zipfile import ZipFile
 # pip install openpyxl
 
 def download_data(url, destination_folder, boolzip):
-    print(f'Downloading annotated data from {url} and unzip into {temp_dir}...') 
+    print(f'Downloading annotated data from {url} and put it into {destination_folder}...') 
     
     # Create the destination folder if it doesn't exist
     if not os.path.exists(destination_folder):
@@ -38,34 +38,40 @@ def gunzip_file(gzipped_file_path, output_file_path):
         shutil.copyfileobj(f_in, f_out)
 
 get_data(out_dir):
-    with tempfile.TemporaryDirectory() as temp_dir:
+    with tempfile.TemporaryDirectory() as tmpdir:
 
     # download the folder 'temporary_file_host_spacehack'   
     download_data('https://cf.10xgenomics.com/samples/xenium/1.0.1/Xenium_FFPE_Human_Breast_Cancer_Rep1/Xenium_FFPE_Human_Breast_Cancer_Rep1_outs.zip', 
-                  f'{temp_dir}/replicate1', True)
+                  f'{tmpdir}/replicate1', True)
     download_data('https://cf.10xgenomics.com/samples/xenium/1.0.1/Xenium_FFPE_Human_Breast_Cancer_Rep1/Xenium_FFPE_Human_Breast_Cancer_Rep1_he_image.tif', 
-                  f'{temp_dir}/replicate1', False)
+                  f'{tmpdir}/replicate1', False)
     download_data('https://cf.10xgenomics.com/samples/xenium/1.0.1/Xenium_FFPE_Human_Breast_Cancer_Rep2/Xenium_FFPE_Human_Breast_Cancer_Rep2_outs.zip', 
-                  f'{temp_dir}/replicate1', True)
+                  f'{tmpdir}/replicate2', True)
     download_data('https://cf.10xgenomics.com/samples/xenium/1.0.1/Xenium_FFPE_Human_Breast_Cancer_Rep2/Xenium_FFPE_Human_Breast_Cancer_Rep2_he_image.tif', 
-                  f'{temp_dir}/replicate1', False)
+                  f'{tmpdir}/replicate2', False)
     download_data('https://cf.10xgenomics.com/samples/xenium/1.0.1/Xenium_FFPE_Human_Breast_Cancer_Rep2/Xenium_FFPE_Human_Breast_Cancer_Rep2_gene_panel.json', 
-                  f'{temp_dir}', False)
+                  f'{tmpdir}', False)
     download_data('https://cdn.10xgenomics.com/raw/upload/v1695234604/Xenium%20Preview%20Data/Cell_Barcode_Type_Matrices.xlsx', 
-                  f'{temp_dir}', False)
+                  f'{tmpdir}', False)
 
     shutil.move(f'{tmpdir}/Xenium_FFPE_Human_Breast_Cancer_Rep2_gene_panel.json', f'{out_dir}/experiment.json')
 
     for replicate in ['replicate1', 'replicate2']:
         print(f'Extract data for {replicate}...')
         
+        tif = ''
+        if (replicate == 'replicate1'):
+            tif = 'Xenium_FFPE_Human_Breast_Cancer_Rep1_he_image'
+        else:
+            tif = 'Xenium_FFPE_Human_Breast_Cancer_Rep2_he_image'
+
         os.makedirs(f'{out_dir}/{replicate}')
-        shutil.move(f'{tmpdir}/{replicate}/Xenium_FFPE_Human_Breast_Cancer_Rep1_he_image.tif', f'{out_dir}/{replicate_dir}/Xenium_FFPE_Human_Breast_Cancer_Rep1_he_image.tif')
+        shutil.move(f'{tmpdir}/{replicate}/{tif}.tif', f'{out_dir}/{replicate}/{tif}.tif')
         shutil.move(f'{tmpdir}/{replicate}/outs/gene_panel.json', f'{out_dir}/{replicate}/experiment.json')    
         gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/features.tsv.gz', f'{out_dir}/{replicate}/features.tsv')
         gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/barcodes.tsv.gz', f'{out_dir}/{replicate}/observations.tsv')
         gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/matrix.mtx.gz', f'{out_dir}/{replicate}/counts.mtx')
-        gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/cells.csv.gz', f'{out_dir}/{replicate}/coordinates.tsv')
+        gunzip_file(f'{tmpdir}/{replicate}/outs/cells.csv.gz', f'{out_dir}/{replicate}/coordinates.tsv')
         
         # Read the Excel file into a pandas DataFrame
         sheet = ''
@@ -74,11 +80,11 @@ get_data(out_dir):
         else:
             sheet = 'Xenium R2 Fig1-5 (supervised)'
 
-        excel_file = f'{temp_dir}/Cell_Barcode_Type_Matrices.xlsx'
+        excel_file = f'{tmpdir}/Cell_Barcode_Type_Matrices.xlsx'
         
         df_labels = pd.read_excel(excel_file, sheet_name=sheet)  # Change 'Sheet1' to the sheet name you want to export
         df_labels.index = df_labels['Barcode']
-        df_labels = df.drop(columns='Barcode')
+        df_labels = df_labels.drop(columns='Barcode')
         df_labels.to_csv(f'{out_dir}/{replicate}/labels.tsv.csv', sep="\t", index_label="")
 
         print('...done')
