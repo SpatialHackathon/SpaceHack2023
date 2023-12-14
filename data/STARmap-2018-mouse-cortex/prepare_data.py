@@ -32,6 +32,8 @@ def convert_data(out_dir):
         
         out_dir = Path(out_dir)
         project_root = out_dir 
+
+        os.makedirs(project_root, exist_ok=True)
         
         # create experiment.json
         experiment_json_dict = {"technology":"STARmap"}
