@@ -83,9 +83,6 @@ def convert_data(out_dir):
         
             # Matrix
             scipy.io.mmwrite(f"{sample_output_folder}/counts.mtx",adata.X)
-        
-            # Anndata
-            adata.write_h5ad(f"{sample_output_folder}/anndata.h5ad")
     
             print(f'{sample} ready.')
     
