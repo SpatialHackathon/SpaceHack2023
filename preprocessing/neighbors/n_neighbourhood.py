@@ -7,7 +7,7 @@ import argparse
 
 # TODO adjust description
 parser = argparse.ArgumentParser(
-    description="Constructing spatial neighborhood with custom parameters"
+    description="Neighbor definition based on numbers of neibourhood (only for generic coordinates)"
 )
 
 parser.add_argument(
@@ -49,7 +49,7 @@ matrix_file = args.matrix
 feature_file = args.features
 observation_file = args.observations
 
-## Loading parameters from config file
+## Loading n_neighs parameter from config_file
 
 if args.config is not None:
     config_file = args.config
@@ -92,7 +92,7 @@ adata = get_anndata(args)
 ## Your code goes here
 import squidpy as sq
 
-sq.gr.spatial_neighbors(adata, coord_type="generic", n_neighs=n_neighs)
+sq.gr.spatial_neighbors(adata, n_neighs=n_neighs, coord_type="generic")
 
 neighbors = adata.obsp["spatial_connectivities"].astype(int)
 
