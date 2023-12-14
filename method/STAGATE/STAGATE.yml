@@ -11,9 +11,9 @@ dependencies:
   - tqdm=4.66.1
   - python-igraph=0.11.3
   - louvain=0.8.1
+  - rpy2=3.5.11
   - r-base=4.3.2
   - r-mclust=6.0.1
   - pip
   - pip:
-    - rpy2=3.5.14
     - git+https://github.com/QIFEIDKN/STAGATE@48ce7f874c83a9f1f68187be00370181261ab7c5
