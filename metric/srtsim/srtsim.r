@@ -8,35 +8,69 @@ suppressPackageStartupMessages(library(optparse))
 # TODO adjust description
 option_list <- list(
   make_option(
-    c("-l", "--labels"),
+    c("-c", "--coordinates"),
     type = "character", default = NULL,
-    help = "Labels from domain clustering."
+    help = "Path to coordinates (as tsv)."
   ),
   make_option(
-    c("-g", "--ground_truth"),
+    c("-m", "--matrix"),
     type = "character", default = NA,
-    help = "Groundtruth labels."
+    help = "Path to (transformed) counts (as mtx)."
   ),
   make_option(
-    c("-e", "--embedding"),
+    c("-f", "--features"),
+    type = "character", default = NULL,
+    help = "Path to features (as tsv)."
+  ),
+  make_option(
+    c("-o", "--observations"),
+    type = "character", default = NULL,
+    help = "Path to observations (as tsv)."
+  ),
+  make_option(
+    c("-n", "--neighbors"),
     type = "character", default = NA,
-    help = "Embedding of points in latent space. Potential usage for metrics without groundtruth."
+    help = "Path to neighbor definitions. Square matrix (not necessarily symmetric) where each row contains the neighbors of this observation (as mtx)."
   ),
-  # format should be json
   make_option(
-    c("-c", "--config"),
+    c("-d", "--out_dir"),
+    type = "character", default = NULL,
+    help = "Output directory."
+  ),
+  make_option(
+    c("--dim_red"),
+    type = "character", default = NA,
+    help = "Reduced dimensionality representation (e.g. PCA)."
+  ),
+  make_option(
+    c("--image"),
+    type = "character", default = NA,
+    help = "Path to H&E staining."
+  ),
+  make_option(
+    c("--n_clusters"),
+    type = "integer", default = NULL,
+    help = "Number of clusters to return."
+  ),
+  make_option(
+    c("--technology"),
+    type = "character", default = NULL,
+    help = "The technology of the dataset (Visium, ST, imaging-based)."
+  ),
+  make_option(
+    c("--seed"),
+    type = "integer", default = NULL,
+    help = "Seed to use for random operations."
+  ),
+  make_option(
+    c("--config"),
     type = "character", default = NA,
     help = "Optional config file (json) used to pass additional parameters."
-  ),
-  make_option(
-    c("-o", "--out_file"),
-    type = "character", default = NULL,
-    help = "Output file."
   )
 )
 
 # TODO adjust description
-description <- "Generate matrix(ces) from package SRTsim"
+description <- "Generate matrix(ces) from package SRTsim - matrix and coordinates needed"
 
 opt_parser <- OptionParser(
   usage = description,
@@ -47,15 +81,6 @@ opt <- parse_args(opt_parser)
 # Use these filepaths as input
 label_file <- opt$labels
 
-if (!is.na(opt$ground_truth)) {
-  groundtruth_file <- opt$ground_truth
-}
-if (!is.na(opt$embedding)) {
-  embedding_file <- opt$embedding
-}
-if (!is.na(opt$config)) {
-  config_file <- opt$config
-}
 
 
 ## Code for calculating metric goes here
@@ -81,4 +106,4 @@ simSRT2 <- srtsim_count(simSRT2)
 # from template
 dir.create(dirname(outfile), showWarnings = FALSE, recursive = TRUE)
 
-##write matrix
+##write matrix(ces)
