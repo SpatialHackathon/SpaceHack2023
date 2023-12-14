@@ -5,7 +5,7 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Load data for Mouse Brain (Sagittal-Anterior)")
+parser = argparse.ArgumentParser(description="Load data for Mouse Brain (Sagittal-Posterior)")
 
 parser.add_argument(
     "-o", "--out_dir", help="Output directory to write files to.", required=True
@@ -52,14 +52,14 @@ sample_columns = ["patient","sample","position","replicate","n_clusters","direct
 samples_df = pd.DataFrame(columns=sample_columns)
 
 samples_info = [{
-                "sample_id": "V1_Mouse_Brain_Sagittal_Anterior", 
-                "filtered_matrix": "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Mouse_Brain_Sagittal_Anterior/V1_Mouse_Brain_Sagittal_Anterior_filtered_feature_bc_matrix.h5",
-                "spatial": "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Mouse_Brain_Sagittal_Anterior/V1_Mouse_Brain_Sagittal_Anterior_spatial.tar.gz",
+                "sample_id": "V1_Mouse_Brain_Sagittal_Posterior", 
+                "filtered_matrix": "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Mouse_Brain_Sagittal_Posterior/V1_Mouse_Brain_Sagittal_Posterior_filtered_feature_bc_matrix.h5",
+                "spatial": "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Mouse_Brain_Sagittal_Posterior/V1_Mouse_Brain_Sagittal_Posterior_spatial.tar.gz",
                },
                {
-                "sample_id": "V1_Mouse_Brain_Sagittal_Anterior_Section_2", 
-                "filtered_matrix": "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Mouse_Brain_Sagittal_Anterior_Section_2/V1_Mouse_Brain_Sagittal_Anterior_Section_2_filtered_feature_bc_matrix.h5",
-                "spatial": "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Mouse_Brain_Sagittal_Anterior_Section_2/V1_Mouse_Brain_Sagittal_Anterior_Section_2_spatial.tar.gz",
+                "sample_id": "V1_Mouse_Brain_Sagittal_Posterior_Section_2", 
+                "filtered_matrix": "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Mouse_Brain_Sagittal_Posterior_Section_2/V1_Mouse_Brain_Sagittal_Posterior_Section_2_filtered_feature_bc_matrix.h5",
+                "spatial": "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Mouse_Brain_Sagittal_Posterior_Section_2/V1_Mouse_Brain_Sagittal_Posterior_Section_2_spatial.tar.gz",
                }]
 
 def download_link(link, filename, temp_dir):
