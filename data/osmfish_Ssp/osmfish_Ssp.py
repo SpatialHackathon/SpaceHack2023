@@ -41,7 +41,6 @@ def process_adata(adata_path,output_folder,iteration,sample_df):
     complete_path = os.path.join(output_folder,folder_name)
     os.makedirs(complete_path, exist_ok=True)
     adata = anndata.read_loom(adata_path)
-    print(adata)
     # Observations
     obs = adata.obs.copy()
     obs["selected"] = "true"
