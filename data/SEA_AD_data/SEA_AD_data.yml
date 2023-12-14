@@ -1,4 +1,3 @@
-name: SEA_AD
 channels:
   - conda-forge
 dependencies:
