@@ -90,23 +90,13 @@ from PIL import Image
 # ... or AnnData if you want
 def get_anndata(args):
     import anndata as ad
+    import numpy as np
+    import pandas as pd
     import scipy as sp
     from PIL import Image
 
-    X = sp.io.mmread(args.matrix)
-    if sp.sparse.issparse(X):
-        X = X.tocsr()
-
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
-
-    # Filter
-    if "selected" in observations.columns:
-        X = X[observations["selected"].to_numpy().nonzero()[0], :]
-        observations = observations.loc[lambda df: df["selected"]]
-    if "selected" in features.columns:
-        X = X[:, features["selected"].to_numpy().nonzero()[0]]
-        features = features.loc[lambda df: df["selected"]]
 
     coordinates = (
         pd.read_table(args.coordinates, index_col=0)
@@ -114,12 +104,30 @@ def get_anndata(args):
         .to_numpy()
     )
 
-    adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial_pixel": coordinates}
-    )
+    adata = ad.AnnData(obs=observations, var=features, obsm={"spatial": coordinates})
 
-    if args.image is not None:
-        adata.uns["image"] = np.array(Image.open(args.image))
+    if args.matrix is not None:
+        X = sp.io.mmread(args.matrix)
+        if sp.sparse.issparse(X):
+            X = X.tocsr()
+        adata.X = X
+
+    if args.neighbors is not None:
+        adata.obsp["spatial_connectivities"] = sp.io.mmread(args.neighbors).T.tocsr()
+
+    # Filter by selected samples/features
+    if "selected" in adata.obs.columns:
+        adata = adata[observations["selected"].astype(bool), :]
+    if "selected" in adata.var.columns:
+        adata = adata[:, features["selected"].astype(bool)]
+
+    if args.dim_red is not None:
+        adata.obsm["reduced_dimensions"] = (
+            pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
+        )
+
+    if args.img is not None:
+        adata.uns["image"] = np.array(Image.open(args.img))
     else:
         adata.uns["image"] = None
 
@@ -155,10 +163,13 @@ import warnings
 warnings.warn("Scanpy uses leiden/louvain for clustering, which relies on the resolution parameter in the config file. The parameter num_clusters will be ignored.", UserWarning)
 
 # scanpy starts here
-sc.pp.normalize_total(adata)
-sc.pp.log1p(adata)
-sc.tl.pca(adata)
-sc.pp.neighbors(adata, n_neighbors = config["n_neighbors"], n_pcs=config["n_pcs"], random_state=seed)
+if not args.dim_red:
+    sc.pp.normalize_total(adata)
+    sc.pp.log1p(adata)
+    sc.tl.pca(adata)
+    sc.pp.neighbors(adata, n_neighbors=config["n_neighbors"], n_pcs=config["n_pcs"], random_state=seed)
+else:
+    sc.pp.neighbors(adata, n_neighbors=config["n_neighbors"], use_rep="reduced_dimensions")
 
 #two options - leiden or loivain
 if config['clustering'] == "louvain":
