@@ -73,3 +73,13 @@ rule spatialDLPFC:
         GIT_DIR + "/data/spatialDLPFC/spatialDLPFC.yml"
     shell:
         "Rscript {GIT_DIR}/data/spatialDLPFC/spatialDLPFC.r -o {output.dir}"
+
+rule mouse_brain_sagittal_anterior:
+    output:
+        dir=directory(config['results_dir'] + "/mouse_brain_sagittal_anterior")
+    conda:
+        GIT_DIR + "/data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior.yml"
+    shell:
+        "python {GIT_DIR}/data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior.py -o {output.dir}"
+
+
