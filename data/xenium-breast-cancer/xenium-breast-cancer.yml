@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+  - anaconda
+dependencies:
+  - anndata=0.10.3
+  - gdown=4.7.1
+  - pandas=2.1.4
+  - openpyxl=3.0.10
+  - requests=2.31.0
