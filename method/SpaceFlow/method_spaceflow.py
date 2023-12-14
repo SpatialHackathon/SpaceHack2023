@@ -128,6 +128,10 @@ import scanpy as sc
 from SpaceFlow import SpaceFlow
 import pandas as pd
 import warnings
+import torch
+
+use_cuda = torch.cuda.is_available()
+device = 1 if use_cuda else 0
 
 # Filter genes expressed in < 3 cells
 sc.pp.filter_genes(adata, min_cells=3)
@@ -137,7 +141,7 @@ sf = SpaceFlow.SpaceFlow(adata=adata)
 sf.preprocessing_data(n_top_genes=3000)
 
 # Train the network
-sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, max_patience=50, min_stop=100, random_seed=seed, gpu=0, regularization_acceleration=True, edge_subset_sz=1000000, embedding_save_filepath=out_dir)
+sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, edge_subset_sz=1000000, embedding_save_filepath=out_dir)
 
 if config is not None:
     res = int(config['res'])
