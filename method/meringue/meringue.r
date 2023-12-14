@@ -72,7 +72,7 @@ option_list <- list(
   )
 )
 
-description <- "Spatial clustering with hidden Markov random field using empirical Bayes"
+description <- "Spatially informed clustering with igraph"
 
 opt_parser <- OptionParser(
   usage = description,
