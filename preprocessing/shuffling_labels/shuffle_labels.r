@@ -47,9 +47,8 @@ if (!("label" %in% colnames(df))){
 }
 
 # Randomize labels
-df_randomized <- data.frame(label = sample(df$label))
-rownames(df_randomized) <- rownames(df)
+df$label <- sample(df$label)
 
 ## Write output
 outfile <- file(opt$out_file)
-write.table(df_randomized, outfile, sep = "\t", col.names = NA, quote = FALSE)
+write.table(df, outfile, sep = "\t", col.names = NA, quote = FALSE)
