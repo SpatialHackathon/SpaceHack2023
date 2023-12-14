@@ -4,7 +4,8 @@ from shared.functions import get_sample_dirs, get_ncluster
 configfile: "config.yaml"
 
 GIT_DIR = os.getenv("GIT_DIR", "/home/ubuntu/workspace/SpaceHack2023")
-
+TECHNOLOGY = config["technology"]
+SEED = "42"
 
 #####
 
@@ -30,6 +31,9 @@ def create_BayesSpace_input(wildcards):
 def create_scMEB_input(wildcards):
     return create_input("scMEB")
 
+def create_SCAN_IT_input(wildcards):
+    return create_input("SCAN_IT")
+
 # with config
 def create_spaGCN_input(wildcards):
     return create_input_config("spaGCN")
@@ -44,7 +48,7 @@ def create_meringue_input(wildcards):
     return create_input_config("meringue")
 
 rule all:
-    input: create_meringue_input
+    input: create_SCAN_IT_input
 #rule all:
 #    input: create_spaGCN_input, create_BayesSpace_input, create_scMEB_input
 
@@ -60,8 +64,8 @@ rule spaGCN:
         file = config["data_dir"] + "/{sample}/spaGCN/{config_file_name}/domains.tsv",
     params:
         n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
-        technology = "Visium",
-        seed = "42",
+        technology = TECHNOLOGY,
+        seed = SEED,
         configfile = lambda wildcards: config["config_files"]["spaGCN"][wildcards.config_file_name]
     conda:
         GIT_DIR + "/method/spaGCN/spaGCN.yml"
@@ -92,8 +96,8 @@ rule BayesSpace:
         file = config["data_dir"] + "/{sample}/BayesSpace/domains.tsv",
     params:
         n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
-        technology = "Visium",
-        seed = "42"
+        technology = TECHNOLOGY,
+        seed = SEED
     conda:
         GIT_DIR + "/method/BayesSpace/BayesSpace.yml"
     shell:
@@ -133,8 +137,8 @@ rule scMEB:
         domains = config["data_dir"] + "/{sample}/scMEB/domains.tsv",
     params:
         n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
-        technology = "Visium",
-        seed = "42"
+        technology = TECHNOLOGY,
+        seed = SEED
     conda:
         GIT_DIR + "/method/SC.MEB/SC.MEB.yml"
     shell:
@@ -163,8 +167,8 @@ rule GraphST:
         file = config["data_dir"] + "/{sample}/GraphST/{config_file_name}/domains.tsv",
     params:
         n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
-        technology = "Visium",
-        seed = "42",
+        technology = TECHNOLOGY,
+        seed = SEED,
         configfile = lambda wildcards: config["config_files"]["GraphST"][wildcards.config_file_name]
     conda:
         GIT_DIR + "/method/GraphST/GraphST.yml"
@@ -206,8 +210,8 @@ rule BANKSY:
         file = config["data_dir"] + "/{sample}/BANKSY/{config_file_name}/domains.tsv",
     params:
         n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
-        technology = "Visium",
-        seed = "42",
+        technology = TECHNOLOGY,
+        seed = SEED,
         configfile = lambda wildcards: config["config_files"]["BANKSY"][wildcards.config_file_name]
     conda:
         GIT_DIR + "/method/BANKSY/banksy.yml"
@@ -250,14 +254,48 @@ rule meringue:
         file = config["data_dir"] + "/{sample}/meringue/{config_file_name}/domains.tsv",
     params:
         n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
-        technology = "Visium",
-        seed = "42",
+        technology = TECHNOLOGY,
+        seed = SEED,
         configfile = lambda wildcards: config["config_files"]["meringue"][wildcards.config_file_name]
     conda:
         GIT_DIR + "/method/meringue/meringue.yml"
     shell:
         """
         Rscript {GIT_DIR}/method/meringue/meringue.r \
+            -c {input.coordinates} \
+            -m {input.matrix} \
+            -f {input.features} \
+            -o {input.observations} \
+            -n {input.neighbors} \
+            -d {output.dir} \
+            --n_clusters {params.n_clusters} \
+            --dim_red {input.dim_red} \
+            --technology {params.technology} \
+            --seed {params.seed} \
+            --config {GIT_DIR}/method/meringue/{params.configfile}
+        """
+
+rule SCAN_IT:
+    input:
+        coordinates = config["data_dir"] + "/{sample}/coordinates.tsv",
+        matrix = config["data_dir"] + "/{sample}/log1p/counts.mtx",
+        features = config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
+        observations = config["data_dir"] + "/{sample}/observations.tsv",
+        neighbors = config["data_dir"] + "/{sample}/delaunay_triangulation.mtx",
+        dim_red = config["data_dir"] + "/{sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv",
+    output:
+        dir = directory(config["data_dir"] + "/{sample}/SCAN_IT/"),
+        file = config["data_dir"] + "/{sample}/SCAN_IT/domains.tsv",
+    params:
+        n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
+        technology = TECHNOLOGY,
+        seed = SEED,
+        configfile = GIT_DIR + "/method/SCAN-IT/config.json"
+    conda:
+        GIT_DIR + "/method/SCAN-IT/scanit.yml"
+    shell:
+        """
+        python {GIT_DIR}/method/SCAN-IT/method_scanit.py \
             -c {input.coordinates} \
             -m {input.matrix} \
             -f {input.features} \
