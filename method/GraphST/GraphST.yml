@@ -1,10 +1,11 @@
+name: GraphST_env
 channels:
   - conda-forge
 dependencies:
-  - python=3.12.0
+  - python=3.11.6
   - anndata=0.9.2
   - numpy=1.26.2
-  - pandas=2.0.3
+  - pandas=2.1.4
   - pytorch=2.1.0
   - scikit-misc=0.1.4
   - python-igraph=0.11.3
@@ -14,8 +15,8 @@ dependencies:
   - r-mclust=6.0.1
   - pip
   - pip:
-    - GraphST=1.1.1
-    - pot=0.9.1
+    - GraphST==1.1.1
+    - pot==0.9.1
 
 
   
