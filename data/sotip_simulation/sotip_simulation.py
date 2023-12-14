@@ -67,9 +67,6 @@ def process_adata(adata_path,output_folder,iteration,sample_df):
     # Matrix
     scipy.io.mmwrite(f"{complete_path}/counts.mtx",adata.X)
 
-    # Anndata
-    adata.write_h5ad(f"{complete_path}/anndata.h5ad")
-
     # add info for sample.tsv
     # Your sample_data_basis dictionary
     sample_data_basis = {"patient": iteration, "sample": "1", "position": "0", "replicate": "1", "n_clusters": adata.obs.region_id.nunique(), "directory": folder_name}
