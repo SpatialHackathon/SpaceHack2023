@@ -1,0 +1,17 @@
+name: drsc_env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.3.1
+  - r-optparse=1.7.3
+  - r-biocmanager=1.30.22
+  - bioconductor-SingleCellExperiment=1.24.0
+  - bioconductor-S4Vectors=0.40.2
+  - r-crayon=1.5.2
+  - r-Matrix=1.6.3
+  - r-seurat=4.4.0
+  - r-remotes=2.4.2
+  - r-RcppArmadillo=0.12.6
+  - r-igraph=1.5.1
+  - r-curl=5.1.0
