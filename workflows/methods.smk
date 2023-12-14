@@ -5,38 +5,43 @@ configfile: "config.yaml"
 
 GIT_DIR = os.getenv("GIT_DIR", "/home/ubuntu/workspace/SpaceHack2023")
 
-def create_spaGCN_input(wildcards):
+
+
+def create_input_config(dataset):
     input_files = []
     sample_dirs = get_sample_dirs(config["data_dir"])
     for sample_dir in sample_dirs:
-        for config_file_name in config["config_files"]["spaGCN"].keys():
-            input_files.append(sample_dir + "/spaGCN/" + config_file_name + "/domains.tsv")
+        for config_file_name in config["config_files"][dataset].keys():
+            input_files.append(sample_dir + "/" + dataset + "/" + config_file_name + "/domains.tsv")
     return input_files
 
-def create_BayesSpace_input(wildcards):
+def create_input(dataset):
     input_files = []
     sample_dirs = get_sample_dirs(config["data_dir"])
     for sample_dir in sample_dirs:
-        input_files.append(sample_dir + "/BayesSpace/domains.tsv")
+        input_files.append(sample_dir + "/" + dataset + "/domains.tsv")
     return input_files
+
+# without config
+def create_BayesSpace_input(wildcards):
+    return create_input("BayesSpace")
 
 def create_scMEB_input(wildcards):
-    input_files = []
-    sample_dirs = get_sample_dirs(config["data_dir"])
-    for sample_dir in sample_dirs:
-        input_files.append(sample_dir + "/scMEB/domains.tsv")
-    return input_files
+    return create_input("scMEB")
+
+# with config
+def create_spaGCN_input(wildcards):
+    return create_input_config("spaGCN")
 
 def create_GraphST_input(wildcards):
-    input_files = []
-    sample_dirs = get_sample_dirs(config["data_dir"])
-    for sample_dir in sample_dirs:
-        for config_file_name in config["config_files"]["GraphST"].keys():
-            input_files.append(sample_dir + "/GraphST/" + config_file_name + "/domains.tsv")
-    return input_files
+    return create_input_config("GraphST")
+
+def create_BANKSY_input(wildcards):
+    return create_input_config("BANKSY")
+
 
 rule all:
-    input: create_GraphST_input
+    input: create_BANKSY_input
 #rule all:
 #    input: create_spaGCN_input, create_BayesSpace_input, create_scMEB_input
 
@@ -174,4 +179,47 @@ rule GraphST:
             --technology {params.technology} \
             --seed {params.seed} \
             --config {GIT_DIR}/method/spaGCN/{params.configfile}
+        """
+
+
+rule BANKSY_requirements:
+    output:
+        temp("BANKSY_requirements.info")
+    conda:
+        GIT_DIR + "/method/BANKSY/banksy.yml"
+    shell:
+        """
+        conda run Rscript -e \"remotes::install_github('prabhakarlab/Banksy@v0.1.5', dependencies = TRUE)\"
+        touch BANKSY_requirements.info
+        """
+
+rule BANKSY:
+    input:
+        coordinates = config["data_dir"] + "/{sample}/coordinates.tsv",
+        matrix = config["data_dir"] + "/{sample}/log1p/counts.mtx",
+        features = config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
+        observations = config["data_dir"] + "/{sample}/observations.tsv",
+        requirements = "BANKSY_requirements.info"
+    output:
+        dir = directory(config["data_dir"] + "/{sample}/BANKSY/{config_file_name}"),
+        file = config["data_dir"] + "/{sample}/BANKSY/{config_file_name}/domains.tsv",
+    params:
+        n_clusters = "7",
+        technology = "Visium",
+        seed = "42",
+        configfile = lambda wildcards: config["config_files"]["BANKSY"][wildcards.config_file_name]
+    conda:
+        GIT_DIR + "/method/BANKSY/banksy.yml"
+    shell:
+        """
+        Rscript {GIT_DIR}/method/BANKSY/banksy.r \
+            -c {input.coordinates} \
+            -m {input.matrix} \
+            -f {input.features} \
+            -o {input.observations} \
+            -d {output.dir} \
+            --n_clusters {params.n_clusters} \
+            --technology {params.technology} \
+            --seed {params.seed} \
+            --config {GIT_DIR}/method/BANKSY/{params.configfile}
         """
