@@ -1,13 +1,8 @@
-name: scanpy_env
-channels:
-  - conda-forge
-  - defaults
 dependencies:
   - python>=3.10
-  - numpy
-  - pandas
-  - scipy
-  - pillow
-  - anndata
-  - leidenalg
-  - scanpy
+  - numpy=1.26.2 
+  - scipy=1.11.4 
+  - pillow=10.1.0
+  - anndata=0.10.3
+  - leidenalg=0.10.1
+  - scanpy=1.9.6 
