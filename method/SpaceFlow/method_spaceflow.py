@@ -133,9 +133,6 @@ import torch
 use_cuda = torch.cuda.is_available()
 device = 1 if use_cuda else 0
 
-# Filter genes expressed in < 3 cells
-sc.pp.filter_genes(adata, min_cells=3)
-
 # Create a SpaceFlow object 
 sf = SpaceFlow.SpaceFlow(adata=adata)
 
