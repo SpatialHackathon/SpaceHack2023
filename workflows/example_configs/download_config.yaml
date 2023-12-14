@@ -1,2 +1,2 @@
-dataset: "osmfish_Ssp"
+dataset: "mouse_brain_sagittal_anterior"
 results_dir: "/home/ubuntu/tmp_data"
