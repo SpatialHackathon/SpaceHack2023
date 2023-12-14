@@ -82,6 +82,12 @@ if technology is None:
     raise Exception(
         f"Invalid technology. GraphST only supports 10X Visium, Stereo-seq, and Slide-seq/Slide-seqV2 not {args.technology}. "
         )
+
+if args.neighbors is not None:
+    neighbors_file = args.neighbors
+    
+if args.dim_red is not None:
+    dimred_file = args.dim_red
     
 # TODO use the default settings or place it into the config.
 # start=0.1
@@ -115,7 +121,7 @@ def get_anndata(args):
 
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
-
+        
     # Filter
     if "selected" in observations.columns:
         X = X[observations["selected"].to_numpy().nonzero()[0], :]
@@ -133,7 +139,17 @@ def get_anndata(args):
     adata = ad.AnnData(
         X=X, obs=observations, var=features, obsm={"spatial": coordinates}
     )
-
+    
+    # To skip the preprocess step in GraphST
+    adata.var['highly_variable'] = adata.var['selected']
+    
+    # To skip the neighbor computation step in GraphST
+    if args.neighbors is not None:
+        interaction = sp.io.mmread(neighbors_file).T.tocsr()
+        interaction = interaction.toarray()
+        adata.obsm["graph_neigh"] = interaction
+        adata.obsm['adj'] = interaction
+        
     return adata
 
 
