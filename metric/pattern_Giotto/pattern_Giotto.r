@@ -126,17 +126,17 @@ my_giotto_object <- Giotto::normalizeGiotto(my_giotto_object)
 my_giotto_object = Giotto::createSpatialNetwork(gobject = my_giotto_object,minimum_k = 10)
 
 # identify genes with a spatial coherent expression profile
-km_spatialgenes = Giotto::binSpect(my_giotto_object, bin_method = 'rank')
-my_spatial_genes = km_spatialgenes[1:500]$genes
-
-pattern_cell_ids = my_giotto_object@cell_metadata$cell_ID[1:500]
+cell_ids <- as.data.frame(my_giotto_object@spatial_locs)
+pattern_cell_ids <- cell_ids[as.numeric(cell_ids$sdimx) < mean(as.numeric(cell_ids$sdimx))/4*3,]
+random_genes <- sample(km_spatialgenes$genes, 100)
 pattern_sim <- Giotto::runPatternSimulation(my_giotto_object,pattern_colors = c(`in` = "green", out = "red"),reps = 2,
-                                            pattern_cell_ids = my_giotto_object@cell_metadata$cell_ID[1:500],
-                                            gene_names = my_spatial_genes,
+                                            pattern_cell_ids = pattern_cell_ids$cell_ID,
+                                            gene_names = random_genes,
                                             spat_methods_params = list(bin_method = 'rank'),
                                             spat_methods_names = c("binSpect_single" ),
-                                            spat_methods = c('binSpect_single'),save_dir=dirname(out_file))
+                                            spat_methods = c('binSpect_single'),save_raw = T,save_plot = F,
+                                            save_dir=dirname(out_file))
 
 ## Write output
-## output is new matrix with generated data, output in out_file
+## output is new matrix with generated data (raw counts), output in out_file directory
 
