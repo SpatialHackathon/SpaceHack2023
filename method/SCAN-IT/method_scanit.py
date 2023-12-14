@@ -126,12 +126,16 @@ import scanit
 import scanpy as sc
 import pandas as pd
 import warnings
+import torch
+
+use_cuda = torch.cuda.is_available()
+device = 'cuda' if use_cuda else 'cpu'
 
 # Construct the spatial graph
 scanit.tl.spatial_graph(adata, method='alpha shape', alpha_n_layer=2, knn_n_neighbors=5)
 
 # Generate low dimentional embedding (saved to X_scanit)
-scanit.tl.spatial_representation(adata, n_h=30, n_epoch=2000, lr=0.001, device='cpu', n_consensus=1, projection='mds', python_seed=seed, torch_seed=seed, numpy_seed=seed)
+scanit.tl.spatial_representation(adata, n_h=30, n_epoch=2000, lr=0.001, device=device, n_consensus=1, projection='mds', python_seed=seed, torch_seed=seed, numpy_seed=seed)
 
 if config is not None:
     res = int(config['res'])
