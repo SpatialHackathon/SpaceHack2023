@@ -1,2 +1,2 @@
-dataset: "SEA_AD_data"
+dataset: "STARmap_2018_mouse_cortex"
 results_dir: "/home/ubuntu/tmp_data"
