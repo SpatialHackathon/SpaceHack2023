@@ -32,9 +32,6 @@ BRAIN_LABEL = 'C57BL6J-638850'
 CCF_VERSION = '20230630'
 
 
-
-
-
 ''' 
 --------------------------------------------------------------------------------
 THALAMUS SUBSET FUNCTIONS ------------------------------------------------------
@@ -634,7 +631,9 @@ if __name__=='__main__':
     
     # Generate dataset ---------------------------------------------------------
     # load ABC Atlas WMB, thalamus subset, dataset
+    print('Downloading ABC Atlas dataset ...')
     adata_abc = load_th_subset_adata(counts_transform='raw') # can also load 'log2' counts
+    print('... done!')
 
     # add label confidence for parcellation substructures 
     adata_abc = add_label_confidence_to_obs(adata_abc)
@@ -649,7 +648,8 @@ if __name__=='__main__':
 
     # no H&E images included with this dataset
     # img = None  # optional
-
+    
+    print('Formatting and writing to disk for SpaceHack2 benchmarking ...')
     # Write out each z section as a separate sample -----------------------------
     sections = sorted(adata_abc.obs['z_reconstructed'].unique())
     for sec in sections:
@@ -702,3 +702,5 @@ if __name__=='__main__':
         )
     with open(out_dir / 'LICENSE.txt', "w") as f:
         f.write(license_text)
+
+    print('... done!')
