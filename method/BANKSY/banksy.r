@@ -73,7 +73,7 @@ option_list <- list(
   )
 )
 
-description <- "BANKSY cluster cluster cells in a feature space"
+description <- "BANKSY cluster cells in a feature space"
 
 opt_parser <- OptionParser(
   usage = description,
@@ -169,11 +169,12 @@ k_geom <- config$k_geom
 npcs <- config$npcs
 resolution <- config$resolution
 method <- config$method
-assay_name <- "counts"
+assay_name <- "logcounts"
 spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom)
 set.seed(seed)
 spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = npcs)
-spe <- Banksy::clusterBanksy(spe, lambda = lambda, npcs = npcs, resolution = resolution, seed = seed, method = method)
+spe <- Banksy::clusterBanksy(spe, lambda = lambda, npcs = npcs, resolution = resolution, seed = seed, method = method,
+                            dimred = reducedDimNames(spe))
 
 
 # The data.frames with observations may contain a column "selected" which you need to use to
