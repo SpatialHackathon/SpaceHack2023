@@ -37,7 +37,7 @@ def gunzip_file(gzipped_file_path, output_file_path):
     with gzip.open(gzipped_file_path, 'rb') as f_in, open(output_file_path, 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
 
-get_data(out_dir):
+def get_data(out_dir):
     with tempfile.TemporaryDirectory() as tmpdir:
 
     # download the folder 'temporary_file_host_spacehack'   
