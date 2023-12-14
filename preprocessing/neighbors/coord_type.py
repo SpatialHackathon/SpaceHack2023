@@ -45,7 +45,6 @@ from pathlib import Path
 
 out_dir = Path(args.out_dir)
 
-# Output files
 spatial_connectivities_file = out_dir / "spatial_connectivities.mtx"
 spatial_distances_file = out_dir / "spatial_distances.mtx"
 
