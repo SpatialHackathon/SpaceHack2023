@@ -126,8 +126,8 @@ def get_anndata(args):
             pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
         )
 
-    if args.img is not None:
-        adata.uns["image"] = np.array(Image.open(args.img))
+    if args.image is not None:
+        adata.uns["image"] = np.array(Image.open(args.image))
     else:
         adata.uns["image"] = None
 
