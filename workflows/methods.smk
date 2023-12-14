@@ -48,9 +48,14 @@ def create_meringue_input(wildcards):
     return create_input_config("meringue")
 
 rule all:
-    input: create_SCAN_IT_input
-#rule all:
-#    input: create_spaGCN_input, create_BayesSpace_input, create_scMEB_input
+    input: 
+        create_BayesSpace_input,
+        create_scMEB_input,
+        #create_SCAN_IT_input, unklar
+        create_spaGCN_input,
+        #create_GraphST_input, unklar
+        #create_BANKSY_input, unklar
+        create_meringue_input
 
 rule spaGCN:
     input:
