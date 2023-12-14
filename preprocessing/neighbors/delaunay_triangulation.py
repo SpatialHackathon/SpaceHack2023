@@ -44,7 +44,7 @@ matrix_file = args.matrix
 feature_file = args.features
 observation_file = args.observations
 
-## Loading parameters from config_file
+## Loading delaunay parameters from config_file
 if args.config is not None:
     config_file = args.config
 
