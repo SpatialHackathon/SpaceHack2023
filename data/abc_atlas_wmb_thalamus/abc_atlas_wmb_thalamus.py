@@ -27,7 +27,6 @@ structure.
 '''
 
 # versions for downloading ABC Atlas WMB data
-DATASET_LABEL = 'ABC_Atlas_WMB_TH'
 CURRENT_VERSION = '20230830'
 BRAIN_LABEL = 'C57BL6J-638850'
 CCF_VERSION = '20230630'
@@ -550,7 +549,7 @@ def split_adata_into_components(adata):
                                    'y_reconstructed':'y', 
                                    'z_reconstructed':'z'},
                           inplace=True)
-    counts = adata.X.astype('int')  # CSR sparse matrix as dtype int64
+    counts = adata.X.astype('int')  # CSR sparse matrix as dtype-int64
     labels_df = adata.obs[['parcellation_substructure', 'label_confidence']].copy()
     labels_df.rename(columns={'parcellation_substructure':'label'}, 
                      inplace=True)
@@ -630,8 +629,7 @@ if __name__=='__main__':
         "-o", "--out_dir", help="Output directory to write files to.", required=True
     )
     args = parser.parse_args()
-    out_dir = Path(args.out_dir)#+DATASET_LABEL)
-    out_dir = (out_dir / DATASET_LABEL)
+    out_dir = Path(args.out_dir)
     Path.mkdir(out_dir, exist_ok=True)
     
     # Generate dataset ---------------------------------------------------------
