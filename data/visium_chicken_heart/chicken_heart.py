@@ -106,7 +106,9 @@ def data_retrieval(out):
         obs["selected"] = True
         obs.to_csv(os.path.join(res_path,"observations.tsv"), sep="\t", index_label="")
         
-        meta = pd.read_csv(os.path.join(path,'chicken_heart/data/spatialRNAseq_metadata.csv'), index_col=0)
+        meta = pd.read_csv(os.path.join(path,'chicken_heart/data/spatialRNAseq_metadata.csv'))
+        meta['Unnamed: 0'] = meta['Unnamed: 0'].str.split('_').str[1]
+        meta = meta.set_index('Unnamed: 0')
         meta = meta[meta['orig.ident']== sample][['seurat_clusters']]
         meta = meta.rename(columns={'seurat_clusters':'labels'})
         meta.to_csv(os.path.join(res_path,"labels.tsv"), sep="\t", index_label="")
@@ -123,7 +125,7 @@ def data_retrieval(out):
     ## creation of metadata
     
     d = {"sample": ["D4", "D7", "D10", "D14"], "tissue": ["embryonic chicken heart", "embryonic chicken heart", "embryonic chicken heart", "embryonic chicken heart"], "time": ["day_4", "day_7", "day_10", "day_14"], 
-         "capture_area": ["A1", "B1", "C1", "D1"], "n_sections": [5,4,2,1], "directory": [f"{out}/sample_D4", f"{out}/sample_D7", f"{out}/sample_D10", f"{out}/sample_D14"], "n_clusters": [6, 10, 11, 10]}
+         "capture_area": ["A1", "B1", "C1", "D1"], "n_sections": [5,4,2,1], "directory": ["sample_D4", "sample_D7", "sample_D10", "sample_D14"], "n_clusters": [6, 10, 11, 10]}
     df = pd.DataFrame(data=d)
     
     df.to_csv(os.path.join(out,"samples.tsv"), sep="\t", index_label="")
@@ -135,8 +137,7 @@ def data_retrieval(out):
 
 def main():
     
-    parser = argparse.ArgumentParser(
-    )
+    parser = argparse.ArgumentParser()
         
     parser.add_argument('-o','--out', help="Output directory",required=True)
     
