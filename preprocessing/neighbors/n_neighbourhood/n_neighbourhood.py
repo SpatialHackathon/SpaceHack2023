@@ -42,6 +42,7 @@ from pathlib import Path
 out_dir = Path(args.out_dir)
 
 spatial_connectivities_file = out_dir / "spatial_connectivities.mtx"
+##spatial_distances_file = out_dir / "spatial_distances.mtx"
 
 # Use these filepaths and inputs ...
 coord_file = args.coordinates
@@ -94,6 +95,7 @@ import squidpy as sq
 sq.gr.spatial_neighbors(adata, n_neighs=n_neighs, coord_type="generic")
 
 neighbors = adata.obsp["spatial_connectivities"].astype(int)
+##distance = adata.obsp["spatial_distances"].astype(float)
 
 ## Write output
 import scipy as sp
@@ -101,4 +103,4 @@ import scipy as sp
 out_dir.mkdir(parents=True, exist_ok=True)
 
 sp.io.mmwrite(spatial_connectivities_file, neighbors)
-             
+##sp.io.mmwrite(spatial_distances_file, distance)              
