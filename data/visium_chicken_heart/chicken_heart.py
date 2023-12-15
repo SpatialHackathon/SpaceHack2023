@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import shutil
 import scanpy as sc
 import squidpy as sq
@@ -20,7 +21,9 @@ def data_retrieval(out):
     Image.MAX_IMAGE_PIXELS = 933120000
     
     path = os.path.join(out, 'tmp')
-    os.makedir(path) 
+    os.makedirs(path) 
+
+    print('loading data')
     
     # download hires images 
     request.urlretrieve('https://figshare.com/ndownloader/files/42985297', os.path.join(path,'D4.tif'))
@@ -39,35 +42,38 @@ def data_retrieval(out):
     git.Git(path).clone('https://github.com/madhavmantri/chicken_heart.git')
     
     # temporal folders rearrangements
+    print('download is complete')
     
     samples = ['D4', 'D7', 'D10', 'D14']
     for sample in samples:
-        os.makedirs(os.path.join(path,sample, spatial)) 
+        os.makedirs(os.path.join(path,sample, "spatial")) 
     
-    
-    h5_files = [f for f in os.listdir(path) if re.match(r'*spatial_RNAseq*\.h5', f)]
+    h5_files = [f for f in os.listdir(path) if re.match(r'.*spatial_RNAseq.*\.h5', f)]
     for sample in samples:
         name = next(obj for obj in h5_files if sample in obj)
         os.rename(os.path.join(path,name), os.path.join(path, sample, 'filtered_feature_bc_matrix.h5'))
-    
-    lowres_files = [f for f in os.listdir(path) if re.match(r'*\.png', f)]
+
+    processed_path = os.path.join(path,'chicken_heart/data/chicken_heart_spatial_RNAseq_processed')
+    lowres_files = [f for f in os.listdir(processed_path) if re.match(r'.*\.png', f)]
     for sample in samples:
         name = next(obj for obj in lowres_files if sample in obj)
-        os.rename(os.path.join(path,name), os.path.join(path, sample, 'spatial','tissue_lowres_image.png'))
+        os.rename(os.path.join(processed_path,name), os.path.join(path, sample, 'spatial','tissue_lowres_image.png'))
     
-    json_files = [f for f in os.listdir(path) if re.match(r'*\.json', f)]
+    json_files = [f for f in os.listdir(processed_path) if re.match(r'.*\.json', f)]
     for sample in samples:
         name = next(obj for obj in json_files if sample in obj)
-        os.rename(os.path.join(path,name), os.path.join(path, sample, 'spatial','scalefactors_json.json'))
+        os.rename(os.path.join(processed_path,name), os.path.join(path, sample, 'spatial','scalefactors_json.json'))
     
-    csv_files = [f for f in os.listdir(path) if re.match(r'*\.csv', f)]
+    csv_files = [f for f in os.listdir(processed_path) if re.match(r'.*\.csv', f)]
     for sample in samples:
         name = next(obj for obj in csv_files if sample in obj)
-        os.rename(os.path.join(path,name), os.path.join(path, sample, 'spatial', 'tissue_positions_list.csv'))
+        os.rename(os.path.join(processed_path,name), os.path.join(path, sample, 'spatial', 'tissue_positions_list.csv'))
         
         
     # transform into png
-    tif_files = [f for f in os.listdir(path) if re.match(r'*\.tif', f)]
+
+    print('transforming tif into png, takes some time')
+    tif_files = [f for f in os.listdir(path) if re.match(r'.*\.tif', f)]
     
     for i in tif_files:
         im = Image.open(os.path.join(path,i))
@@ -76,9 +82,12 @@ def data_retrieval(out):
         im.save(os.path.join(path, folder, 'spatial', 'tissue_hires_image.png'), "png")
     
     # anndata creation
+
+    print('output writing')
+    
     for sample in samples:
         res_path = os.path.join(out, f"sample_{sample}")
-        os.makedir(res_path) 
+        os.makedirs(res_path) 
         adata = sc.read_visium(os.path.join(path, sample))
         adata.var_names_make_unique()
         
@@ -87,7 +96,7 @@ def data_retrieval(out):
         
         features = adata.var.copy()
         features["selected"] = True
-        feature.to_csv(os.path.join(res_path,"features.tsv"), sep="\t", index_label="")
+        features.to_csv(os.path.join(res_path,"features.tsv"), sep="\t", index_label="")
         
         coord = pd.DataFrame(adata.obsm["spatial"], index=adata.obs_names, columns=["x","y"])
         coord.to_csv(os.path.join(res_path,"coordinates.tsv"), sep="\t", index_label="")
@@ -98,7 +107,7 @@ def data_retrieval(out):
         obs.to_csv(os.path.join(res_path,"observations.tsv"), sep="\t", index_label="")
         
         meta = pd.read_csv(os.path.join(path,'chicken_heart/data/spatialRNAseq_metadata.csv'), index_col=0)
-        meta[meta['orig.ident']== sample][['seurat_clusters']]
+        meta = meta[meta['orig.ident']== sample][['seurat_clusters']]
         meta = meta.rename(columns={'seurat_clusters':'labels'})
         meta.to_csv(os.path.join(res_path,"labels.tsv"), sep="\t", index_label="")
         
@@ -109,19 +118,20 @@ def data_retrieval(out):
     # common files
     with open(os.path.join(out,"experiment.json"), "w") as f:
         pl_info = {"technology": "Visium"}
-        json.dump([pl_info, f)
+        json.dump(pl_info, f)
     
     ## creation of metadata
     
-    d = {"sample": ["D4", "D7", "D10", "D14"], "time": ["day_4", "day_7", "day_10", "day_14"], "capture_area": ["A1", "B1", "C1", "D1"], "n_sections": [5,4,2,1], 
-         "directory": [f"{path}/sample_D4", f"{path}/sample_D7", f"{path}/sample_D10", f"{path}/sample_D14"], "n_clusters": [6, 10, 11, 10]}
+    d = {"sample": ["D4", "D7", "D10", "D14"], "tissue": ["embryonic chicken heart", "embryonic chicken heart", "embryonic chicken heart", "embryonic chicken heart"], "time": ["day_4", "day_7", "day_10", "day_14"], 
+         "capture_area": ["A1", "B1", "C1", "D1"], "n_sections": [5,4,2,1], "directory": [f"{out}/sample_D4", f"{out}/sample_D7", f"{out}/sample_D10", f"{out}/sample_D14"], "n_clusters": [6, 10, 11, 10]}
     df = pd.DataFrame(data=d)
     
     df.to_csv(os.path.join(out,"samples.tsv"), sep="\t", index_label="")
     
     # removing extra files
-    
+    print('cleaning')
     shutil.rmtree(path)
+    print('DONE')
 
 def main():
     
