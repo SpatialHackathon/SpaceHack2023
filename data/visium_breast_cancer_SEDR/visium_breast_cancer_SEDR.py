@@ -56,7 +56,7 @@ def process_adata(input_path,output_folder,sample_df):
     adata.var_names_make_unique()
     obs = adata.obs.copy()
     obs["selected"] = "true"
-    obs.rename(columns={"array_row":"row","array_col":"col"})
+    obs.rename(columns={'array_row': 'row', 'array_col': 'col'}, inplace=True)
     obs.to_csv(f"{complete_path}/observations.tsv",sep="\t",index_label="")
 
     # Features
