@@ -122,9 +122,8 @@ import STAGATE as sg
 from scipy.spatial.distance import euclidean
 # To skip the neighbor computation step in STAGATE
 if args.neighbors is not None:
-    neighbors = sp.io.mmread(args.neighbors).T.tocsr()
-    neighbors = neighbors.toarray()
-    row_indices, col_indices = np.where(neighbors == 1)
+    neighbors = sp.io.mmread(args.neighbors).T.tocoo()
+    row_indices, col_indices = neighbors.row, neighbors.col
     coor = adata.obsm['spatial']
     cell_ids = adata.obs_names
     Spatial_Net = pd.DataFrame({'Cell1': cell_ids[row_indices],
