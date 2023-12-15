@@ -7,4 +7,3 @@ dependencies:
   - r-optparse=1.7.3
   - r-Seurat=5.0.1
   - bioconductor-SpatialExperiment=1.12.0
-# - maple, remotes::install_github("carter-allen/maple")

@@ -7,4 +7,4 @@ conda env create -f maple.yml
 source activate maple_env
 
 # Install the required R packages
-conda run -n maple_env R -e "install.packages('maple')"
+Rscript -e "remotes::install_github('carter-allen/maple', ref = 'b173e89a7bc82c6ae09c7e0709d09ed22082172d')"
