@@ -17,4 +17,4 @@ dependencies:
   - git
   - pip:
     - squidpy==1.1.2
-    - "--editable=git+https://github.com/TencentAILabHealthcare/SOTIP.git@d3b762cca2a527dd5bc51408924c807832c5e1bb#egg=sotip"
+    - "git+https://github.com/TencentAILabHealthcare/SOTIP.git@d3b762cca2a527dd5bc51408924c807832c5e1bb#egg=sotip"
