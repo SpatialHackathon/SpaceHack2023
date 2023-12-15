@@ -95,6 +95,7 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
+    neighbors <- as(Matrix::readMM(neighbors_file), "CsparseMatrix")
 }
 if (!is.na(opt$matrix)) {
   matrix_file <- opt$matrix
@@ -161,8 +162,8 @@ sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = 
 seurat_obj <- as.Seurat(sce)
 PRECASTObj <- CreatePRECASTObject(seuList = list(seurat_obj), customGenelist = rownames(rowData(sce)))
 
-PRECASTObj <- AddAdjList(PRECASTObj, type = "fixed_number",
-                         platform = technology)
+PRECASTObj <- AddAdjList(PRECASTObj, platform = technology)
+PRECASTObj@AdjList <- list(neighbors)
 PRECASTObj <- AddParSetting(PRECASTObj, Sigma_equal = FALSE, coreNum = 4, maxIter = 10, verbose = TRUE)
 
 PRECASTObj <- PRECAST(PRECASTObj, K = n_clusters)
