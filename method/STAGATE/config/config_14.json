@@ -1,0 +1,1 @@
+{"method": "louvain", "model": "KNN", "k_cutoff": 10, "res": 1}
