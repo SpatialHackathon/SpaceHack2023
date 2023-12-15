@@ -55,7 +55,6 @@ import json
 with open(config_file) as f:
    parameters = json.load(f)
 
-delaunay = parameters["delaunay"]
 
 
 # ... or AnnData if you want
@@ -88,7 +87,7 @@ adata = get_anndata(args)
 ## Your code goes here
 import squidpy as sq
 
-sq.gr.spatial_neighbors(adata, delaunay=delaunay, coord_type="generic")
+sq.gr.spatial_neighbors(adata, delaunay=True, coord_type="generic")
 
 neighbors = adata.obsp["spatial_connectivities"].astype(int)
 ##distance = adata.obsp["spatial_distances"].astype(float)
