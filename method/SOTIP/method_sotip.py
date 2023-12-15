@@ -93,7 +93,7 @@ def get_anndata(args):
         X = mmread(args.matrix)
         if issparse(X):
             X = X.tocsr()
-        adata.X = X.toarray()
+        adata.X = X
 
     if args.neighbors is not None:
         adata.obsp["spatial_connectivities"] = sp.io.mmread(args.neighbors).T.tocsr()
