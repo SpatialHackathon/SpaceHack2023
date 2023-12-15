@@ -95,7 +95,6 @@ def data_retrieval(out):
         scipy.io.mmwrite(os.path.join(res_path,"counts.mtx"),adata.X)
         
         features = adata.var.copy()
-        features["selected"] = True
         features.to_csv(os.path.join(res_path,"features.tsv"), sep="\t", index_label="")
         
         coord = pd.DataFrame(adata.obsm["spatial"], index=adata.obs_names, columns=["x","y"])
@@ -103,7 +102,6 @@ def data_retrieval(out):
         
         obs = adata.obs.copy()
         obs.columns = ["in_tissue", "row", "col"]
-        obs["selected"] = True
         obs.to_csv(os.path.join(res_path,"observations.tsv"), sep="\t", index_label="")
         
         meta = pd.read_csv(os.path.join(path,'chicken_heart/data/spatialRNAseq_metadata.csv'))
@@ -137,12 +135,14 @@ def data_retrieval(out):
 
 def main():
     
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Load data for embryonic chicken heart dataset"
+    )
         
-    parser.add_argument('-o','--out', help="Output directory",required=True)
+    parser.add_argument('-o','--out_dir', help="Output directory to write files to.",required=True)
     
     args = parser.parse_args()
-    data_retrieval(args.out)
+    data_retrieval(args.out_dir)
 
 if __name__ == '__main__':
     main()
