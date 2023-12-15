@@ -46,16 +46,6 @@ matrix_file = args.matrix
 feature_file = args.features
 observation_file = args.observations
 
-## Loading delaunay parameters from config_file
-if args.config is not None:
-    config_file = args.config
-
-import json
-
-with open(config_file) as f:
-   parameters = json.load(f)
-
-
 
 # ... or AnnData if you want
 def get_anndata(args):
