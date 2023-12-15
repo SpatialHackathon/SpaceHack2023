@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-# Author_and_contribution: Niklas Mueller-Boetticher; created script
+# Author_and_contribution: 
+# Niklas Mueller-Boetticher; created template
+# Peiying Cai; implemented method
 
 import argparse
+from ast import If
 
 parser = argparse.ArgumentParser(
-    description="""SpaGCN (https://www.nature.com/articles/s41592-021-01255-8)
-Requirements: Visium or ST. Images can be used."""
+    description="""GraphST (https://www.nature.com/articles/s41467-023-36796-3)
+"""
 )
 
 parser.add_argument(
@@ -51,6 +54,7 @@ parser.add_argument(
     required=False,
 )
 
+
 args = parser.parse_args()
 
 from pathlib import Path
@@ -62,37 +66,54 @@ label_file = out_dir / "domains.tsv"
 embedding_file = out_dir / "embedding.tsv"
 
 n_clusters = args.n_clusters
-technology = args.technology
 seed = args.seed
 
+# Map technology spelling
+def map_technology(input_technology):
+    technology_mapping = {
+        "Visium": "10X",
+        "Stereo-seq": "Stereo",
+        "Slide-seq": "Slide"
+    }
+    return technology_mapping.get(input_technology, None)
 
-## Your code goes here
+technology = map_technology(str(args.technology))
+if technology is None:
+    raise Exception(
+        f"Invalid technology. GraphST only supports 10X Visium, Stereo-seq, and Slide-seq/Slide-seqV2 not {args.technology}. "
+        )
+
+if args.neighbors is not None:
+    neighbors_file = args.neighbors
+    
+if args.dim_red is not None:
+    dimred_file = args.dim_red
+    
+# TODO use the default settings or place it into the config.
+# start=0.1
+# end=3.0
+# increment=0.01
+
 import json
 
 with open(args.config, "r") as f:
     config = json.load(f)
 
-if config["refine"] and technology not in ["Visium", "ST"]:
-    raise Exception(
-        f"Invalid parameter combination. Refinement only works with Visium and ST not {technology}"
-    )
-
-# TODO how to determine beta
-beta = 49
-
-
 import random
 
 import numpy as np
 import pandas as pd
-import SpaGCN as spg
+import scanpy as sc
+from sklearn import metrics
 import torch
+from GraphST import GraphST
 
+# Run device, by default, the package is implemented on 'cpu'. The author recommend using GPU.
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
 def get_anndata(args):
     import anndata as ad
     import scipy as sp
-    from PIL import Image
 
     X = sp.io.mmread(args.matrix)
     if sp.sparse.issparse(X):
@@ -100,7 +121,7 @@ def get_anndata(args):
 
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
-
+        
     # Filter
     if "selected" in observations.columns:
         X = X[observations["selected"].to_numpy().nonzero()[0], :]
@@ -116,107 +137,58 @@ def get_anndata(args):
     )
 
     adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial_pixel": coordinates}
+        X=X, obs=observations, var=features, obsm={"spatial": coordinates}
     )
-
-    if args.image is not None:
-        adata.uns["image"] = np.array(Image.open(args.image))
-    else:
-        adata.uns["image"] = None
-
+    
+    # To skip the preprocess step in GraphST
+    adata.var['highly_variable'] = adata.var['selected']
+    
+    # To skip the neighbor computation step in GraphST
+    if args.neighbors is not None:
+        interaction = sp.io.mmread(neighbors_file).T.tocsr()
+        interaction = interaction.toarray()
+        adata.obsm["graph_neigh"] = interaction
+        adata.obsm['adj'] = interaction
+        
     return adata
 
 
 adata = get_anndata(args)
-
+adata.var_names_make_unique()
 
 # Set seed
 random.seed(seed)
 torch.manual_seed(seed)
 np.random.seed(seed)
 
-if technology in ["Visium", "ST"]:
-    if adata.uns["image"] is not None:
-        adj = spg.calculate_adj_matrix(
-            adata.obs["col"],
-            adata.obs["row"],
-            adata.obsm["spatial_pixel"][:, 0],
-            adata.obsm["spatial_pixel"][:, 1],
-            image=adata.uns["image"],
-            alpha=config["alpha"],
-            beta=beta,
-            histology=True,
-        )
-    else:
-        adj = spg.calculate_adj_matrix(
-            adata.obs["col"], adata.obs["row"], histology=False
-        )
+# Train
+# define model
+model = GraphST.GraphST(adata, datatype=technology, device=device)
+
+# train model
+adata = model.train()
+
+# Refinement:
+# This step is not recommended for ST data with fine-grained domains, Stereo-seq, and Slide-seqV2
+# Radius: speficy the number of neighbors considered during refinement
+# If not refinement is intended, set it as the default setting in GraphST, but it is not going to be used. 
+if config["refine"]:
+    radius = config["radius"]
 else:
-    adj = spg.calculate_adj_matrix(
-        adata.obsm["spatial_pixel"][:, 0],
-        adata.obsm["spatial_pixel"][:, 1],
-        histology=False,
-    )
-
-
-clf = spg.SpaGCN()
-
-# Find the l value given p
-l = spg.search_l(config["p"], adj)
-clf.set_l(l)
-
+    radius = 50
+    
 
 # Run
-if config["method"] == "louvain":
-    # Search for suitable resolution
-    res = spg.search_res(
-        adata, adj, l, n_clusters, r_seed=seed, t_seed=seed, n_seed=seed
-    )
-    clf.train(
-        adata,
-        adj,
-        init_spa=True,
-        init=config["method"],
-        res=res,
-        n_neighbors=config["n_neighbors"],
-        num_pcs=config["n_pcs"],
-    )
-else:
-    clf.train(
-        adata,
-        adj,
-        init_spa=True,
-        init=config["method"],
-        n_clusters=n_clusters,
-        num_pcs=config["n_pcs"],
-    )
-y_pred, prob = clf.predict()
+from GraphST.utils import clustering
 
-adata.obs["cluster"] = pd.Series(y_pred, index=adata.obs_names, dtype="category")
+clustering(adata, 
+           n_clusters=n_clusters, 
+           radius=radius, 
+           method=config["method"], 
+           refinement=config["refine"]
+           )
 
-if technology in ["Visium", "ST"] and config["refine"]:
-    # Do cluster refinement(optional)
-    adj_2d = spg.calculate_adj_matrix(
-        adata.obs["col"], adata.obs["row"], histology=False
-    )
-
-    shape = "hexagon" if technology == "Visium" else "square"
-    refined_pred = spg.refine(
-        sample_id=adata.obs_names.tolist(),
-        pred=adata.obs["cluster"].tolist(),
-        dis=adj_2d,
-        shape=shape,
-    )
-
-    adata.obs["refined_cluster"] = pd.Series(
-        refined_pred, index=adata.obs_names, dtype="category"
-    )
-
-    label_df = adata.obs[["refined_cluster"]]
-
-else:
-    label_df = adata.obs[["cluster"]]
-
+label_df = adata.obs[["domain"]]
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)

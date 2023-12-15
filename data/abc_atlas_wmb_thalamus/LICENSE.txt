@@ -1,0 +1,15 @@
+ABC Atlas - Mouse Whole Brain by Allen Institute for Brain Science
+ 
+ABC Atlas - Mouse Whole Brain
+(https://knowledge.brain-map.org/data/LVDBJAW8BI5YSS1QUBG/collections)
+MERSCOPE v1 whole brain Data Collection is licensed under a
+Creative Commons Attribution 4.0 International License, and
+10x scRNAseq whole brain Data Collection is licensed under a
+Creative Commons Attribution-NonCommercial 4.0 International License.
+ 
+See https://alleninstitute.org/citation-policy/ for the Allen Institute Citation
+Policy and https://alleninstitute.org/terms-of-use/ for the Allen Institute
+Terms of Use.
+ 
+See https://creativecommons.org/licenses/by/4.0/ and
+https://creativecommons.org/licenses/by-nc/4.0/ for a copy of each license.
