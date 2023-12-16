@@ -1,5 +1,4 @@
 channels:
-  - anaconda
   - conda-forge
 dependencies:
   - anndata=0.10.3
@@ -11,5 +10,4 @@ dependencies:
   - re2=2023.06.02
   - scanpy=1.9.6
   - scipy=1.11.4
-  - squidpy=1.2.2
   - urllib3=2.1.0
