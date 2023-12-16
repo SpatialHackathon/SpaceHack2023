@@ -3,7 +3,6 @@ import os
 import re
 import shutil
 import scanpy as sc
-import squidpy as sq
 import anndata as an
 import pandas as pd
 import scipy
