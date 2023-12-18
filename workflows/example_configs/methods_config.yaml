@@ -1,5 +1,7 @@
 data_dir: "/home/ubuntu/tmp_data/libd_dlpfc"
 technology: "Visium"
+methods:
+  - "BANKSY"
 config_files:
   spaGCN:
     config_1: "config/config_1.json"
