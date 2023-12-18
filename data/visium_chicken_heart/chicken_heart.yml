@@ -1,0 +1,13 @@
+channels:
+  - conda-forge
+dependencies:
+  - anndata=0.10.3
+  - gitpython=3.1.40
+  - pandas=2.1.4
+  - pillow=10.1.0
+  - pytest-shutil=1.7.0
+  - python=3.9.18
+  - re2=2023.06.02
+  - scanpy=1.9.6
+  - scipy=1.11.4
+  - urllib3=2.1.0
