@@ -9,85 +9,142 @@ SEED = "42"
 
 #####
 
-def create_input_config(dataset):
+def create_input(method):
     input_files = []
     sample_dirs = get_sample_dirs(config["data_dir"])
     for sample_dir in sample_dirs:
-        for config_file_name in config["config_files"][dataset].keys():
-            input_files.append(sample_dir + "/" + dataset + "/" + config_file_name + "/domains.tsv")
+        if method in config["config_files"].keys():
+            for config_file_name in config["config_files"][method].keys():
+                input_files.append(sample_dir + "/" + method + "/" + config_file_name + "/domains.tsv")
+        else:
+            input_files.append(sample_dir + "/" + method + "/domains.tsv")
+    print(input_files)
     return input_files
 
-def create_input(dataset):
-    input_files = []
-    sample_dirs = get_sample_dirs(config["data_dir"])
-    for sample_dir in sample_dirs:
-        input_files.append(sample_dir + "/" + dataset + "/domains.tsv")
-    return input_files
 
-# without config
-def create_BayesSpace_input(wildcards):
-    return create_input("BayesSpace")
-
-def create_scMEB_input(wildcards):
-    return create_input("scMEB")
-
-def create_SCAN_IT_input(wildcards):
-    return create_input("SCAN_IT")
-
-# with config
-def create_spaGCN_input(wildcards):
-    return create_input_config("spaGCN")
-
-def create_GraphST_input(wildcards):
-    return create_input_config("GraphST")
-
-def create_BANKSY_input(wildcards):
-    return create_input_config("BANKSY")
-
-def create_meringue_input(wildcards):
-    return create_input_config("meringue")
+def create_input_all(wildcards):
+    files = []
+    for method in config["methods"]:
+        files += create_input(method)
+    return files
 
 rule all:
-    input: 
-        create_BayesSpace_input,
-        create_scMEB_input,
-        #create_SCAN_IT_input, unklar
-        create_spaGCN_input,
-        #create_GraphST_input, unklar
-        #create_BANKSY_input, unklar
-        create_meringue_input
+    input:
+        create_input_all
 
-rule spaGCN:
+methods_info = dict()
+methods_info["spaGCN"] = dict()
+methods_info["spaGCN"]["script"] = "python " + GIT_DIR + "/method/spaGCN/spaGCN.py"
+methods_info["spaGCN"]["env"] = GIT_DIR + "/method/spaGCN/spaGCN.yml"
+methods_info["BANKSY"] = dict()
+methods_info["BANKSY"]["script"] = "Rscript " + GIT_DIR + "/method/BANKSY/banksy.r"
+methods_info["BANKSY"]["env"] = GIT_DIR + "/method/BANKSY/banksy.yml"
+
+
+
+def get_sample_image(wildcards):
+    files = ["H_E.tiff", "H_E.png"]
+    for file in files:
+        image = config["data_dir"] + "/" + wildcards.sample + "/" + file
+        if os.path.isfile(image):
+            return "--image " + image
+    return ""
+
+def get_config_file(wildcards):
+    current_config = GIT_DIR + "/method/" + wildcards.method + "/" + config["config_files"][wildcards.method][wildcards.config_file_name]
+    print(current_config)
+    return current_config
+
+##########################################################
+# requirements
+
+def get_requirements(wildcards):
+    if wildcards.method == "BANKSY": return "BANKSY_requirements.info"
+    return []
+
+
+rule BANKSY_requirements:
+    output:
+        temp("BANKSY_requirements.info")
+    conda:
+        GIT_DIR + "/method/BANKSY/banksy.yml"
+    shell:
+        """
+        conda run Rscript -e \"remotes::install_github('prabhakarlab/Banksy@v0.1.5', dependencies = TRUE)\"
+        touch BANKSY_requirements.info
+        """
+
+##########################################################
+# methods
+
+rule method_with_config:
     input:
         coordinates = config["data_dir"] + "/{sample}/coordinates.tsv",
         matrix = config["data_dir"] + "/{sample}/log1p/counts.mtx",
         features = config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
         observations = config["data_dir"] + "/{sample}/observations.tsv",
-        image = config["data_dir"] + "/{sample}/H_E.tiff",
+        neighbors = config["data_dir"] + "/{sample}/delaunay_triangulation.mtx",
+        dim_red = config["data_dir"] + "/{sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv",
+        requirements = get_requirements
     output:
-        dir = directory(config["data_dir"] + "/{sample}/spaGCN/{config_file_name}"),
-        file = config["data_dir"] + "/{sample}/spaGCN/{config_file_name}/domains.tsv",
+        dir = directory(config["data_dir"] + "/{sample}/{method}/{config_file_name}"),
+        file = config["data_dir"] + "/{sample}/{method}/{config_file_name}/domains.tsv",
     params:
         n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
         technology = TECHNOLOGY,
         seed = SEED,
-        configfile = lambda wildcards: config["config_files"]["spaGCN"][wildcards.config_file_name]
+        configfile = get_config_file,
+        image = get_sample_image,
+        script = lambda wildcards: methods_info[wildcards.method]["script"]
     conda:
-        GIT_DIR + "/method/spaGCN/spaGCN.yml"
+        lambda wildcards: methods_info[wildcards.method]["env"]
     shell:
         """
-        {GIT_DIR}/method/spaGCN/spaGCN.py \
+        {params.script} \
             -c {input.coordinates} \
             -m {input.matrix} \
             -f {input.features} \
             -o {input.observations} \
+            -n {input.neighbors} \
             -d {output.dir} \
-            --image {input.image} \
+            {params.image} \
             --n_clusters {params.n_clusters} \
             --technology {params.technology} \
             --seed {params.seed} \
-            --config {GIT_DIR}/method/spaGCN/{params.configfile}
+            --config {params.configfile}
         """
+
+#rule spaGCN:
+#    input:
+#        coordinates = config["data_dir"] + "/{sample}/coordinates.tsv",
+#        matrix = config["data_dir"] + "/{sample}/log1p/counts.mtx",
+#        features = config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
+#        observations = config["data_dir"] + "/{sample}/observations.tsv",
+#        image = config["data_dir"] + "/{sample}/H_E.tiff",
+#    output:
+#        dir = directory(config["data_dir"] + "/{sample}/spaGCN/{config_file_name}"),
+#        file = config["data_dir"] + "/{sample}/spaGCN/{config_file_name}/domains.tsv",
+#    params:
+#        n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
+#        technology = TECHNOLOGY,
+#        seed = SEED,
+#        configfile = lambda wildcards: config["config_files"]["spaGCN"][wildcards.config_file_name]
+#    conda:
+#        GIT_DIR + "/method/spaGCN/spaGCN.yml"
+#    shell:
+#        """
+#        {GIT_DIR}/method/spaGCN/spaGCN.py \
+#            -c {input.coordinates} \
+#            -m {input.matrix} \
+#            -f {input.features} \
+#            -o {input.observations} \
+#            -d {output.dir} \
+#            --image {input.image} \
+#            --n_clusters {params.n_clusters} \
+#            --technology {params.technology} \
+#            --seed {params.seed} \
+#            --config {GIT_DIR}/method/spaGCN/{params.configfile}
+#        """
 
 
 rule BayesSpace:
@@ -192,47 +249,38 @@ rule GraphST:
         """
 
 
-rule BANKSY_requirements:
-    output:
-        temp("BANKSY_requirements.info")
-    conda:
-        GIT_DIR + "/method/BANKSY/banksy.yml"
-    shell:
-        """
-        conda run Rscript -e \"remotes::install_github('prabhakarlab/Banksy@v0.1.5', dependencies = TRUE)\"
-        touch BANKSY_requirements.info
-        """
 
-rule BANKSY:
-    input:
-        coordinates = config["data_dir"] + "/{sample}/coordinates.tsv",
-        matrix = config["data_dir"] + "/{sample}/log1p/counts.mtx",
-        features = config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
-        observations = config["data_dir"] + "/{sample}/observations.tsv",
-        requirements = "BANKSY_requirements.info"
-    output:
-        dir = directory(config["data_dir"] + "/{sample}/BANKSY/{config_file_name}"),
-        file = config["data_dir"] + "/{sample}/BANKSY/{config_file_name}/domains.tsv",
-    params:
-        n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
-        technology = TECHNOLOGY,
-        seed = SEED,
-        configfile = lambda wildcards: config["config_files"]["BANKSY"][wildcards.config_file_name]
-    conda:
-        GIT_DIR + "/method/BANKSY/banksy.yml"
-    shell:
-        """
-        Rscript {GIT_DIR}/method/BANKSY/banksy.r \
-            -c {input.coordinates} \
-            -m {input.matrix} \
-            -f {input.features} \
-            -o {input.observations} \
-            -d {output.dir} \
-            --n_clusters {params.n_clusters} \
-            --technology {params.technology} \
-            --seed {params.seed} \
-            --config {GIT_DIR}/method/BANKSY/{params.configfile}
-        """
+
+#rule BANKSY:
+#    input:
+#        coordinates = config["data_dir"] + "/{sample}/coordinates.tsv",
+#        matrix = config["data_dir"] + "/{sample}/log1p/counts.mtx",
+#        features = config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
+#        observations = config["data_dir"] + "/{sample}/observations.tsv",
+#        requirements = "BANKSY_requirements.info"
+#    output:
+#        dir = directory(config["data_dir"] + "/{sample}/BANKSY/{config_file_name}"),
+#        file = config["data_dir"] + "/{sample}/BANKSY/{config_file_name}/domains.tsv",
+#    params:
+#        n_clusters = lambda wildcards: get_ncluster(config["data_dir"] + "/samples.tsv", wildcards.sample),
+#        technology = TECHNOLOGY,
+#        seed = SEED,
+#        configfile = lambda wildcards: config["config_files"]["BANKSY"][wildcards.config_file_name]
+#    conda:
+#        GIT_DIR + "/method/BANKSY/banksy.yml"
+#    shell:
+#        """
+#        Rscript {GIT_DIR}/method/BANKSY/banksy.r \
+#            -c {input.coordinates} \
+#            -m {input.matrix} \
+#            -f {input.features} \
+#            -o {input.observations} \
+#            -d {output.dir} \
+#            --n_clusters {params.n_clusters} \
+#            --technology {params.technology} \
+#            --seed {params.seed} \
+#            --config {GIT_DIR}/method/BANKSY/{params.configfile}
+#        """
 
 rule meringue_requirements:
     output:
