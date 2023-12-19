@@ -1,0 +1,8 @@
+{
+    "K": 15,
+    "lambda_Sigma_x_inv": 1e-4,
+    "device": "cuda:0",
+    "dtype": "float64",
+    "num_preiterations": 5,
+    "num_iterations": 200
+}
