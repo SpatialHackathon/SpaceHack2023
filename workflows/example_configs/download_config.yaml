@@ -11,6 +11,5 @@ datasets:
   - STARmap_2018_mouse_cortex
   - visium_breast_cancer_SEDR
   - visium_chicken_heart
-  - xenium_breast_cancer
   - xenium_mouse_brain_SergioSalas
 results_dir: "/home/ubuntu/tmp_data"
