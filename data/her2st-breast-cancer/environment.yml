@@ -5,4 +5,4 @@ dependencies:
   - scipy=1.11.4
   - pandas=2.1.4
   - p7zip
-  - gunzip
+  - gzip
