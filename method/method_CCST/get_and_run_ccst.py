@@ -114,6 +114,12 @@ def clone_and_process_repo(git_url, release_tag, output_dir):
         # Get the path
         script_path = gitdir / "run_CCST.py"
 
+        # TODO: convert the given tsv files into csv, because CCST wants csv
+
+        # TODO: save the new .csv files into the temporary directory
+
+        # TODO: change the "--data_path" option in the CCST call to the new files
+
         # Ensure the script file still exists in the ccst repo
         if os.path.exists(script_path):
             # Run the Python script run_CCST.py from the CCST repo
@@ -150,18 +156,19 @@ with open (args.config, "r") as c:
 # label_df = ...  # DataFrame with index (cell-id/barcode) and 1 column (label)
 # embedding_df = None  # optional, DataFrame with index (cell-id/barcode) and n columns
 
-######## Testing area #########
+######## Testing area, delete before the pull request #########
 if __name__ == "__main__":
     # git_url = "https://github.com/xiaoyeye/CCST.git"  # The CCST repo
     # release_tag = "v1.0.1"  # Version used during SpaceHack2.0
     out_dir.mkdir(parents=True, exist_ok=True)
     clone_and_process_repo(git_url, release_tag, out_dir)
-
-    
-##############################
+##############################################################
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)
+
+# TODO: save embeddings because CCST produces some - get them out of the temp directory
+
 
 # label_df.columns = ["label"]
 # label_df.to_csv(label_file, sep="\t", index_label="")
