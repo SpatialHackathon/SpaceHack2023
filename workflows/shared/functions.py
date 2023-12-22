@@ -37,18 +37,7 @@ def generate_metrics_results(data_dir, metrics_name, methods, file_ext, configfi
     return(result_files)
 
 
-def generate_metrics_results(data_dir, metrics_name, methods, file_ext, configfiles=None):
-    result_files = []
-    for sample_dir in get_sample_dirs(data_dir):
-        for method in methods:
-            method_dir = os.path.join(sample_dir, method)
-            dirs_to_check = [method_dir] if check_files_in_folder(method_dir, ["domains.tsv"]) else os.listdir(method_dir)
-            for dir_to_check in dirs_to_check:
-                if check_files_in_folder(os.path.join(method_dir, dir_to_check), ["domains.tsv"]):
-                    config_files = configfiles.keys() if configfiles else [""]
-                    for config_file_name in config_files:
-                        result_files.append(os.path.join(method_dir, dir_to_check, metrics_name, config_file_name, "results." + file_ext))
-    return result_files
+
 
 #configfiles = {"name1":"file1"}
 #methods = ["spaGCN"] 
@@ -65,7 +54,7 @@ def get_ncluster(file_path, sample, default_value=7):
         df = pd.read_csv(file_path, sep='\t', index_col=0)
         df_filtered = df[df["directory"] == sample]
         return int(df_filtered["n_clusters"].mean())
-    except (KeyError, pd.errors.EmptyDataError):
+    except:
         return default_value
 
 #sample = "Br5595_151669"
