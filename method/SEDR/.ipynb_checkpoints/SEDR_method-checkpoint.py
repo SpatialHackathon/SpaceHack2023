@@ -8,8 +8,8 @@ import argparse
 
 # TODO adjust description
 parser = argparse.ArgumentParser(
-    description="SEDR – Unsupervised spatially embedded deep representation of spatial transcriptomics. See https://doi.org/10.1101/2021.06.15.448542 for details")
-
+    description="SEDR – Unsupervised spatially embedded deep representation of spatial transcriptomics. See https://doi.org/10.1101/2021.06.15.448542 for details"
+)
 parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
 )
@@ -53,6 +53,7 @@ parser.add_argument(
 )
 
 ## Session for code
+args = parser.parse_args()
 
 # anndata input
 def get_anndata(args):
@@ -60,7 +61,6 @@ def get_anndata(args):
     import numpy as np
     import pandas as pd
     import scipy as sp
-    from PIL import Image
 
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
@@ -93,16 +93,94 @@ def get_anndata(args):
             pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
         )
 
-    if args.img is not None:
-        adata.uns["image"] = np.array(Image.open(args.img))
-    else:
-        adata.uns["image"] = None
+    return adata
+
+## Cluster code is SEDR had some bugs. Modified below
+def res_search_fixed_clus_leiden(adata, n_clusters, increment=0.01, random_seed=2023):
+    import scanpy as sc
+    import pandas as pd
+    import numpy as np
+    
+    for res in np.arange(0.2, 2, increment):
+        sc.tl.leiden(adata, random_state=random_seed, resolution=res)
+        if len(adata.obs['leiden'].unique()) > n_clusters:
+            break
+    return res-increment
+
+
+def leiden(adata, n_clusters, use_rep='SEDR', key_added='SEDR', random_seed=2023):
+    import scanpy as sc
+    import pandas as pd
+    import numpy as np
+    
+    sc.pp.neighbors(adata, use_rep=use_rep)
+    res = res_search_fixed_clus_leiden(adata, n_clusters, increment=0.01, random_seed=random_seed)
+    sc.tl.leiden(adata, random_state=random_seed, resolution=res)
+
+    adata.obs[key_added] = adata.obs['leiden']
+    adata.obs[key_added] = adata.obs[key_added].astype('int')
+    adata.obs[key_added] = adata.obs[key_added].astype('category')
 
     return adata
 
+
+def res_search_fixed_clus_louvain(adata, n_clusters, increment=0.01, random_seed=2023):
+    import scanpy as sc
+    import pandas as pd
+    import numpy as np
+    
+    for res in np.arange(0.2, 2, increment):
+        sc.tl.louvain(adata, random_state=random_seed, resolution=res)
+        if len(adata.obs['louvain'].unique()) > n_clusters:
+            break
+    return res-increment
+
+def louvain(adata, n_clusters, use_rep='SEDR', key_added='SEDR', random_seed=2023):
+    import scanpy as sc
+    import pandas as pd
+    import numpy as np
+    
+    sc.pp.neighbors(adata, use_rep=use_rep)
+    res = res_search_fixed_clus_louvain(adata, n_clusters, increment=0.01, random_seed=random_seed)
+    sc.tl.louvain(adata, random_state=random_seed, resolution=res)
+
+    adata.obs[key_added] = adata.obs['louvain']
+    adata.obs[key_added] = adata.obs[key_added].astype('int')
+    adata.obs[key_added] = adata.obs[key_added].astype('category')
+
+    return adata
+
+# modified SDER mclust function cuz in their they define their own R home pathway
+def mclust_R(adata, n_clusters, use_rep='SEDR', key_added='SEDR', modelNames= "EEE", random_seed=2023):
+    """\
+    Clustering using the mclust algorithm.
+    The parameters are the same as those in the R package mclust.
+    """
+    import numpy as np
+
+    np.random.seed(random_seed)
+    import rpy2.robjects as robjects
+    robjects.r.library("mclust")
+
+    import rpy2.robjects.numpy2ri
+    rpy2.robjects.numpy2ri.activate()
+    r_random_seed = robjects.r['set.seed']
+    r_random_seed(random_seed)
+    rmclust = robjects.r['Mclust']
+
+    res = rmclust(rpy2.robjects.numpy2ri.numpy2rpy(adata.obsm[use_rep]), n_clusters, modelNames)
+    mclust_res = np.array(res[-2])
+
+    adata.obs[key_added] = mclust_res
+    adata.obs[key_added] = adata.obs[key_added].astype('int')
+    adata.obs[key_added] = adata.obs[key_added].astype('category')
+
+    return adata
+    
 # Import packages for SEDR
 import scanpy as sc
 import numpy as np
+import pandas as pd
 import scipy as sp
 import torch
 import SEDR
@@ -110,9 +188,6 @@ import SEDR
 import os
 import warnings
 warnings.filterwarnings('ignore')
-
-# Get args
-args = parser.parse_args()
 
 # Def config
 import json
@@ -147,18 +222,21 @@ if "reduced_dimensions" not in adata.obsm_keys():
     adata.obsm['reduced_dimensions'] = adata_X
 
 # Constructing neighborhood graphs if neighbors not provided
-if "spatial_connectivities" in adata.obsp_keys():
+if "spatial_connectivities" in adata.obsp.keys():
+    # import intermediate functions
+    from SEDR.graph_func import preprocess_graph
+    
     # Copy from source code in order for customization
     adj_m1 = adata.obsp["spatial_connectivities"]
-    adj_m1 = sp.coo_matrix(adj_m1)
+    adj_m1 = sp.sparse.coo_matrix(adj_m1)
 
     # Store original adjacency matrix (without diagonal entries) for later
-    adj_m1 = adj_m1 - sp.dia_matrix((adj_m1.diagonal()[np.newaxis, :], [0]), shape=adj_m1.shape)
+    adj_m1 = adj_m1 - sp.sparse.dia_matrix((adj_m1.diagonal()[np.newaxis, :], [0]), shape=adj_m1.shape)
     adj_m1.eliminate_zeros()
 
     # Some preprocessing
-    adj_norm_m1 = SEDR.preprocess_graph(adj_m1)
-    adj_m1 = adj_m1 + sp.eye(adj_m1.shape[0])
+    adj_norm_m1 = preprocess_graph(adj_m1)
+    adj_m1 = adj_m1 + sp.sparse.eye(adj_m1.shape[0])
 
     adj_m1 = adj_m1.tocoo()
     shape = adj_m1.shape
@@ -176,8 +254,8 @@ if "spatial_connectivities" in adata.obsp_keys():
     
 else: 
     graph_dict = SEDR.graph_construction(adata, 
-                                         n=12, 
-                                         dmax=50, 
+                                         n=config['graph_dmax'], 
+                                         dmax=config['graph_n'], 
                                          mode=config['graph_mode'])
     
 
@@ -200,21 +278,21 @@ adata.obsm['SEDR'] = sedr_feat
 # Clustering 
 match config['cluster_method']:
     case "mclust":
-        adata = SEDR.mclust_R(adata, 
+        adata = mclust_R(adata, 
                               n_clusters = n_clusters, 
                               use_rep='SEDR', 
                               key_added='SEDR', 
                               random_seed=seed
                              )
     case "louvain":
-         adata = SEDR.louvain(adata, 
+         adata = louvain(adata, 
                               n_clusters = n_clusters, 
                               use_rep='SEDR', 
                               key_added='SEDR', 
                               random_seed=seed
                              )
     case "leiden":
-         adata = SEDR.leiden(adata, 
+         adata = leiden(adata, 
                               n_clusters = n_clusters, 
                               use_rep='SEDR', 
                               key_added='SEDR', 
@@ -223,7 +301,8 @@ match config['cluster_method']:
         
 # Output dataframes
 label_df = adata.obs[["SEDR"]]
-embedding_df = adata.obsm['SEDR']
+embedding_df = pd.DataFrame(adata.obsm['SEDR'])
+embedding_df.index = adata.obs_names
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)

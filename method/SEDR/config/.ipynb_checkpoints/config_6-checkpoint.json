@@ -1,0 +1,8 @@
+{
+"device": "cpu",
+"graph_mode": "KNN", 
+"graph_dmax": 10,
+"graph_n": 12, 
+"cluster_method": "mclust", 
+"using_dec": true
+}
