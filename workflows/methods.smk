@@ -177,7 +177,7 @@ rule method_with_config:
         matrix = config["data_dir"] + "/{sample}/log1p/counts.mtx",
         features = config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
         observations = config["data_dir"] + "/{sample}/observations.tsv",
-        neighbors = config["data_dir"] + "/{sample}/delaunay_triangulation.mtx",
+        neighbors = config["data_dir"] + "/{sample}/delaunay_traingulation/spatial_connectivities.mtx",
         dim_red = config["data_dir"] + "/{sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv",
         requirements = get_requirements
     output:
@@ -217,7 +217,7 @@ rule method_without_config:
         matrix = config["data_dir"] + "/{sample}/log1p/counts.mtx",
         features = config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
         observations = config["data_dir"] + "/{sample}/observations.tsv",
-        neighbors = config["data_dir"] + "/{sample}/delaunay_triangulation.mtx",
+        neighbors = config["data_dir"] + "/{sample}/delaunay_traingulation/spatial_connectivities.mtx",
         dim_red = config["data_dir"] + "/{sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv",
         requirements = get_requirements
     output:
@@ -231,6 +231,8 @@ rule method_without_config:
         script = lambda wildcards: methods_info[wildcards.method]["script"]
     conda:
         lambda wildcards: methods_info[wildcards.method]["env"]
+    wildcard_constraints:
+        method="[a-zA-Z0-9_-]+"
     shell:
         """
         {params.script} \

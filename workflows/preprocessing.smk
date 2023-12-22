@@ -3,7 +3,12 @@ from shared.functions import get_sample_dirs, check_files_in_folder
 
 configfile: "config.yaml"
 
-GIT_DIR = os.getenv("GIT_DIR", "/mnt/hack_data/code/SpaceHack2023")
+GIT_DIR = os.getenv("GIT_DIR", "/home/ubuntu/workspace/SpaceHack2023")
+
+neighbors_infos = {}
+neighbors_infos["delaunay_traingulation"] = {}
+neighbors_infos["delaunay_traingulation"]["script"] = "delaunay_traingulation/delaunay_triangulation.py"
+neighbors_infos["delaunay_traingulation"]["env"] = "delaunay_traingulation/delaunay_traingulation.yml"
 
 def create_input(file_list, input_file_name):
     input_files = []
@@ -12,9 +17,13 @@ def create_input(file_list, input_file_name):
             input_files.append(sample_dir + input_file_name)
     return input_files
 
-def create_neighbors_delaunay_triangulation_input(wildcards):
+def create_neighbors_input(wildcards):
     file_list = ["coordinates.tsv", "counts.mtx", "features.tsv", "observations.tsv"]
-    return create_input(file_list, "/delaunay_triangulation.mtx")
+    all_neighbors_files = []
+    for neighbors_method in neighbors_infos.keys():
+        all_neighbors_files += create_input(file_list, "/" + neighbors_method + "/spatial_connectivities.mtx")
+    print(all_neighbors_files)
+    return all_neighbors_files
 
 def create_transformation_log1p_input(wildcards):
     file_list = ["coordinates.tsv", "counts.mtx", "features.tsv", "observations.tsv"]
@@ -30,29 +39,32 @@ def create_dimensionality_reduction_pca_input(wildcards):
 
 rule all:
     input:
-        create_neighbors_delaunay_triangulation_input,
+        create_neighbors_input,
         create_transformation_log1p_input,
         create_selection_hvg_input,
-        create_dimensionality_reduction_pca_input,
+        create_dimensionality_reduction_pca_input
 
-rule neighbors_delaunay_triangulation:
+rule neighbors:
     input:
         coordinates = config["data_dir"] + "/{sample}/coordinates.tsv",
         matrix = config["data_dir"] + "/{sample}/counts.mtx",
         features = config["data_dir"] + "/{sample}/features.tsv",
         observations = config["data_dir"] + "/{sample}/observations.tsv",
     output:
-        file = config["data_dir"] + "/{sample}/delaunay_triangulation.mtx",
+        file = config["data_dir"] + "/{sample}/{neighbors_method}/spatial_connectivities.mtx",
+        outdir = directory(config["data_dir"] + "/{sample}/{neighbors_method}")
     conda:
-        GIT_DIR + "/preprocessing/neighbors/delaunay_triangulation.yml"
+        lambda wildcards: GIT_DIR + "/preprocessing/neighbors/" + neighbors_infos[wildcards.neighbors_method]["env"]
+    params:
+        script = lambda wildcards: GIT_DIR + "/preprocessing/neighbors/" + neighbors_infos[wildcards.neighbors_method]["script"]
     shell:
         """
-        {GIT_DIR}/preprocessing/neighbors/delaunay_triangulation.py \
+        python {params.script} \
           -c {input.coordinates} \
           -m {input.matrix} \
           -f {input.features} \
           -o {input.observations} \
-          -d {output.file}
+          -d {output.outdir}
         """
 
 rule transformation_log1p:
@@ -68,7 +80,7 @@ rule transformation_log1p:
         GIT_DIR + "/preprocessing/transformation/log1p.yml"
     shell:
         """
-        {GIT_DIR}/preprocessing/transformation/log1p.py \
+        python {GIT_DIR}/preprocessing/transformation/log1p.py \
           -c {input.coordinates} \
           -m {input.matrix} \
           -f {input.features} \
@@ -89,7 +101,7 @@ rule selection_hvg:
         GIT_DIR + "/preprocessing/feature_selection/highly_variable_genes_scanpy.yml"
     shell:
         """
-        {GIT_DIR}/preprocessing/feature_selection/highly_variable_genes_scanpy.py \
+        python {GIT_DIR}/preprocessing/feature_selection/highly_variable_genes_scanpy.py \
           -c {input.coordinates} \
           -m {input.matrix} \
           -f {input.features} \
@@ -112,7 +124,7 @@ rule dimensionality_reduction_pca:
         GIT_DIR + "/preprocessing/dimensionality_reduction/PCA.yml"
     shell:
         """
-        {GIT_DIR}/preprocessing/dimensionality_reduction/PCA.py \
+        python {GIT_DIR}/preprocessing/dimensionality_reduction/PCA.py \
           -c {input.coordinates} \
           -m {input.matrix} \
           -f {input.features} \
