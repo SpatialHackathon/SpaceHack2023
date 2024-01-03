@@ -5,6 +5,7 @@
 
 suppressPackageStartupMessages({
     library(optparse)
+    library(jsonlite)
     library(SingleCellExperiment)
     library(Seurat)
     library(PRECAST)
@@ -108,6 +109,7 @@ if (!is.na(opt$image)) {
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
@@ -163,7 +165,12 @@ seurat_obj <- as.Seurat(sce)
 PRECASTObj <- CreatePRECASTObject(seuList = list(seurat_obj), customGenelist = rownames(rowData(sce)))
 
 PRECASTObj <- AddAdjList(PRECASTObj, platform = technology)
-PRECASTObj@AdjList <- list(neighbors)
+if(config$use_neighbors){
+    # Ensure dimensions of neighborhood matrix match precastobject and overwrite AdjList
+    keep <- match(colnames(sce), colnames(PRECASTObj@seulist[[1]]))
+    neighbors <- neighbors[keep, keep]
+    PRECASTObj@AdjList <- list(neighbors)
+}
 PRECASTObj <- AddParSetting(PRECASTObj, Sigma_equal = FALSE, coreNum = 4, maxIter = 10, verbose = TRUE)
 
 PRECASTObj <- PRECAST(PRECASTObj, K = n_clusters)
