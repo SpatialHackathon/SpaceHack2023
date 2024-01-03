@@ -5,6 +5,7 @@ channels:
 dependencies:
   - r-base=4.3.1
   - r-optparse=1.7.3
+  - r-jsonlite=1.8.8
   - r-biocmanager=1.30.22
   - bioconductor-SingleCellExperiment=1.24.0
   - bioconductor-S4Vectors=0.40.2
