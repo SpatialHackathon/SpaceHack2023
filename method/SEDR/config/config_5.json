@@ -1,8 +1,5 @@
 {
-"device": "cpu",
-"graph_mode": "KNN", 
-"graph_dmax": 100,
-"graph_n": 12, 
+"device": "cpu", 
 "cluster_method": "louvain", 
-"using_dec": true
+"using_dec": false
 }

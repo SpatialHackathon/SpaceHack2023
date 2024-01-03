@@ -123,7 +123,6 @@ def leiden(adata, n_clusters, use_rep='SEDR', key_added='SEDR', random_seed=2023
 
     return adata
 
-
 def res_search_fixed_clus_louvain(adata, n_clusters, increment=0.01, random_seed=2023):
     import scanpy as sc
     import pandas as pd
@@ -214,50 +213,39 @@ SEDR.fix_seed(seed)
 adata = get_anndata(args)
 adata.var_names_make_unique()
 
-# if dim-red is not provided, use default PCA dimRed
-if "reduced_dimensions" not in adata.obsm_keys():
-    from sklearn.decomposition import PCA 
-    adata_X = PCA(n_components=200, 
-                  random_state=seed).fit_transform(adata.X)
-    adata.obsm['reduced_dimensions'] = adata_X
+# Constructing neighborhood graphs object format
+# Return warning if no neighborhood graph is not provided
+if args.neighbors is None:
+    raise ValueError("No neighbor graphs found, define neighbor graphs")
 
-# Constructing neighborhood graphs if neighbors not provided
-if "spatial_connectivities" in adata.obsp.keys():
-    # import intermediate functions
-    from SEDR.graph_func import preprocess_graph
-    
-    # Copy from source code in order for customization
-    adj_m1 = adata.obsp["spatial_connectivities"]
-    adj_m1 = sp.sparse.coo_matrix(adj_m1)
+# import intermediate functions
+from SEDR.graph_func import preprocess_graph
 
-    # Store original adjacency matrix (without diagonal entries) for later
-    adj_m1 = adj_m1 - sp.sparse.dia_matrix((adj_m1.diagonal()[np.newaxis, :], [0]), shape=adj_m1.shape)
-    adj_m1.eliminate_zeros()
+# Copy from source code in order for customization
+adj_m1 = adata.obsp["spatial_connectivities"]
+adj_m1 = sp.sparse.coo_matrix(adj_m1)
 
-    # Some preprocessing
-    adj_norm_m1 = preprocess_graph(adj_m1)
-    adj_m1 = adj_m1 + sp.sparse.eye(adj_m1.shape[0])
+# Store original adjacency matrix (without diagonal entries) for later
+adj_m1 = adj_m1 - sp.sparse.dia_matrix((adj_m1.diagonal()[np.newaxis, :], [0]), shape=adj_m1.shape)
+adj_m1.eliminate_zeros()
 
-    adj_m1 = adj_m1.tocoo()
-    shape = adj_m1.shape
-    values = adj_m1.data
-    indices = np.stack([adj_m1.row, adj_m1.col])
-    adj_label_m1 = torch.sparse_coo_tensor(indices, values, shape)
+# Some preprocessing
+adj_norm_m1 = preprocess_graph(adj_m1)
+adj_m1 = adj_m1 + sp.sparse.eye(adj_m1.shape[0])
 
-    norm_m1 = adj_m1.shape[0] * adj_m1.shape[0] / float((adj_m1.shape[0] * adj_m1.shape[0] - adj_m1.sum()) * 2)
+adj_m1 = adj_m1.tocoo()
+shape = adj_m1.shape
+values = adj_m1.data
+indices = np.stack([adj_m1.row, adj_m1.col])
+adj_label_m1 = torch.sparse_coo_tensor(indices, values, shape)
 
-    graph_dict = {
-        "adj_norm": adj_norm_m1,
-        "adj_label": adj_label_m1.coalesce(),
-        "norm_value": norm_m1
-    }
-    
-else: 
-    graph_dict = SEDR.graph_construction(adata, 
-                                         n=config['graph_dmax'], 
-                                         dmax=config['graph_n'], 
-                                         mode=config['graph_mode'])
-    
+norm_m1 = adj_m1.shape[0] * adj_m1.shape[0] / float((adj_m1.shape[0] * adj_m1.shape[0] - adj_m1.sum()) * 2)
+
+graph_dict = {
+    "adj_norm": adj_norm_m1,
+    "adj_label": adj_label_m1.coalesce(),
+    "norm_value": norm_m1
+}
 
 # Training SEDR
 # device: using cpu or gpu (if avaliable)
