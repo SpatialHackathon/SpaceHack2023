@@ -1,0 +1,5 @@
+{
+"device": "cpu",
+"cluster_method": "louvain", 
+"using_dec": true
+}
