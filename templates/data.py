@@ -46,7 +46,7 @@ out_dir = Path(args.out_dir)
 # counts = ...  # array with #observations rows x #features columns
 # labels_df = None  # optional, DataFrame with index (cell-id/barcode) and 1 column (label)
 # img = None  # optional
-# technology = ...  # "Visium", "ST", "imaging-based"
+# technology = ...  # i.e. "Visium", "ST", "MERSCOPE", "MERFISH", "Stereo-seq", "Slide-seq", "Xenium", "STARmap", "STARmap+", "osmFISH", "seqFISH"
 # samples_df = ...  # DataFrame with information on samples. columns: (patient, sample, position, replicate, directory, n_clusters), columns can be NA
 
 # Make sure to use consistent indexes for the DataFrames
