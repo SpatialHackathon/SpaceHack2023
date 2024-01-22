@@ -3,7 +3,8 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - r-base=4.3.2
+  - r-base=4.3.1
   - r-optparse=1.7.3
-  - r-Seurat=5.0.1
+  - r-Seurat=4.4.0
   - bioconductor-SpatialExperiment=1.12.0
+  - r-remotes=2.4.2
