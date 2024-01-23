@@ -122,7 +122,6 @@ import anndata as ad
 import scanpy as sc
 import pandas as pd
 import numpy as np
-from squidpy._constants._pkg_constants import Key
 from sklearn.metrics.pairwise import euclidean_distances
 from scipy.sparse import csr_matrix
 from itertools import chain
