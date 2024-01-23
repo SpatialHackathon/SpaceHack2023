@@ -184,13 +184,13 @@ cc.gr.aggregate_neighbors(adata,
                           out_key='X_cellcharter', 
                           sample_key=None)
 
-# Cellcharter automatically select the best cluster number...
+# clustering
 model = cc.tl.Cluster(
     n_clusters=n_clusters, 
     random_state=seed,
     convergence_tolerance=config["convergence_tolerance"], 
     covariance_regularization=config["covariance_regularization"]
-    # if running on cpu
+    # if running on gpu
     #trainer_params=dict(accelerator='gpu', devices=1)
     )
 
