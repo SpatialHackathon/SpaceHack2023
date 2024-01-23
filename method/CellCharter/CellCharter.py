@@ -133,32 +133,48 @@ random.seed(seed)
 adata = get_anndata(args)
 adata.var_names_make_unique()
 
-# Generate spatial neighbor distance (from Squidpy source code)
-coords = adata.obsm["spatial"]
-N = coords.shape[0]
-Adj = adata.obsp["spatial_connectivities"] 
+# Only calculates distance and remove edges if it's not Visium(grid structure)
+if technology != "Visium":
+    
+    coords = adata.obsm["spatial"]
+    N = coords.shape[0]
+    Adj = adata.obsp["spatial_connectivities"] 
+    
+    # Calculate euclidean distances
+    dists = np.array(list(chain(*(
+        euclidean_distances(coords[Adj.indices[Adj.indptr[i] : Adj.indptr[i + 1]], :], 
+                            coords[np.newaxis, i, :])
+        for i in range(N)
+        if len(Adj.indices[Adj.indptr[i] : Adj.indptr[i + 1]])
+    )))).squeeze()
+    
+    Dst = csr_matrix((dists, Adj.indices, Adj.indptr), shape=(N, N))
+    Dst.setdiag(0.0)
+    
+    # Fitting into the respective data slot
+    adata.obsp["spatial_distances"] = Dst
+    adata.uns["spatial_neighbors"] = {
+            "connectivities_key": "spatial_connectivities",
+            "distances_key": "spatial_distances",
+            "params": {"coord_type": "generic", 
+                       "delaunay": True, 
+                       "transform": None,
+                       "technology": technology},
+        }
+    
+    # Remove links between cells at a distance bigger than 99% of all positive distances.
+    cc.gr.remove_long_links(adata, distance_percentile = 0.99)
 
-# Calculate euclidean distances
-dists = np.array(list(chain(*(
-    euclidean_distances(coords[Adj.indices[Adj.indptr[i] : Adj.indptr[i + 1]], :], 
-                        coords[np.newaxis, i, :])
-    for i in range(N)
-    if len(Adj.indices[Adj.indptr[i] : Adj.indptr[i + 1]])
-)))).squeeze()
-
-Dst = csr_matrix((dists, Adj.indices, Adj.indptr), shape=(N, N))
-Dst.setdiag(0.0)
-
-# Fitting into the respective data slot
-adata.obsp["spatial_distances"] = Dst
-adata.uns["spatial_neighbors"] = {
+else:
+    adata.uns["spatial_neighbors"] = {
         "connectivities_key": "spatial_connectivities",
-        "distances_key": "spatial_distances",
-        "params": {"coord_type": "generic", "delaunay": True, "transform": None},
+        "distances_key": None,
+        "params": {"coord_type": "grid", 
+                   "delaunay": False, 
+                   "transform": None,
+                   "technology": technology},
     }
 
-# Remove links between cells at a distance bigger than 99% of all positive distances.
-cc.gr.remove_long_links(adata, distance_percentile = 0.99)
 
 # Aggregate neighborhoods
 cc.gr.aggregate_neighbors(adata, 
