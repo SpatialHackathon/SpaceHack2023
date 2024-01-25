@@ -426,6 +426,7 @@ dependencies:
   - r-plotly=4.10.4
   - r-plyr=1.8.9
   - r-png=0.1_8
+  - r-pracma=2.4.4
   - r-praise=1.0.0
   - r-prettyunits=1.2.0
   - r-processx=3.8.3
@@ -442,6 +443,7 @@ dependencies:
   - r-rapidjsonr=1.2.0
   - r-rappdirs=0.3.3
   - r-raster=3.6_26
+  - r-rbibutils=2.2.16
   - r-rcmdcheck=1.4.0
   - r-rcolorbrewer=1.1_3
   - r-rcpp=1.0.11
@@ -453,6 +455,7 @@ dependencies:
   - r-rcpptoml=0.2.2
   - r-rcppziggurat=0.1.6
   - r-rcurl=1.98_1.14
+  - r-rdpack=2.6
   - r-readr=2.1.5
   - r-rematch2=2.1.2
   - r-remotes=2.4.2.1
