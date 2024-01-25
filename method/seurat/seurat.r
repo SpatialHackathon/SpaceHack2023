@@ -73,8 +73,7 @@ option_list <- list(
   )
 )
 
-# TODO adjust description
-description <- "Seurat: "
+description <- "Seurat: A wrapper for igraph SNN and three clustering methods (Louvain, SLM, and Leiden)"
 
 opt_parser <- OptionParser(
   usage = description,
@@ -115,7 +114,7 @@ technology <- opt$technology
 n_clusters <- opt$n_clusters
 
 
-# You can get SpatialExperiment directly
+# Function to create SpatialExperiment
 get_SpatialExperiment <- function(
     feature_file,
     observation_file,
@@ -161,8 +160,9 @@ get_SpatialExperiment <- function(
 # Seed
 seed <- opt$seed
 set.seed(seed)
-# TODO if the method requires the seed elsewhere please pass it on
-# You can use the data as SpatialExperiment
+
+
+# Create SpatialExperiment
 spe <- get_SpatialExperiment(
     feature_file = feature_file,
     observation_file = observation_file,
@@ -171,7 +171,7 @@ spe <- get_SpatialExperiment(
     matrix_file = matrix_file
 )
 
-## Your code goes here
+# Convert to Seurat object
 seurat_obj <- as.Seurat(spe)
 
 # Find neighbors
@@ -185,19 +185,13 @@ seurat_obj <- FindClusters(
     method = "igraph",
     random.seed = seed)
 
-
-# The data.frames with observations may contain a column "selected" which you need to use to
-# subset and also use to subset coordinates, neighbors, (transformed) count matrix
-# label_df = ...  # data.frame with row.names (cell-id/barcode) and 1 column (label)
-# embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
-
 # save data
 label_df <- data.frame("label" = Idents(seurat_obj), row.names=colnames(seurat_obj))
+colnames(label_df) <- c("label")
 
 ## Write output
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
-colnames(label_df) <- c("label")
 write.table(label_df, file = label_file, sep = "\t", col.names = NA, quote = FALSE)
 
 if (exists("embedding_df")) {
