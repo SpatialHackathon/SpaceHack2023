@@ -2,8 +2,14 @@
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
 # Author_and_contribution: Lucie Pfeiferova; functions for Giotto HMRF spatial domain exploring
+# Author_and_contribution: Søren Helweg Dam; created environment setup script, updated environment.yml, added configs for remaining cluster functions, tidied code
 
-suppressPackageStartupMessages(library(optparse))
+suppressPackageStartupMessages({
+    library(optparse)
+    library(jsonlite)
+    library(SpatialExperiment)
+    library(Giotto)
+})
 
 option_list <- list(
   make_option(
@@ -68,8 +74,7 @@ option_list <- list(
   )
 )
 ## -- make option for betas (eg c(0,8,10) and betas_to_add (eg which one to use)
-# TODO adjust description
-description <- "Method Giotto HMRF spatial domain"
+description <- "Method Giotto HMRF spatial domain + clustering methods"
 
 opt_parser <- OptionParser(
   usage = description,
@@ -103,6 +108,7 @@ if (!is.na(opt$image)) {
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
@@ -151,83 +157,233 @@ get_SpatialExperiment <- function(
 # Seed
 seed <- opt$seed
 set.seed(seed)
-# TODO if the method requires the seed elsewhere please pass it on
 
-# You can use the data as SpatialExperiment
-spe <- spe <- get_SpatialExperiment(feature_file = feature_file,observation_file = observation_file,
-                                    coord_file = coord_file,matrix_file = matrix_file)
+# SpatialExperiment
+spe <- get_SpatialExperiment(
+    feature_file = feature_file,
+    observation_file = observation_file,
+    coord_file = coord_file,
+    matrix_file = matrix_file,
+    reducedDim_file = dimred_file
+)
 
-## Your code goes here
-# TODO
-# The data.frames with observations may contain a column "selected" which you need to use to
-# subset and also use to subset coordinates, neighbors, (transformed) count matrix
-# label_df = ...  # data.frame with row.names (cell-id/barcode) and 1 column (label)
-# embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
-##raw expression counts expected
-createGiotto_fn = function(sce,annotation = FALSE, selected_clustering = NULL){
-  raw_expr = SummarizedExperiment::assay(sce, "counts")
+## Configuration
+method <- config$method
+k <- config$k
+beta <- config$beta
+type <- config$type
+
+## Giotto instructions
+python_path <- "/home/jovyan/conda_envs/giotto_env/bin/python" #"/opt/conda/bin/python"
+instrs <- createGiottoInstructions(save_dir = out_dir,
+                                  save_plot = TRUE,
+                                  show_plot = TRUE,
+                                  python_path = python_path)
+
+
+
+## raw expression counts expected
+createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, instructions = NULL){
+  raw_expr <- SummarizedExperiment::assay(spe, "counts")
   #colnames(raw_expr) <- colData(sce)[,"Barcode"]
   #norm_expression <- SummarizedExperiment::assay(sce, "logcounts")
   
-  cell_metadata <- SingleCellExperiment::colData(sce)
-  cell_metadata$cell_ID <- rownames(SingleCellExperiment::colData(sce))
-  colnames(cell_metadata)[c(1,2)] <- c("sdimx","sdimy")
-  cell_metadata <- cell_metadata[,4,1,2,3]
-  gene_metadata <- as.data.frame(SingleCellExperiment::rowData(sce))
-  colnames(gene_metadata)[[1]] <- c("gene_ID")
+  cell_metadata <- SingleCellExperiment::colData(spe)
+  cell_metadata$cell_ID <- rownames(SingleCellExperiment::colData(spe))
+  colnames(cell_metadata)[c(1,2)] <- c("sdimx", "sdimy")
+  cell_metadata <- as.data.frame(cell_metadata[,c(4,1,2,3)])
+  feat_metadata <- tibble::as_tibble(SingleCellExperiment::rowData(spe),rownames = "feat_ID")
+  #colnames(feat_metadata)[[1]] <- c("feat_ID")
   #rownames(raw_epxr) <- gene_metadata$gene_ID
   if (annotation) {
-    rownames(raw_expr) <- c(SingleCellExperiment::rowData(sce)[,"SYMBOL"])
+    rownames(raw_expr) <- c(SingleCellExperiment::rowData(spe)[, "SYMBOL"])
     #rownames(norm_expression) <- c(SingleCellExperiment::rowData(sce)[,"SYMBOL"])
   }
-  gobj = Giotto::createGiottoObject(raw_exprs = raw_expr,
-                                    cell_metadata = cell_metadata,
-                                    spatial_locs = as.data.frame(SpatialExperiment::spatialCoords(spe)),
-                                    gene_metadata = gene_metadata)
+  gobj = Giotto::createGiottoObject(
+      expression = raw_expr,
+      cell_metadata = cell_metadata,
+      spatial_locs = as.data.frame(SpatialExperiment::spatialCoords(spe)),
+      feat_metadata = feat_metadata,
+      instructions = instructions,
+      dimension_reduction = GiottoClass::createDimObj(
+          coordinates = SingleCellExperiment::reducedDim(spe, "reducedDim"),
+          name = "PCA",
+          method = "pca")
+  )
   return(gobj)
 }
-my_giotto_object <- createGiotto_fn(spe)
+my_giotto_object <- createGiotto_fn(spe, instructions = instrs)
 # my_giotto_object = createGiottoObject(raw_exprs = feature_file,
 #                                       spatial_locs = coord_file,norm_expr = matrix_file)
 
 my_giotto_object <- Giotto::normalizeGiotto(my_giotto_object)
-# create network (required for binSpect methods)
-my_giotto_object = Giotto::createSpatialNetwork(gobject = my_giotto_object,minimum_k = 10)
 
-# identify genes with a spatial coherent expression profile
-km_spatialgenes = Giotto::binSpect(my_giotto_object, bin_method = 'rank')
+# Create nearest network
+    my_giotto_object <- createNearestNetwork(
+        gobject = my_giotto_object,
+        type = type,
+        spat_unit = "cell",
+        feat_type = "rna",
+        dim_reduction_to_use = "pca",
+        dim_reduction_name = 'PCA',
+        dimensions_to_use = 1:20, 
+        k = k,
+        name = 'network')
 
-###2. Run HMRF
+###2. Run clustering
 
 #if(!file.exists(hmrf_folder)) dir.create(hmrf_folder, recursive = T)
+message("Running ", method, " clustering")
+if (method == "HMRF"){
+    
+    # create network (required for binSpect methods)
+    my_giotto_object <- Giotto::createSpatialNetwork(gobject = my_giotto_object, minimum_k = 10)
+    
+    # identify genes with a spatial coherent expression profile
+    km_spatialgenes <- Giotto::binSpect(my_giotto_object, bin_method = 'rank')
 
-my_spatial_genes = km_spatialgenes[1:100]$genes
-HMRF_spatial_genes = Giotto::doHMRF(gobject = my_giotto_object,
-                                    betas = c(0, 2, 10),
-                            spatial_genes = my_spatial_genes
-                            )
-#viewHMRFresults2D(gobject = my_giotto_object,
-#                    HMRFoutput = HMRF_spatial_genes,
-#                   k = 9, betas_to_view = i,
-#                  point_size = 2)
+    my_spatial_genes <- km_spatialgenes[1:100]$feats
+    HMRF_spatial_genes <- Giotto::doHMRF(
+        gobject = my_giotto_object,
+        spat_unit = "cell",
+        feat_type = "rna",
+        betas = c(0, 2, beta),
+        expression_values = "scaled",
+        spatial_genes = my_spatial_genes,
+        dim_reduction_to_use = "pca",
+        dim_reduction_name = "PCA",
+        k = n_clusters,
+        name = method,
+        seed = seed
+        )
+    #viewHMRFresults2D(gobject = my_giotto_object,
+    #                    HMRFoutput = HMRF_spatial_genes,
+    #                   k = 9, betas_to_view = i,
+    #                  point_size = 2)
+    
+    
+    ## Write output
+    my_giotto_object <- addHMRF(
+        gobject = my_giotto_object,
+        HMRFoutput = HMRF_spatial_genes,
+        k = k, betas_to_add = c(beta),
+        hmrf_name = method)
+    
+} else if (method == "leiden"){
 
-
-
-## Write output
-my_giotto_object = addHMRF(gobject = my_giotto_object,
-                           HMRFoutput = HMRF_spatial_genes,
-                           k = 10, betas_to_add = c(10),
-                           hmrf_name = 'HMRF')
-
-
+    my_giotto_object <- doLeidenCluster(
+      my_giotto_object,
+      spat_unit = "cell",
+      feat_type = "rna",
+      name = method,
+      nn_network_to_use = type,
+      network_name = "network",
+      python_path = python_path,
+      resolution = 1,
+      weight_col = "weight",
+      partition_type = "RBConfigurationVertexPartition",#, "ModularityVertexPartition"),
+      init_membership = NULL,
+      n_iterations = 1000,
+      return_gobject = TRUE,
+      set_seed = TRUE,
+      seed_number = seed
+    )
+    } else if (method == "louvain"){
+    message("Version ", config$version)
+    
+        my_giotto_object <- doLouvainCluster(
+            my_giotto_object,
+            spat_unit = "cell",
+            feat_type = "rna",
+            version = config$version,
+            name = method,
+            nn_network_to_use = type,
+            network_name = "network",
+            python_path = python_path,
+            resolution = 1,
+            weight_col = NULL,
+            gamma = 1,
+            omega = 1,
+            louv_random = FALSE,
+            return_gobject = TRUE,
+            set_seed = TRUE,
+            seed_number = seed
+        )
+    } else if (method == "randomwalk"){
+        my_giotto_object <- doRandomWalkCluster(
+            my_giotto_object,
+            name = method,
+            nn_network_to_use = type,
+            network_name = "network",
+            walk_steps = 4,
+            walk_clusters = n_clusters,
+            walk_weights = NA,
+            return_gobject = TRUE,
+            set_seed = TRUE,
+            seed_number = seed
+        )
+    } else if (method == "sNNclust"){
+        my_giotto_object <- doSNNCluster(
+            my_giotto_object,
+            name = method,
+            nn_network_to_use = type,
+            network_name = "network",
+            k = 20,
+            eps = 4,
+            minPts = 16,
+            borderPoints = TRUE,
+            return_gobject = TRUE,
+            set_seed = TRUE,
+            seed_number = seed
+        )
+    } else if (method == "kmeans"){
+        my_giotto_object <- doKmeans(
+            my_giotto_object,
+            spat_unit = "cell",
+            feat_type = "rna",
+            expression_values = "normalized",#c("normalized", "scaled", "custom"),
+            feats_to_use = NULL,
+            dim_reduction_to_use = "pca", #c("cells", "pca", "umap", "tsne"),
+            dim_reduction_name = "PCA",
+            dimensions_to_use = 1:10,
+            distance_method = "original",#, "pearson", "spearman", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"),
+            centers = n_clusters,
+            iter_max = 100,
+            nstart = 1000,
+            algorithm = "Hartigan-Wong",
+            name = "kmeans",
+            return_gobject = TRUE,
+            set_seed = TRUE,
+            seed_number = seed
+        )
+    }else if (method == "hierarchical"){
+        my_giotto_object <- doHclust(
+            my_giotto_object,
+            spat_unit = "cell",
+            feat_type = "rna",
+            expression_values = "normalized", #c("normalized", "scaled", "custom"),
+            feats_to_use = NULL,
+            dim_reduction_to_use = "pca", #c("cells", "pca", "umap", "tsne"),
+            dim_reduction_name = "PCA",
+            dimensions_to_use = 1:10,
+            distance_method = "pearson", #c("pearson", "spearman", "original", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"),
+            agglomeration_method = "ward.D2", #c("ward.D2", "ward.D", "single", "complete", "average",    "mcquitty", "median", "centroid"),
+            k = n_clusters,
+            h = NULL,
+            name = method,
+            return_gobject = TRUE,
+            set_seed = TRUE,
+            seed_number = seed
+        )
+    }
 
 ## Write output
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-label_df<- as.data.frame(my_giotto_object@cell_metadata[,c("cell_ID","HMRF_k10_b.10")])
-rownames(label_df) <- label_df$cell_ID
-label_df <- label_df[,2, drop=FALSE]
+label_df <- as.data.frame(Giotto::getCellMetadata(my_giotto_object, output = "data.table"))
+label_df <- data.frame(label = label_df[length(colnames(label_df))], row.names = label_df[[1]])
+colnames(label_df) <- "label"
 
-colnames(label_df) <- c("label")
+
 write.table(label_df, file = label_file, sep = "\t", col.names = NA, quote = FALSE)
 
 
