@@ -1,1 +1,1 @@
-{"method": "louvain", "n_comps": 15, "n_neighbors": 15, "res": 1}
+{"image": true, "normalize": false, "method": "kmeans", "n_comps": 15}

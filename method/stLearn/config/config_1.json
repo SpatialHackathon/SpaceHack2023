@@ -1,1 +1,1 @@
-{"method": "kmeans", "n_comps": 10}
+{"image": true, "normalize": true, "weights": "physical_distance", "method": "kmeans", "n_comps": 15}

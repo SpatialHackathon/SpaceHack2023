@@ -1,1 +1,1 @@
-{"method": "kmeans", "n_comps": 50}
+{"image": true, "normalize": true, "weights": "physical_distance", "method": "louvain", "n_comps": 15, "n_neighbors": 20, "resolution": 1}
