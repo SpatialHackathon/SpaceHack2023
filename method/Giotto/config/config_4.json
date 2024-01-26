@@ -1,1 +1,1 @@
-{"method": "louvain", "version": "multinet", "beta": 10, "k": 10, "type":"sNN"}
+{"method": "louvain", "version": "multinet", "k": 10, "type":"sNN", "resolution":0.5}

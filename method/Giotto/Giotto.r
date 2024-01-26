@@ -2,7 +2,7 @@
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
 # Author_and_contribution: Lucie Pfeiferova; functions for Giotto HMRF spatial domain exploring
-# Author_and_contribution: Søren Helweg Dam; created environment setup script, updated environment.yml, added configs for remaining cluster functions, tidied code
+# Author_and_contribution: Søren Helweg Dam; created environment setup script, updated environment yaml, added configs and code for remaining cluster functions, tidied code
 
 suppressPackageStartupMessages({
     library(optparse)
@@ -74,7 +74,7 @@ option_list <- list(
   )
 )
 ## -- make option for betas (eg c(0,8,10) and betas_to_add (eg which one to use)
-description <- "Method Giotto HMRF spatial domain + clustering methods"
+description <- "Giotto: Implementations of HMRF, Leiden, Louvain, randomwalk, SNNclust, kmeans, and hierarchical"
 
 opt_parser <- OptionParser(
   usage = description,
@@ -170,11 +170,10 @@ spe <- get_SpatialExperiment(
 ## Configuration
 method <- config$method
 k <- config$k
-beta <- config$beta
 type <- config$type
 
 ## Giotto instructions
-python_path <- "/home/jovyan/conda_envs/giotto_env/bin/python" #"/opt/conda/bin/python"
+python_path <- Sys.which(c("python"))
 instrs <- createGiottoInstructions(save_dir = out_dir,
                                   save_plot = TRUE,
                                   show_plot = TRUE,
@@ -212,10 +211,10 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
   )
   return(gobj)
 }
+# Convert to Giotto object
 my_giotto_object <- createGiotto_fn(spe, instructions = instrs)
-# my_giotto_object = createGiottoObject(raw_exprs = feature_file,
-#                                       spatial_locs = coord_file,norm_expr = matrix_file)
 
+# Normalize
 my_giotto_object <- Giotto::normalizeGiotto(my_giotto_object)
 
 # Create nearest network
@@ -236,22 +235,24 @@ my_giotto_object <- Giotto::normalizeGiotto(my_giotto_object)
 message("Running ", method, " clustering")
 if (method == "HMRF"){
     
-    # create network (required for binSpect methods)
-    my_giotto_object <- Giotto::createSpatialNetwork(gobject = my_giotto_object, minimum_k = 10)
+    # create spatial network (required for binSpect methods)
+    my_giotto_object <- Giotto::createSpatialNetwork(
+        gobject = my_giotto_object,
+        minimum_k = 10)
     
     # identify genes with a spatial coherent expression profile
-    km_spatialgenes <- Giotto::binSpect(my_giotto_object, bin_method = 'rank')
+    #km_spatialgenes <- Giotto::binSpect(my_giotto_object, bin_method = 'rank')
 
-    my_spatial_genes <- km_spatialgenes[1:100]$feats
+    #my_spatial_genes <- km_spatialgenes[1:100]$feats
     HMRF_spatial_genes <- Giotto::doHMRF(
         gobject = my_giotto_object,
         spat_unit = "cell",
         feat_type = "rna",
-        betas = c(0, 2, beta),
-        expression_values = "scaled",
-        spatial_genes = my_spatial_genes,
-        dim_reduction_to_use = "pca",
-        dim_reduction_name = "PCA",
+        betas = c(0, 2, config$beta),
+        expression_values = "normalized",
+        spatial_genes = rownames(spe), #my_spatial_genes,
+        #dim_reduction_to_use = "pca",
+        #dim_reduction_name = "PCA",
         k = n_clusters,
         name = method,
         seed = seed
@@ -266,7 +267,7 @@ if (method == "HMRF"){
     my_giotto_object <- addHMRF(
         gobject = my_giotto_object,
         HMRFoutput = HMRF_spatial_genes,
-        k = k, betas_to_add = c(beta),
+        k = k, betas_to_add = c(config$beta),
         hmrf_name = method)
     
 } else if (method == "leiden"){
@@ -279,7 +280,7 @@ if (method == "HMRF"){
       nn_network_to_use = type,
       network_name = "network",
       python_path = python_path,
-      resolution = 1,
+      resolution = config$resolution,
       weight_col = "weight",
       partition_type = "RBConfigurationVertexPartition",#, "ModularityVertexPartition"),
       init_membership = NULL,
@@ -300,8 +301,8 @@ if (method == "HMRF"){
             nn_network_to_use = type,
             network_name = "network",
             python_path = python_path,
-            resolution = 1,
-            weight_col = NULL,
+            resolution = config$resolution,
+            weight_col = "weight",
             gamma = 1,
             omega = 1,
             louv_random = FALSE,
@@ -322,15 +323,15 @@ if (method == "HMRF"){
             set_seed = TRUE,
             seed_number = seed
         )
-    } else if (method == "sNNclust"){
+    } else if (method == "sNNclust" && type == "kNN"){
         my_giotto_object <- doSNNCluster(
             my_giotto_object,
             name = method,
             nn_network_to_use = type,
             network_name = "network",
-            k = 20,
-            eps = 4,
-            minPts = 16,
+            k = config$sNNK,
+            eps = config$eps,
+            minPts = config$minPts,
             borderPoints = TRUE,
             return_gobject = TRUE,
             set_seed = TRUE,
@@ -383,6 +384,7 @@ label_df <- as.data.frame(Giotto::getCellMetadata(my_giotto_object, output = "da
 label_df <- data.frame(label = label_df[length(colnames(label_df))], row.names = label_df[[1]])
 colnames(label_df) <- "label"
 
+print(table(label_df$label))
 
 write.table(label_df, file = label_file, sep = "\t", col.names = NA, quote = FALSE)
 
