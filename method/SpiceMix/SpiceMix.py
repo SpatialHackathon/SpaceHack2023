@@ -54,6 +54,8 @@ label_file = out_dir / "domains.tsv"
 
 ## Your code goes here
 import json
+import tempfile
+from pathlib import Path
 
 with open(args.config, "r") as f:
     config = json.load(f)
@@ -137,10 +139,15 @@ torch_context = {
     "dtype": dtype
 }
 
-save_anndata(out_dir / "input.h5ad", [adata])
+
+
+
+temp_dir = tempfile.TemporaryDirectory()
+temp_path = Path(temp_dir.name)
+save_anndata(temp_path / "input.h5ad", [adata])
 
 model = SpiceMix(
-    dataset_path=out_dir / "input.h5ad",
+    dataset_path=temp_path / "input.h5ad",
     random_state=args.seed,
     initial_context=torch_context,
     torch_context=torch_context,
@@ -154,7 +161,7 @@ tl.preprocess_embeddings(model, normalized_key="normalized_X")
 tl.leiden(model, joint=True, target_clusters=args.n_clusters, use_rep="normalized_X")
 
 # TODO: add optional smoothing step
-
+temp_dir.cleanup()
 label_df = model.datasets[0].obs[["leiden"]]
 
 ## Write output
