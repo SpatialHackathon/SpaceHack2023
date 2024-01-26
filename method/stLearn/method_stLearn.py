@@ -84,12 +84,13 @@ if args.image is not None and config["normalize"] is True:
         raise Exception(
             f"Invalid technology. stLearn with stSME clustering only supports the spatial transcriptomics platform that includes H&E images, like 10X Visium and ST not {args.technology}. "
             )
+
 # Return warning if no reduced dimensionality representation provided
 if args.dim_red is None:
     raise Exception(
             f"No dimensionality reduction found. Provide path to representation (e.g., PCA). "
             )
-    
+
 seed = args.seed
 ## Your code goes here
 import random
@@ -147,6 +148,7 @@ def get_anndata(args):
             adata.uns[spatial_key][library_id]["images"] = {}
             adata.uns[spatial_key][library_id]["images"][quality] = image
             adata.uns[spatial_key][library_id]["use_quality"] = quality
+
             if technology != 'Visium':
                 adata.uns[spatial_key][library_id]["scalefactors"] = {}
                 if image_json is None:
@@ -198,6 +200,7 @@ np.random.seed(seed)
 
 # Use the provided reduced dimensionality representation.
 adata.obsm["X_pca"] = pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
+
 use_data = "X_pca"
 if config["image"] is True and adata.uns["spatial"] is not None:
     if config["normalize"]:
