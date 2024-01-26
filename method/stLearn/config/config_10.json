@@ -1,1 +1,1 @@
-{"image": true, "normalize": false, "method": "kmeans", "n_comps": 15}
+{"image": false, "method": "kmeans", "n_comps": 15}

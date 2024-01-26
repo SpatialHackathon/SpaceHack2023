@@ -1,1 +1,1 @@
-{"image": true, "normalize": true, "weights": "weights_matrix_pd_md", "method": "kmeans", "n_comps": 15}
+{"image": true, "normalize": true, "weights": "weights_matrix_all", "method": "louvain", "n_comps": 15, "n_neighbors": 15}
