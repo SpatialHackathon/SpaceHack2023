@@ -177,13 +177,23 @@ seurat_obj <- as.Seurat(spe)
 # Find neighbors
 seurat_obj <- FindNeighbors(seurat_obj, dims = 1:10)
 
-# Find clusters
-seurat_obj <- FindClusters(
-    seurat_obj, 
-    resolution = config$resolution,
-    algorithm = config$algorithm,
-    method = "igraph",
-    random.seed = seed)
+# Tune k function
+tunek <- function(seurat_obj, k){
+
+  for(r in seq(0.1, 2, by = 0.01)) {
+    seu <- FindClusters(
+        seurat_obj, 
+        resolution = r,
+        algorithm = config$algorithm,
+        method = "igraph",
+        random.seed = seed)
+    if(length(unique(Idents(seu))) >= k) break
+  }
+  return(seu)
+}
+
+# Find k clusters
+seurat_obj <- tunek(seurat_obj, n_clusters)
 
 # save data
 label_df <- data.frame("label" = Idents(seurat_obj), row.names=colnames(seurat_obj))
