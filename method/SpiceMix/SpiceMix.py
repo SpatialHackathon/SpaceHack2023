@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-# Author_and_contribution: Shahul Alam; created script
+# Author_and_contribution: Niklas Mueller-Boetticher; created template, minor revisions
+# Author_and_contribution: Shahul Alam; implemented SpiceMix
 
 import argparse
 
@@ -15,9 +16,9 @@ parser.add_argument(
 parser.add_argument(
     "-m", "--matrix", help="Path to (transformed) counts (as mtx).", required=True
 )
-# parser.add_argument(
-#     "-f", "--features", help="Path to features (as tsv).", required=True
-# )
+parser.add_argument(
+    "-f", "--features", help="Path to features (as tsv).", required=True
+)
 parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
 )
@@ -76,49 +77,74 @@ from popari.model import SpiceMix
 from popari import tl
 
 preprocess_parameters = config.pop("preprocess", None)
+
+
 def get_anndata(args):
     """Convert data input into SpiceMix anndata format."""
-    
-    counts_matrix = mmread(args.matrix)
 
+    counts_matrix = mmread(args.matrix)
     if issparse(counts_matrix):
         counts_matrix = counts_matrix.tocsr()
 
     observations = pd.read_csv(args.observations, delimiter="\t", index_col=0)
-    coordinates = pd.read_csv(args.coordinates, delimiter="\t", index_col=0)
+    features = pd.read_table(args.features, index_col=0)
 
-    adata = ad.AnnData(
-        X=counts_matrix, obs=observations, obsm={"spatial": coordinates[["x", "y"]].values}
+    coordinates = (
+        pd.read_table(args.coordinates, index_col=0)
+        .loc[observations.index, :]
+        .to_numpy()
     )
 
+    adjacency_matrix = mmread(args.neighbors).T.tocsr()
+
+    adata = ad.AnnData(
+        X=counts_matrix,
+        obs=observations,
+        obsm={"spatial": coordinates},
+        obsp={"spatial_connectivities": adjacency_matrix},
+    )
+
+    # Filter by selected samples
+    if "selected" in adata.obs.columns:
+        adata = adata[observations["selected"].astype(bool), :]
+
     if preprocess_parameters:
+        del adata.obsp["spatial_connectivities"]
         sc.pp.normalize_total(adata)
         sc.pp.log1p(adata)
         sc.pp.highly_variable_genes(adata, n_top_genes=preprocess_parameters["hvgs"])
-        
-        adata = PopariDataset(adata[:, adata.var["highly_variable"]], "processed") 
+
+        adata = PopariDataset(adata[:, adata.var["highly_variable"]], "processed")
         adata.compute_spatial_neighbors()
-        
+
     else:
-        adjacency_matrix = mmread(args.neighbors)
-        if issparse(adjacency_matrix):
-            adjacency_matrix = adjacency_matrix.tocsr()
-    
+        if "selected" in adata.var.columns:
+            adata = adata[:, features["selected"].astype(bool)]
+
+        adjacency_matrix = adata.obsp["spatial_connectivities"]
+
         # Symmetrize matrix
         transpose_condition = adjacency_matrix.T > adjacency_matrix
-        adjacency_matrix = adjacency_matrix + adjacency_matrix.T.multiply(transpose_condition) - adjacency_matrix.multiply(transpose_condition)
-        
-        num_cells = adjacency_matrix.shape[0]
-        adjacency_list = [[] for _ in range(num_cells)]                                         
-        for x, y in zip(*adjacency_matrix.nonzero()):                              
-            adjacency_list[x].append(y)                                                         
+        adjacency_matrix = (
+            adjacency_matrix
+            + adjacency_matrix.T.multiply(transpose_condition)
+            - adjacency_matrix.multiply(transpose_condition)
+        )
 
-        adata.obsp["adjacency_matrix"] = adjacency_matrix                                                                                         
-        adata.obs["adjacency_list"] = adjacency_list 
-    
+        num_cells = adjacency_matrix.shape[0]
+        adjacency_list = [[] for _ in range(num_cells)]
+        for x, y in zip(*adjacency_matrix.nonzero()):
+            adjacency_list[x].append(y)
+
+        adata.obsp["adjacency_matrix"] = adjacency_matrix
+        adata.obs["adjacency_list"] = adjacency_list
+
+        del adata.obsp["spatial_connectivities"]
+
         adata = PopariDataset(adata, "raw")
 
     return adata
+
 
 adata = get_anndata(args)
 
@@ -135,36 +161,33 @@ elif dtype == "float64":
 
 torch_context = {
     "device": device,
-    "dtype": dtype
+    "dtype": dtype,
 }
 
 
+with tempfile.TemporaryDirectory() as temp_dir:
+    temp_path = Path(temp_dir)
+    save_anndata(temp_path / "input.h5ad", [adata])
 
+    model = SpiceMix(
+        dataset_path=temp_path / "input.h5ad",
+        random_state=args.seed,
+        initial_context=torch_context,
+        torch_context=torch_context,
+        **config,
+    )
 
-temp_dir = tempfile.TemporaryDirectory()
-temp_path = Path(temp_dir.name)
-save_anndata(temp_path / "input.h5ad", [adata])
+    # Run
+    model.train(num_preiterations=num_preiterations, num_iterations=num_iterations)
 
-model = SpiceMix(
-    dataset_path=temp_path / "input.h5ad",
-    random_state=args.seed,
-    initial_context=torch_context,
-    torch_context=torch_context,
-    **config
-)
+    tl.preprocess_embeddings(model, normalized_key="normalized_X")
+    tl.leiden(
+        model, joint=True, target_clusters=args.n_clusters, use_rep="normalized_X"
+    )
 
-# Run
-model.train(num_preiterations=num_preiterations, num_iterations=num_iterations)
-
-tl.preprocess_embeddings(model, normalized_key="normalized_X")
-tl.leiden(model, joint=True, target_clusters=args.n_clusters, use_rep="normalized_X")
-
-# TODO: add optional smoothing step
-temp_dir.cleanup()
-label_df = model.datasets[0].obs[["leiden"]]
+    # TODO: add optional smoothing step
+    label_df = model.datasets[0].obs[["leiden"]]
 
 ## Write output
-
-
 label_df.columns = ["label"]
 label_df.to_csv(label_file, sep="\t", index_label="")
