@@ -55,7 +55,6 @@ label_file = out_dir / "domains.tsv"
 ## Your code goes here
 import json
 import tempfile
-from pathlib import Path
 
 with open(args.config, "r") as f:
     config = json.load(f)
