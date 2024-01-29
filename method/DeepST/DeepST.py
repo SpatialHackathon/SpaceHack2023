@@ -141,27 +141,34 @@ random.seed(seed)
 
 # First, set up DeepST environment
 import tempfile
-import subprocess
 import os
 from pathlib import Path
 import scanpy as sc
 
+# Work in a temprary folder
 with tempfile.TemporaryDirectory() as tmpdir:
     gitdir = Path(tmpdir) / "DeepST"
         
     print(f"Created temporary directory at {tmpdir} to store DeepST repo")
 
-    # Clone the repository to the tested commit
-    subprocess.run(["git", "clone", "https://github.com/JiangBioLab/DeepST.git", gitdir], check=True)
-    subprocess.run(["git", "reset", "--hard", "1daa513"])
-
-    # append different 
-    sys.path.append(gitdir+"deepst")
-    from DeepST import run
-    from his_feat import image_feature, image_crop
+    # Clone the repository to the specific commit
+    os.system(
+    f"""
+    git clone https://github.com/JiangBioLab/DeepST.git {gitdir}
+    cd {gitdir} 
+    git reset --hard 1daa513
+    """)
+    
+    # From DeepST import run
+    import importlib.util
+    spec=importlib.util.spec_from_file_location("run", gitdir/"deepst/DeepST.py")
+    run = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(run)
+    
+    # from his_feat import image_feature, image_crop
 
     # Set up deepST object
-    deepen = run(save_path=save_path+str(dataset),
+    deepen = run(save_path=None,
                  task = "Identify_Domain", 
                  platform=technology,
                  pca_n_comps=200,
@@ -170,17 +177,15 @@ with tempfile.TemporaryDirectory() as tmpdir:
                  Conv_type="GCNConv",  # ["GCNConv", ]
                  )
     
-    # adata = deepen._get_adata(data_path, dataset)
-    adata = deepen._get_augment(
-        adata, adjacent_weight=0.3, neighbour_k=4, weights=weights,)
-    
+
+    # TODO: get graph_dict structure from input
     graph_dict = deepen._get_graph(
         adata.obsm["spatial"], distType="BallTree", k=k)
 
-    # Get clustering results (using pretrain=True as recommended by author)
+    # TODO: Parameters changed by configurations
     adata = deepen._fit(adata, graph_dict, pretrain=True)
 
-    # Get clustering results
+    # Get clustering results, set prior=True so we got n_clusters no of clusters
     adata = deepen._get_cluster_data(adata, n_domains=n_clusters, priori=True)
     
     # Output dataframes
