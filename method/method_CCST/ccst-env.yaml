@@ -25,6 +25,5 @@ dependencies:
     - stlearn==0.3.2
     - jinja2==3.0
     - bokeh==2.3.0
-    - scanpy
-    - anndata
+    - anndata==0.7.8
 
