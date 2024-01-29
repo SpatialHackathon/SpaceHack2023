@@ -1,0 +1,1 @@
+{"data_path": "/home/jovyan/scratch/SpaceHack2/data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR", "data_type": "nsc", "data_name": "visium_breast_cancer_SEDR", "lambda_I": 0.3, "num_epoch": 10}
