@@ -88,58 +88,27 @@ n_clusters = args.n_clusters
 technology = args.technology
 seed = args.seed
 
+# TODO set the seed, if the method requires the seed elsewhere please pass it on
+import random
+
+random.seed(seed)
+# np.random.seed(seed)
+# torch.manual_seed(seed)
+
+## Your code goes here
+# we need the config to pass on the CCST-specific parameters
+import json
+try: 
+    with open (args.config, "r") as c:
+        config = json.load(c)
+except:
+    raise FileNotFoundError(f"config file not specified/not found")
 
 # Since CCST is not really a package, but a command line tool, we generate a temporary directory and clone the CCST repo from github into it. Info: https://github.com/xiaoyeye/CCST
 import tempfile
 import subprocess
 import os
 import csv
-
-def get_anndata(args):
-    import anndata as ad
-    import numpy as np
-    import pandas as pd
-    import scipy as sp
-    from PIL import Image
-
-    observations = pd.read_table(args.observations, index_col=0)
-    features = pd.read_table(args.features, index_col=0)
-
-    coordinates = (
-        pd.read_table(args.coordinates, index_col=0)
-        .loc[observations.index, :]
-        .to_numpy()
-    )
-
-    adata = ad.AnnData(obs=observations, var=features, obsm={"spatial": coordinates})
-
-    if args.matrix is not None:
-        X = sp.io.mmread(args.matrix)
-        if sp.sparse.issparse(X):
-            X = X.tocsr()
-        adata.X = X
-
-    if args.neighbors is not None:
-        adata.obsp["spatial_connectivities"] = sp.io.mmread(args.neighbors).T.tocsr()
-
-    # Filter by selected samples/features
-    if "selected" in adata.obs.columns:
-        adata = adata[observations["selected"].astype(bool), :]
-    if "selected" in adata.var.columns:
-        adata = adata[:, features["selected"].astype(bool)]
-
-    if args.dim_red is not None:
-        adata.obsm["reduced_dimensions"] = (
-            pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
-        )
-
-    if args.image is not None:
-        adata.uns["image"] = np.array(Image.open(args.image))
-    else:
-        adata.uns["image"] = None
-
-    return adata
-
 
 def clone_and_process_repo(git_url, release_tag, output_dir):
     if config["data_type"] != "sc" and config["data_type"] != "nsc":
@@ -156,83 +125,63 @@ def clone_and_process_repo(git_url, release_tag, output_dir):
         # get into the cloned CCST directory
         os.chdir(gitdir)
 
+        # TODO: convert our files into what they want in the temp directory:
+            # for sc
+            # for non-sc
+
+        """ CCST has 2 modes - "nsc" or "non-single-cell", for Visium
+        and "sc" for Merfish. They write, that sc datasets other than
+        Merfish can be used aswell. """
+
         if config["data_type"]=='nsc': # not single cell
-            get_anndata(args)
             prepros_script_path = gitdir / "data_generation_ST.py"
             
-            if os.path.exists(prepros_script_path):
-                print("Running preprocessing for non single cell CCST...")
-                command = ["python",prepros_script_path,
-                           "--data_name",config["data_name"]]
-                subprocess.run(command, check=True)
-            else:
-                raise FileNotFoundError(f"The file {prepros_script_path} was not found.")
-            # Idea 1: call their script directly, omit run_CCST.py
+            print("Running preprocessing for non single cell CCST...")
+            command = ["python",prepros_script_path,
+                       "--data_name",config["data_name"]]
+            subprocess.run(command, check=True)
+            # Idea 1: call their functions directly, omit run_CCST.py
             # from CCST_ST_utils import CCST_on_ST
-            # args_ccst = config[YYY]
+            # args_ccst = # get from config
             # CCST_on_ST(args_ccst)
             
         elif config["data_type"]=='sc': # single-cell
             # TODO: convert the given tsv files into the right format for CCST
             prepros_script_path = gitdir / "data_generation_merfish.py"
-            if os.path.exists(prepros_script_path):
-                print("Running preprocessing for single cell CCST...")
-                command = ["python", prepros_script_path,
-                       "--data_name", XXX]
-            else:
-                raise FileNotFoundError(f"The file {prepros_script_path} was not found.")
-            # Idea 1: call their script directly, omit run_CCST.py
+
+            print("Running preprocessing for single cell CCST...")
+            command = ["python", prepros_script_path,
+                   "--data_name", config["data_name"]]
+            # Idea 1: call their functions directly, omit run_CCST.py
             # from CCST_merfish_utils import CCST_on_MERFISH
-            # args_ccst = config[YYY]
+            # args_ccst = # get from config
             # CCST_on_MERFISH(args_ccst)
 
         
-        # Idea 2: Run their offered run_CCST.py script
+        # # Idea 2: Run their offered run_CCST.py script, which separates
+        # # "nsc" and "sc"
+    
         # script_path = gitdir / "run_CCST.py"
-
-        # # Ensure the script file still exists in the ccst repo
-        # if os.path.exists(script_path):
-        #     # Run the Python script run_CCST.py from the CCST repo
-        #     print("Running the run_CCST script with the parameters...")
-        #     command = ["python", script_path,
+        # # Run the Python script run_CCST.py from the CCST repo
+        # print("Running the run_CCST script...")
+        # command = ["python", script_path,
         #             "--data_path", tmpdir, # instead of data_path
         #            "--data_type", config["data_type"],
         #            "--data_name", config["data_name"],
         #            "--result_path", output_dir,
         #            "--embedding_data_path", output_dir]
-
-        #     subprocess.run(command, check=True)
-            
-        # else:
-        #     print(f"Script not found: {script_path}")
+    
+        # subprocess.run(command, check=True)
 
     print('Temporary directory and file have been deleted.')
 
 #######
-
-
-# TODO set the seed, if the method requires the seed elsewhere please pass it on
-import random
-
-random.seed(seed)
-# np.random.seed(seed)
-# torch.manual_seed(seed)
-
-## Your code goes here
-import json
-try: 
-    with open (args.config, "r") as c:
-        config = json.load(c)
-except:
-    raise FileNotFoundError(f"config file not specified/not found")
     
 # label_df = ...  # DataFrame with index (cell-id/barcode) and 1 column (label)
 # embedding_df = None  # optional, DataFrame with index (cell-id/barcode) and n columns
 
 ######## Testing area, delete before the pull request #########
 if __name__ == "__main__":
-    # git_url = "https://github.com/xiaoyeye/CCST.git"  # The CCST repo
-    # release_tag = "v1.0.1"  # Version used during SpaceHack2.0
     out_dir.mkdir(parents=True, exist_ok=True)
     clone_and_process_repo(git_url, release_tag, out_dir)
     
@@ -242,10 +191,7 @@ if __name__ == "__main__":
 out_dir.mkdir(parents=True, exist_ok=True)
 
 # TODO: save embeddings because CCST produces some - get them out of the temp directory
-
-
 # label_df.columns = ["label"]
 # label_df.to_csv(label_file, sep="\t", index_label="")
-
 # if embedding_df is not None:
     # embedding_df.to_csv(embedding_file, sep="\t", index_label="")
