@@ -17,9 +17,14 @@ dependencies:
   - ipykernel
   - pip
   - pip:
+    - torch
     - torch_geometric==1.6.3
     - torch_sparse==0.6.8
     - torch_scatter==2.0.5
     - scanorama==1.7.1
     - stlearn==0.3.2
+    - jinja2==3.0
+    - bokeh==2.3.0
+    - scanpy
+    - anndata
 
