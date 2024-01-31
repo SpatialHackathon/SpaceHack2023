@@ -1,0 +1,3 @@
+Seattle Alzheimers Disease (https://portal.brain-map.org/explore/seattle-alzheimers-disease) MERSCOPE v1 MTG Dataset is licensed 
+under the Allen Institute terms of use (See https://alleninstitute.org/citation-policy/ for the Allen Institute Citation Policy 
+and https://alleninstitute.org/terms-of-use/ for the Allen Institute Terms of Use.
