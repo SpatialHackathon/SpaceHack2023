@@ -26,7 +26,6 @@ dependencies:
         - matplotlib==3.7.0 
         - numpy==1.23.5
         - python-igraph==0.10.4
-        - python-louvain==0.15 
         - scikit-learn==1.2.1 
         - scikit-network==0.28.3
         - scipy==1.10.1
@@ -34,4 +33,5 @@ dependencies:
         - tqdm==4.64.1
         - umap-learn==0.5.3 
         - psutil==5.9.4
-        - pandas==1.5.3        
+        - pandas==1.5.3
+        - louvain==0.8.1

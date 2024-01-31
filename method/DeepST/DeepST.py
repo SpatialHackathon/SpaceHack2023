@@ -75,7 +75,10 @@ if args.dim_red is not None:
 if args.image is not None:
     image_file = args.image
 if args.config is not None:
-    config_file = args.config
+    # Def config
+    import json
+    with open(args.config, "r") as f:
+        config = json.load(f)
 
 n_clusters = args.n_clusters
 technology = args.technology
@@ -121,35 +124,32 @@ def get_anndata(args):
             pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
         )
 
-    if args.img is not None:
-        adata.uns["image"] = np.array(Image.open(args.img))
+    if args.image is not None:
+        adata.uns["image"] = np.array(Image.open(args.image))
     else:
         adata.uns["image"] = None
 
     return adata
 
 adata = get_anndata(args)
+adata.var_names_make_unique()
 
 #######
-
-# TODO set the seed, if the method requires the seed elsewhere please pass it on
-import random
-
-random.seed(seed)
-# np.random.seed(seed)
-# torch.manual_seed(seed)
+# NOTE: Seed cannot be used here
 
 # First, set up DeepST environment
 import tempfile
-import os
-from pathlib import Path
+import os, sys
 import scanpy as sc
+import numpy as np
+import pandas as pd
+import scipy.sparse as sp
+import torch
+
 
 # Work in a temprary folder
 with tempfile.TemporaryDirectory() as tmpdir:
-    gitdir = Path(tmpdir) / "DeepST"
-        
-    print(f"Created temporary directory at {tmpdir} to store DeepST repo")
+    gitdir = f"{str(tmpdir)}/DeepST"
 
     # Clone the repository to the specific commit
     os.system(
@@ -158,33 +158,58 @@ with tempfile.TemporaryDirectory() as tmpdir:
     cd {gitdir} 
     git reset --hard 1daa513
     """)
+
+    # Set working directory as deepST directory
+    sys.path.append(f"{gitdir}/deepst")
+    import adj
     
     # From DeepST import run
     import importlib.util
-    spec=importlib.util.spec_from_file_location("run", gitdir/"deepst/DeepST.py")
-    run = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(run)
+    # Import the main wrapper DeepST module
+    spec=importlib.util.spec_from_file_location("deepST", f"{gitdir}/deepst/DeepST.py")
+    deepST = importlib.util.module_from_spec(spec)
+    sys.modules["deepST"] = deepST
+    spec.loader.exec_module(deepST)
     
-    # from his_feat import image_feature, image_crop
-
     # Set up deepST object
-    deepen = run(save_path=None,
+    deepen = deepST.run(save_path = None,
                  task = "Identify_Domain", 
-                 platform=technology,
-                 pca_n_comps=200,
-                 pre_epochs=800,  # change based on hardware
-                 epochs=1000,  # change based on hardware
-                 Conv_type="GCNConv",  # ["GCNConv", ]
+                 pre_epochs = config["pre_epochs"],  # change based on hardware
+                 epochs = config["epochs"],  # change based on hardware
+                 use_gpu = config["use_gpu"],
                  )
     
+    # adopted code from deepst/adj.py
+    """ Store original adjacency matrix (without diagonal entries) for later """
+    adj_pre = adata.obsp["spatial_connectivities"]
+    adj_pre = sp.coo_matrix(adj_pre)
 
-    # TODO: get graph_dict structure from input
-    graph_dict = deepen._get_graph(
-        adata.obsm["spatial"], distType="BallTree", k=k)
+    adj_pre = adj_pre - sp.dia_matrix((adj_pre.diagonal()[np.newaxis, :], [0]), shape=adj_pre.shape)
+    adj_pre.eliminate_zeros()
 
-    # TODO: Parameters changed by configurations
-    adata = deepen._fit(adata, graph_dict, pretrain=True)
+    """ Some preprocessing."""
+    # intiate a "graph" item, k is a placeholder doesn't matter
+    graph = adj.graph(data = adata, k = 1)
+    adj_norm = graph.pre_graph(adj_pre)
+    adj_label = adj_pre + sp.eye(adj_pre.shape[0])
+    adj_label = torch.FloatTensor(adj_label.toarray())
+    norm = adj_pre.shape[0] * adj_pre.shape[0] / float((adj_pre.shape[0] * adj_pre.shape[0] - adj_pre.sum()) * 2)
 
+    graph_dict = {
+                 "adj_norm": adj_norm,
+                 "adj_label": adj_label,
+                 "norm_value": norm }
+
+    # NOTE: There're so many hyperparameters but I would not change any...the last few commits the author made is to change some default parameters so I assume the author has figure out the "best" config for this model
+    
+    # Conv_type: ["GCNConv", "SAGEConv", "GraphConv", "GatedGraphConv", "ResGatedGraphConv", "TransformerConv", "TAGConv", "ARMAConv", "SGConv", "MFConv", "RGCNConv", "FeaStConv", "LEConv", "ClusterGCNConv"]
+    data = adata.obsm["reduced_dimensions"].astype(np.float64)
+    
+    deepst_embed = deepen._fit(data, 
+                        graph_dict=graph_dict, 
+                        Conv_type=config["Conv_type"])
+
+    adata.obsm["DeepST_embed"] = deepst_embed
     # Get clustering results, set prior=True so we got n_clusters no of clusters
     adata = deepen._get_cluster_data(adata, n_domains=n_clusters, priori=True)
     
