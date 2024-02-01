@@ -9,7 +9,7 @@ configfile: "path_configs/methods.yaml"
 GIT_DIR = get_git_directory(config)
 SEED = config["seed"]
 
-methods = config["methods"]
+methods = config.pop("methods")
 
 
 def get_technology(path):
@@ -75,90 +75,22 @@ def get_config_file(wildcards):
 
 
 def get_requirements(wildcards):
-    if wildcards.method == "BANKSY":
-        return "BANKSY_requirements.info"
-    if wildcards.method == "DRSC":
-        return "DRSC_requirements.info"
-    if wildcards.method == "maple":
-        return "maple_requirements.info"
-    if wildcards.method == "meringue":
-        return "meringue_requirements.info"
-    if wildcards.method == "precast":
-        return "precast_requirements.info"
-    if wildcards.method == "scMEB":
-        return "scMEB_requirements.info"
-    return []
+    if methods[wildcards.method].get("env_additional") is not None:
+        return f"{wildcards.method}_requirements.info"
+    else:
+        return []
 
 
-rule BANKSY_requirements:
+rule installation_requirements:
+    params:
+        install_script=methods[wildcards.method]["env_additional"],
     output:
-        temp("BANKSY_requirements.info"),
+        temp("{method}_requirements.info"),
     conda:
-        GIT_DIR + methods["BANKSY"]["env"]
+        GIT_DIR + methods[wildcards.method]["env"]
     shell:
         """
-        conda run Rscript -e \"remotes::install_github('prabhakarlab/Banksy', dependencies = TRUE, ref = 'b1a2c8bb2af06346f303637b9bba18faa1a1fe32')\"
-        touch BANKSY_requirements.info
-        """
-
-
-rule DRSC_requirements:
-    output:
-        temp("DRSC_requirements.info"),
-    conda:
-        GIT_DIR + methods["DRSC"]["env"]
-    shell:
-        """
-        conda run Rscript -e \"remotes::install_version(package = 'DR.SC', version = '3.3', repos = 'https://cran.uni-muenster.de/')\"
-        touch DRSC_requirements.info
-        """
-
-
-rule maple_requirements:
-    output:
-        temp("maple_requirements.info"),
-    conda:
-        GIT_DIR + methods["maple"]["env"]
-    shell:
-        """
-        conda run Rscript -e \"remotes::install_github('carter-allen/maple', ref = 'b173e89a7bc82c6ae09c7e0709d09ed22082172d')\"
-        touch maple_requirements.info
-        """
-
-
-rule meringue_requirements:
-    output:
-        temp("meringue_requirements.info"),
-    conda:
-        GIT_DIR + methods["meringue"]["env"]
-    shell:
-        """
-        conda run Rscript -e \"remotes::install_github('JEFworks-Lab/MERINGUE', ref = 'ca9e2ccabd95680d9ca0b323a8a507c038f2ea13')\"
-        touch meringue_requirements.info
-        """
-
-
-rule precast_requirements:
-    output:
-        temp("precast_requirements.info"),
-    conda:
-        GIT_DIR + methods["precast"]["env"]
-    shell:
-        """
-        conda run Rscript -e \"remotes::install_version(package = 'PRECAST', version = '1.6.3', repos = 'https://cran.uni-muenster.de/')\"
-        touch precast_requirements.info
-        """
-
-
-rule scMEB_requirements:
-    output:
-        temp("scMEB_requirements.info"),
-    conda:
-        GIT_DIR + methods["scMEB"]["env"]
-    shell:
-        """
-        conda run Rscript -e \"if(!require(SC.MEB)) install.packages('SC.MEB',repos = 'https://cran.r-project.org/')\"
-        touch scMEB_requirements.info
+        {params.install_script}" && touch {output}
         """
 
 
