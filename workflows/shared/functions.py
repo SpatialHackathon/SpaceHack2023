@@ -27,29 +27,6 @@ def check_files_in_folder(folder_path, file_list):
     return True
 
 
-def generate_metrics_results(data_dir, metrics_name, methods, file_ext, configfiles):
-    # fmt: off
-    result_files = []
-    for sample_dir in get_sample_dirs(data_dir):
-        for method in methods:
-            method_dir = sample_dir + "/" + method
-            if check_files_in_folder(method_dir, ["domains.tsv"]):
-                if configfiles:
-                    for config_file_name in configfiles.keys():
-                        result_files.append(method_dir + "/" + metrics_name + "/" + config_file_name + "/results." + file_ext)
-                else:
-                    result_files.append(method_dir + "/" + metrics_name + "/results." + file_ext)
-            else:
-                for config_dir in os.listdir(method_dir):
-                    if check_files_in_folder(method_dir + "/" + config_dir, ["domains.tsv"]):
-                        if "config_files" in config[methods].keys():
-                            for config_file_name in config[methods]["config_files"].keys():
-                                result_files.append(method_dir + "/" + config_dir + "/" + metrics_name + "/" + config_file_name + "/results." + file_ext)
-                        else: result_files.append(method_dir + "/" + config_dir + "/" + metrics_name + "/results." + file_ext)
-    # fmt: on
-    return result_files
-
-
 def get_ncluster(file_path, sample, default_value=7):
     if not os.path.exists(file_path):
         return default_value
