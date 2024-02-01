@@ -10,12 +10,12 @@ print("Run Download Workflow")
 
 GIT_DIR = get_git_directory(config)
 
-datasets = config["datasets"]
+datasets = config.pop("datasets")
 
 
 def get_all_input(wildcards):
     all_folder = []
-    for dataset in config["datasets"]:
+    for dataset in datasets:
         all_folder.append(config["results_dir"] + "/" + dataset)
     return all_folder
 
