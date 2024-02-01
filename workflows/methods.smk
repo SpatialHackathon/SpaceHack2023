@@ -9,9 +9,19 @@ configfile: "path_configs/methods.yaml"
 GIT_DIR = get_git_directory(config)
 SEED = config["seed"]
 
-TECHNOLOGY = config["technology"]
-
 methods = config["methods"]
+
+
+def get_technology(path):
+    import json
+    from pathlib import Path
+
+    with open(Path(path) / "experiments.json", "r") as file:
+        info = json.load(file)
+    return info["technology"]
+
+
+TECHNOLOGY = get_technology(config["data_dir"])
 
 
 def create_input(method):
