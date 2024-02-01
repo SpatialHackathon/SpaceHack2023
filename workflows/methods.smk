@@ -105,7 +105,7 @@ rule method_with_config:
         features=config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
         observations=config["data_dir"] + "/{sample}/observations.tsv",
         neighbors=config["data_dir"]
-        + "/{sample}/delaunay_traingulation/spatial_connectivities.mtx",
+        + "/{sample}/delaunay_triangulation/spatial_connectivities.mtx",
         dim_red=config["data_dir"]
         + "/{sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv",
         requirements=get_requirements,
@@ -150,7 +150,7 @@ rule method_without_config:
         features=config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
         observations=config["data_dir"] + "/{sample}/observations.tsv",
         neighbors=config["data_dir"]
-        + "/{sample}/delaunay_traingulation/spatial_connectivities.mtx",
+        + "/{sample}/delaunay_triangulation/spatial_connectivities.mtx",
         dim_red=config["data_dir"]
         + "/{sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv",
         requirements=get_requirements,
