@@ -174,7 +174,7 @@ seurat_obj@images$image =  new(
   Class = 'SlideSeq',
   assay = "Spatial",
   key = "coordinates_",
-  coordinates = as.data.frame(spatialCoords(spe))
+  coordinates = as.data.frame(colData(spe))
 )
 
 # Run maple
