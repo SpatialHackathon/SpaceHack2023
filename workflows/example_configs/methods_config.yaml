@@ -1,6 +1,8 @@
 data_dir: "/home/ubuntu/tmp_data/libd_dlpfc"
+git_dir: /home/ubuntu/workspace/SpaceHack2023
+seed: 42
 technology: "Visium"
-methods:
+use_methods:
   - "STAGATE"
 config_files:
   spaGCN:

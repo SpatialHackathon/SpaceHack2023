@@ -1,0 +1,52 @@
+methods:
+  BANKSY:
+    env: method/BANKSY/banksy.yml
+    script: method/BANKSY/banksy.r
+  BayesSpace:
+    env: method/BayesSpace/BayesSpace.yml
+    script: method/BayesSpace/BayesSpace.r
+  DRSC:
+    env: method/DRSC/DRSC.yml
+    script: method/DRSC/DRSC.r
+  GraphST:
+    env: method/GraphST/GraphST.yml
+    script: method/GraphST/method_GraphST.py
+  SCAN_IT:
+    env: method/SCAN-IT/scanit.yml
+    script: method/SCAN-IT/method_scanit.py
+  SEDR:
+    env: method/SEDR/SEDR.yml
+    script: method/SEDR/SEDR_method.py
+  SOTIP:
+    env: method/SOTIP/sotip.yml
+    script: method/SOTIP/method_sotip.py
+  STAGATE:
+    env: method/STAGATE/STAGATE.yml
+    script: method/STAGATE/method_STAGATE.py
+  SpaceFlow:
+    env: method/SpaceFlow/spaceflow.yml
+    script: method/SpaceFlow/method_spaceflow.py
+  SpiceMix:
+    env: method/SpiceMix/SpiceMix.yml
+    script: method/SpiceMix/SpiceMix.py
+  maple:
+    env: method/maple/maple.yml
+    script: method/maple/maple.r
+  meringue:
+    env: method/meringue/meringue.yml
+    script: method/meringue/meringue.r
+  precast:
+    env: method/precast/precast.yml
+    script: method/precast/precast.r
+  scMEB:
+    env: method/SC.MEB/SC.MEB.yml
+    script: method/SC.MEB/SC.MEB.r
+  scanpy:
+    env: method/scanpy/scanpy_env.yaml
+    script: method/scanpy/method_scanpy.py
+  seurat:
+    env: method/seurat/seurat.yml
+    script: method/seurat/seurat.r
+  spaGCN:
+    env: method/spaGCN/spaGCN.yml
+    script: method/spaGCN/spaGCN.py
