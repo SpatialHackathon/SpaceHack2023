@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: ENTER YOUR NAME AND CONTRIBUTION HERE
+# Author_and_contribution: Jieran Sun; Implemented method DeepST
 
 import argparse
 
-# TODO adjust description
-parser = argparse.ArgumentParser(description="Method ...")
+# description
+parser = argparse.ArgumentParser(description="Method DeepST: identifying spatial domains in spatial transcriptomics by deep learning https://doi.org/10.1093/nar/gkac901")
 
 parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
@@ -146,6 +146,11 @@ import pandas as pd
 import scipy.sparse as sp
 import torch
 
+# Seeding for controlling randomization
+import random
+random.seed(seed)
+torch.manual_seed(seed)
+np.random.seed(seed)
 
 # Work in a temprary folder
 with tempfile.TemporaryDirectory() as tmpdir:
