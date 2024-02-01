@@ -2,8 +2,19 @@ import os
 import pandas as pd
 
 
+def get_git_directory(config):
+    if config.get("git_dir") is not None:
+        git_dir = config["git_dir"]
+    else:
+        git_dir = os.getenv("GIT_DIR", "/home/ubuntu/workspace/SpaceHack2023")
+
+    if not git_dir.endswith("/"):
+        git_dir += "/"
+    return git_dir
+
+
 def get_sample_dirs(data_dir):
-    return [ f.path for f in os.scandir(data_dir) if f.is_dir() ]
+    return [f.path for f in os.scandir(data_dir) if f.is_dir()]
 
 
 def check_files_in_folder(folder_path, file_list):
@@ -17,6 +28,7 @@ def check_files_in_folder(folder_path, file_list):
 
 
 def generate_metrics_results(data_dir, metrics_name, methods, file_ext, configfiles):
+    # fmt: off
     result_files = []
     for sample_dir in get_sample_dirs(data_dir):
         for method in methods:
@@ -34,29 +46,16 @@ def generate_metrics_results(data_dir, metrics_name, methods, file_ext, configfi
                             for config_file_name in config[methods]["config_files"].keys():
                                 result_files.append(method_dir + "/" + config_dir + "/" + metrics_name + "/" + config_file_name + "/results." + file_ext)
                         else: result_files.append(method_dir + "/" + config_dir + "/" + metrics_name + "/results." + file_ext)
-    return(result_files)
+    # fmt: on
+    return result_files
 
-
-
-
-#configfiles = {"name1":"file1"}
-#methods = ["spaGCN"] 
-#data_dir = "/home/ubuntu/tmp_data/libd_dlpfc"
-#metrics_name = "test_metrics"
-#file_ext = "json"
-#generate_metrics_results(data_dir, metrics_name, methods, file_ext,configfiles)
-#generate_metrics_results(data_dir, metrics_name, methods, file_ext, None)
 
 def get_ncluster(file_path, sample, default_value=7):
     if not os.path.exists(file_path):
         return default_value
     try:
-        df = pd.read_csv(file_path, sep='\t', index_col=0)
+        df = pd.read_csv(file_path, sep="\t", index_col=0)
         df_filtered = df[df["directory"] == sample]
         return int(df_filtered["n_clusters"].mean())
     except:
         return default_value
-
-#sample = "Br5595_151669"
-#file_path = "/home/ubuntu/tmp_data/xenium_mouse_brain_SergioSalas/samples.tsv"
-#get_ncluster(file_path, sample)
