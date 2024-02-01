@@ -2,12 +2,14 @@ methods:
   BANKSY:
     env: method/BANKSY/banksy.yml
     script: method/BANKSY/banksy.r
+    env_additional:
   BayesSpace:
     env: method/BayesSpace/BayesSpace.yml
     script: method/BayesSpace/BayesSpace.r
   DRSC:
     env: method/DRSC/DRSC.yml
     script: method/DRSC/DRSC.r
+    env_additional:
   GraphST:
     env: method/GraphST/GraphST.yml
     script: method/GraphST/method_GraphST.py
@@ -32,15 +34,19 @@ methods:
   maple:
     env: method/maple/maple.yml
     script: method/maple/maple.r
+    env_additional:
   meringue:
     env: method/meringue/meringue.yml
     script: method/meringue/meringue.r
+    env_additional:
   precast:
     env: method/precast/precast.yml
     script: method/precast/precast.r
+    env_additional:
   scMEB:
     env: method/SC.MEB/SC.MEB.yml
     script: method/SC.MEB/SC.MEB.r
+    env_additional:
   scanpy:
     env: method/scanpy/scanpy_env.yaml
     script: method/scanpy/method_scanpy.py
