@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Made by Paul Kiessling pakiessling@ukaachen.de 
 
 
