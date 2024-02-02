@@ -90,7 +90,7 @@ rule installation_requirements:
         GIT_DIR + methods[wildcards.method]["env"]
     shell:
         """
-        {params.install_script}" && touch {output}
+        {params.install_script} && touch {output}
         """
 
 
