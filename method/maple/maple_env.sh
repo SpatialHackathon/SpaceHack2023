@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Create the maple conda environment named maple_env
-conda env create -f maple.yml
+# conda env create -f maple.yml
 
 # Activate the environment
-source activate maple_env
+# source activate maple_env
 
 # Install the required R packages
 Rscript -e "remotes::install_github('carter-allen/spruce', ref = '47b02300cc9a1d83213682bd78464115867d1763')"
