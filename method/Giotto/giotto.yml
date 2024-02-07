@@ -1,4 +1,3 @@
-name: giotto_env
 channels:
   - conda-forge
   - bioconda

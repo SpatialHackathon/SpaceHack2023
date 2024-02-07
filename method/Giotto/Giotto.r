@@ -2,7 +2,7 @@
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
 # Author_and_contribution: Lucie Pfeiferova; functions for Giotto HMRF spatial domain exploring
-# Author_and_contribution: Søren Helweg Dam; created environment setup script, updated environment yaml, added configs, tidied code, HMFR finally works when using normalizeGiotto + runPCA
+# Author_and_contribution: Søren Helweg Dam; created environment setup script, updated environment yaml, added configs, tidied code, HMFR works when adding PCA using runPCA
 
 suppressPackageStartupMessages({
     library(optparse)
@@ -74,7 +74,7 @@ option_list <- list(
   )
 )
 ## -- make option for betas (eg c(0,8,10) and betas_to_add (eg which one to use)
-description <- "Giotto: Implementations of HMRF, Leiden, Louvain, randomwalk, SNNclust, kmeans, and hierarchical"
+description <- "Giotto: Implementation of HMRF from smfishHmrf" # , Leiden, Louvain, randomwalk, SNNclust, kmeans, and hierarchical were removed
 
 opt_parser <- OptionParser(
   usage = description,
@@ -137,6 +137,7 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(spe, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
   }
 
   # Filter features and samples
@@ -171,7 +172,6 @@ spe <- get_SpatialExperiment(
 ## Configuration
 method <- "HMRF"
 k <- config$k
-type <- config$type
 
 ## Giotto instructions
 python_path <- Sys.which(c("python"))
@@ -186,7 +186,7 @@ instrs <- createGiottoInstructions(save_dir = out_dir,
 createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, instructions = NULL){
   raw_expr <- SummarizedExperiment::assay(spe, "counts")
   #colnames(raw_expr) <- colData(sce)[,"Barcode"]
-  #norm_expression <- SummarizedExperiment::assay(sce, "logcounts")
+  norm_expression <- SummarizedExperiment::assay(spe, "logcounts")
   
   cell_metadata <- SingleCellExperiment::colData(spe)
   cell_metadata$cell_ID <- rownames(SingleCellExperiment::colData(spe))
@@ -200,11 +200,13 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
     #rownames(norm_expression) <- c(SingleCellExperiment::rowData(sce)[,"SYMBOL"])
   }
   gobj = Giotto::createGiottoObject(
-      expression = raw_expr,
+      expression = list("raw" = raw_expr,
+                        "normalized" = norm_expression),
       cell_metadata = cell_metadata,
       spatial_locs = as.data.frame(SpatialExperiment::spatialCoords(spe)),
       feat_metadata = feat_metadata,
       instructions = instructions#,
+      # Add dimred (doesn't quite work)
       #dimension_reduction = GiottoClass::createDimObj(
       #    coordinates = SingleCellExperiment::reducedDim(spe, "reducedDim"),
       #    name = "PCA",
@@ -213,44 +215,44 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
   return(gobj)
 }
 # Convert to Giotto object
-my_giotto_object <- createGiotto_fn(spe, instructions = instrs)
+gobj <- createGiotto_fn(spe, instructions = instrs)
 
 # Normalize
-my_giotto_object <- Giotto::normalizeGiotto(my_giotto_object)
-# Using provided normalized counts produce errors
+# gobj <- Giotto::normalizeGiotto(gobj)
+# Alternatively, use the Giotto normalization
 
 # PCA
-my_giotto_object <- runPCA(gobject = my_giotto_object, center = TRUE, scale_unit = TRUE, name = "PCA", method = "exact", feats_to_use = NULL)
+gobj <- runPCA(gobject = gobj, center = TRUE, scale_unit = TRUE, name = "PCA", method = "exact", feats_to_use = NULL)
+# Compatibility issues with Matrix and method = "irlba" - the fix is to downgrade Matrix to 1.6.1, but GiottoClass requires 1.6.2
 # Using provided PCA throws:
 # (Error in cov(y[lclust[[i]], ]) :
 #   supply both 'x' and 'y' or a matrix-like 'x')
 
 
-###2. Run clustering
+
+### Run clustering
 
 #if(!file.exists(hmrf_folder)) dir.create(hmrf_folder, recursive = T)
 message("Running ", method, " clustering")
 
-
-# create spatial network (required for binSpect methods)
-
-my_giotto_object <- Giotto::createSpatialNetwork(
-    gobject = my_giotto_object,
+# create spatial network (tricky to use input network)
+gobj <- Giotto::createSpatialNetwork(
+    gobject = gobj,
     k = k
     #minimum_k = 10
 )
 
-# identify genes with a spatial coherent expression profile
-#km_spatialgenes <- Giotto::binSpect(my_giotto_object, bin_method = 'rank')
+# identify genes with a spatial coherent expression profile (Not necessary - default uses all 'selected' features)
+#km_spatialgenes <- Giotto::binSpect(gobj, bin_method = 'rank')
 
 #my_spatial_genes <- km_spatialgenes[1:100]$feats
 HMRF_spatial_genes <- Giotto::doHMRF(
-    gobject = my_giotto_object,
+    gobject = gobj,
     spat_unit = "cell",
     feat_type = "rna",
     betas = c(0, 2, config$beta),
-    #expression_values = "normalized",
-    #spatial_genes = my_spatial_genes,
+    expression_values = "normalized",
+    spatial_genes = NULL, #my_spatial_genes,
     dim_reduction_to_use = "pca",
     dim_reduction_name = "PCA",
     dimensions_to_use = 1:20,
@@ -258,15 +260,16 @@ HMRF_spatial_genes <- Giotto::doHMRF(
     name = method,
     seed = seed
     )
-#viewHMRFresults2D(gobject = my_giotto_object,
+
+# Manually inspect results:
+#viewHMRFresults2D(gobject = gobj,
 #                    HMRFoutput = HMRF_spatial_genes,
 #                   k = 9, betas_to_view = i,
 #                  point_size = 2)
 
-
-## Write output
-my_giotto_object <- addHMRF(
-    gobject = my_giotto_object,
+## Add HMRF
+gobj <- addHMRF(
+    gobject = gobj,
     HMRFoutput = HMRF_spatial_genes,
     k = k, betas_to_add = c(config$beta),
     hmrf_name = method)
@@ -274,7 +277,7 @@ my_giotto_object <- addHMRF(
 
 ## Write output
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-label_df <- as.data.frame(Giotto::getCellMetadata(my_giotto_object, output = "data.table"))
+label_df <- as.data.frame(Giotto::getCellMetadata(gobj, output = "data.table"))
 label_df <- data.frame(label = label_df[length(colnames(label_df))], row.names = label_df[[1]])
 colnames(label_df) <- "label"
 
