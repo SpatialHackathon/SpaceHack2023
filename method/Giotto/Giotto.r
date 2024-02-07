@@ -2,7 +2,7 @@
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
 # Author_and_contribution: Lucie Pfeiferova; functions for Giotto HMRF spatial domain exploring
-# Author_and_contribution: Søren Helweg Dam; created environment setup script, updated environment yaml, added configs and code for remaining cluster functions, tidied code
+# Author_and_contribution: Søren Helweg Dam; created environment setup script, updated environment yaml, added configs, tidied code, HMFR finally works when using normalizeGiotto + runPCA
 
 suppressPackageStartupMessages({
     library(optparse)
@@ -96,6 +96,7 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
+  #neighbors <- as(Matrix::readMM(neighbors_file), "CsparseMatrix")
 }
 if (!is.na(opt$matrix)) {
   matrix_file <- opt$matrix
@@ -168,7 +169,7 @@ spe <- get_SpatialExperiment(
 )
 
 ## Configuration
-method <- config$method
+method <- "HMRF"
 k <- config$k
 type <- config$type
 
@@ -203,11 +204,11 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
       cell_metadata = cell_metadata,
       spatial_locs = as.data.frame(SpatialExperiment::spatialCoords(spe)),
       feat_metadata = feat_metadata,
-      instructions = instructions,
-      dimension_reduction = GiottoClass::createDimObj(
-          coordinates = SingleCellExperiment::reducedDim(spe, "reducedDim"),
-          name = "PCA",
-          method = "pca")
+      instructions = instructions#,
+      #dimension_reduction = GiottoClass::createDimObj(
+      #    coordinates = SingleCellExperiment::reducedDim(spe, "reducedDim"),
+      #    name = "PCA",
+      #    method = "pca")
   )
   return(gobj)
 }
@@ -216,167 +217,60 @@ my_giotto_object <- createGiotto_fn(spe, instructions = instrs)
 
 # Normalize
 my_giotto_object <- Giotto::normalizeGiotto(my_giotto_object)
+# Using provided normalized counts produce errors
 
-# Create nearest network
-    my_giotto_object <- createNearestNetwork(
-        gobject = my_giotto_object,
-        type = type,
-        spat_unit = "cell",
-        feat_type = "rna",
-        dim_reduction_to_use = "pca",
-        dim_reduction_name = 'PCA',
-        dimensions_to_use = 1:20, 
-        k = k,
-        name = 'network')
+# PCA
+my_giotto_object <- runPCA(gobject = my_giotto_object, center = TRUE, scale_unit = TRUE, name = "PCA", method = "exact", feats_to_use = NULL)
+# Using provided PCA throws:
+# (Error in cov(y[lclust[[i]], ]) :
+#   supply both 'x' and 'y' or a matrix-like 'x')
+
 
 ###2. Run clustering
 
 #if(!file.exists(hmrf_folder)) dir.create(hmrf_folder, recursive = T)
 message("Running ", method, " clustering")
-if (method == "HMRF"){
-    
-    # create spatial network (required for binSpect methods)
-    my_giotto_object <- Giotto::createSpatialNetwork(
-        gobject = my_giotto_object,
-        minimum_k = 10)
-    
-    # identify genes with a spatial coherent expression profile
-    #km_spatialgenes <- Giotto::binSpect(my_giotto_object, bin_method = 'rank')
 
-    #my_spatial_genes <- km_spatialgenes[1:100]$feats
-    HMRF_spatial_genes <- Giotto::doHMRF(
-        gobject = my_giotto_object,
-        spat_unit = "cell",
-        feat_type = "rna",
-        betas = c(0, 2, config$beta),
-        expression_values = "normalized",
-        spatial_genes = rownames(spe), #my_spatial_genes,
-        #dim_reduction_to_use = "pca",
-        #dim_reduction_name = "PCA",
-        k = n_clusters,
-        name = method,
-        seed = seed
-        )
-    #viewHMRFresults2D(gobject = my_giotto_object,
-    #                    HMRFoutput = HMRF_spatial_genes,
-    #                   k = 9, betas_to_view = i,
-    #                  point_size = 2)
-    
-    
-    ## Write output
-    my_giotto_object <- addHMRF(
-        gobject = my_giotto_object,
-        HMRFoutput = HMRF_spatial_genes,
-        k = k, betas_to_add = c(config$beta),
-        hmrf_name = method)
-    
-} else if (method == "leiden"){
 
-    my_giotto_object <- doLeidenCluster(
-      my_giotto_object,
-      spat_unit = "cell",
-      feat_type = "rna",
-      name = method,
-      nn_network_to_use = type,
-      network_name = "network",
-      python_path = python_path,
-      resolution = config$resolution,
-      weight_col = "weight",
-      partition_type = "RBConfigurationVertexPartition",#, "ModularityVertexPartition"),
-      init_membership = NULL,
-      n_iterations = 1000,
-      return_gobject = TRUE,
-      set_seed = TRUE,
-      seed_number = seed
+# create spatial network (required for binSpect methods)
+
+my_giotto_object <- Giotto::createSpatialNetwork(
+    gobject = my_giotto_object,
+    k = k
+    #minimum_k = 10
+)
+
+# identify genes with a spatial coherent expression profile
+#km_spatialgenes <- Giotto::binSpect(my_giotto_object, bin_method = 'rank')
+
+#my_spatial_genes <- km_spatialgenes[1:100]$feats
+HMRF_spatial_genes <- Giotto::doHMRF(
+    gobject = my_giotto_object,
+    spat_unit = "cell",
+    feat_type = "rna",
+    betas = c(0, 2, config$beta),
+    #expression_values = "normalized",
+    #spatial_genes = my_spatial_genes,
+    dim_reduction_to_use = "pca",
+    dim_reduction_name = "PCA",
+    dimensions_to_use = 1:20,
+    k = n_clusters,
+    name = method,
+    seed = seed
     )
-    } else if (method == "louvain"){
-    message("Version ", config$version)
+#viewHMRFresults2D(gobject = my_giotto_object,
+#                    HMRFoutput = HMRF_spatial_genes,
+#                   k = 9, betas_to_view = i,
+#                  point_size = 2)
+
+
+## Write output
+my_giotto_object <- addHMRF(
+    gobject = my_giotto_object,
+    HMRFoutput = HMRF_spatial_genes,
+    k = k, betas_to_add = c(config$beta),
+    hmrf_name = method)
     
-        my_giotto_object <- doLouvainCluster(
-            my_giotto_object,
-            spat_unit = "cell",
-            feat_type = "rna",
-            version = config$version,
-            name = method,
-            nn_network_to_use = type,
-            network_name = "network",
-            python_path = python_path,
-            resolution = config$resolution,
-            weight_col = "weight",
-            gamma = 1,
-            omega = 1,
-            louv_random = FALSE,
-            return_gobject = TRUE,
-            set_seed = TRUE,
-            seed_number = seed
-        )
-    } else if (method == "randomwalk"){
-        my_giotto_object <- doRandomWalkCluster(
-            my_giotto_object,
-            name = method,
-            nn_network_to_use = type,
-            network_name = "network",
-            walk_steps = 4,
-            walk_clusters = n_clusters,
-            walk_weights = NA,
-            return_gobject = TRUE,
-            set_seed = TRUE,
-            seed_number = seed
-        )
-    } else if (method == "sNNclust" && type == "kNN"){
-        my_giotto_object <- doSNNCluster(
-            my_giotto_object,
-            name = method,
-            nn_network_to_use = type,
-            network_name = "network",
-            k = config$sNNK,
-            eps = config$eps,
-            minPts = config$minPts,
-            borderPoints = TRUE,
-            return_gobject = TRUE,
-            set_seed = TRUE,
-            seed_number = seed
-        )
-    } else if (method == "kmeans"){
-        my_giotto_object <- doKmeans(
-            my_giotto_object,
-            spat_unit = "cell",
-            feat_type = "rna",
-            expression_values = "normalized",#c("normalized", "scaled", "custom"),
-            feats_to_use = NULL,
-            dim_reduction_to_use = "pca", #c("cells", "pca", "umap", "tsne"),
-            dim_reduction_name = "PCA",
-            dimensions_to_use = 1:10,
-            distance_method = "original",#, "pearson", "spearman", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"),
-            centers = n_clusters,
-            iter_max = 100,
-            nstart = 1000,
-            algorithm = "Hartigan-Wong",
-            name = "kmeans",
-            return_gobject = TRUE,
-            set_seed = TRUE,
-            seed_number = seed
-        )
-    }else if (method == "hierarchical"){
-        my_giotto_object <- doHclust(
-            my_giotto_object,
-            spat_unit = "cell",
-            feat_type = "rna",
-            expression_values = "normalized", #c("normalized", "scaled", "custom"),
-            feats_to_use = NULL,
-            dim_reduction_to_use = "pca", #c("cells", "pca", "umap", "tsne"),
-            dim_reduction_name = "PCA",
-            dimensions_to_use = 1:10,
-            distance_method = "pearson", #c("pearson", "spearman", "original", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"),
-            agglomeration_method = "ward.D2", #c("ward.D2", "ward.D", "single", "complete", "average",    "mcquitty", "median", "centroid"),
-            k = n_clusters,
-            h = NULL,
-            name = method,
-            return_gobject = TRUE,
-            set_seed = TRUE,
-            seed_number = seed
-        )
-    }
 
 ## Write output
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
@@ -384,7 +278,7 @@ label_df <- as.data.frame(Giotto::getCellMetadata(my_giotto_object, output = "da
 label_df <- data.frame(label = label_df[length(colnames(label_df))], row.names = label_df[[1]])
 colnames(label_df) <- "label"
 
-print(table(label_df$label))
+#print(table(label_df$label))
 
 write.table(label_df, file = label_file, sep = "\t", col.names = NA, quote = FALSE)
 

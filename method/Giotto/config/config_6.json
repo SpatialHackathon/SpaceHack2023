@@ -1,1 +1,0 @@
-{"method": "sNNclust", "k": 20, "type":"kNN", "eps":4, "minPts":12, "sNNK":10}

@@ -405,7 +405,7 @@ dependencies:
   - r-magick=2.8.1
   - r-magrittr=2.0.3
   - r-mass=7.3_60
-  - r-matrix=1.6_4
+  - r-matrix=1.6_5
   - r-matrixstats=1.2.0
   - r-memoise=2.0.1
   - r-mgcv=1.9_1
