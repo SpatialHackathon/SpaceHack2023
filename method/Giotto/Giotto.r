@@ -172,6 +172,7 @@ spe <- get_SpatialExperiment(
 ## Configuration
 method <- "HMRF"
 k <- config$k
+dims_used <- config$dims_used
 
 ## Giotto instructions
 python_path <- Sys.which(c("python"))
@@ -222,8 +223,7 @@ gobj <- createGiotto_fn(spe, instructions = instrs)
 # Alternatively, use the Giotto normalization
 
 # PCA
-gobj <- runPCA(gobject = gobj, center = TRUE, scale_unit = TRUE, name = "PCA", method = "exact", feats_to_use = NULL)
-# Compatibility issues with Matrix and method = "irlba" - the fix is to downgrade Matrix to 1.6.1, but GiottoClass requires 1.6.2
+gobj <- runPCA(gobject = gobj, center = TRUE, scale_unit = TRUE, name = "PCA", feats_to_use = NULL)
 # Using provided PCA throws:
 # (Error in cov(y[lclust[[i]], ]) :
 #   supply both 'x' and 'y' or a matrix-like 'x')
@@ -251,11 +251,11 @@ HMRF_spatial_genes <- Giotto::doHMRF(
     spat_unit = "cell",
     feat_type = "rna",
     betas = c(0, 2, config$beta),
-    expression_values = "normalized",
+    # expression_values = "normalized", # not used when dim_reduction_to_use is given
     spatial_genes = NULL, #my_spatial_genes,
     dim_reduction_to_use = "pca",
     dim_reduction_name = "PCA",
-    dimensions_to_use = 1:20,
+    dimensions_to_use = 1:dims_used,
     k = n_clusters,
     name = method,
     seed = seed
