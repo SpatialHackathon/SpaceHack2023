@@ -176,9 +176,9 @@ k <- config$k
 ## Giotto instructions
 python_path <- Sys.which(c("python"))
 instrs <- createGiottoInstructions(save_dir = out_dir,
-                                  save_plot = TRUE,
-                                  show_plot = TRUE,
-                                  python_path = python_path)
+                                   save_plot = FALSE,
+                                   show_plot = FALSE,
+                                   python_path = python_path)
 
 
 
@@ -285,4 +285,5 @@ colnames(label_df) <- "label"
 
 write.table(label_df, file = label_file, sep = "\t", col.names = NA, quote = FALSE)
 
-
+# Clean HMRF_output folder
+system("rm -rf HMRF_output")
