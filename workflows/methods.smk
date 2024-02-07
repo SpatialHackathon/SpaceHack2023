@@ -2,7 +2,6 @@ import os
 
 from shared.functions import get_git_directory, get_ncluster, get_sample_dirs
 
-
 configfile: "path_configs/methods.yaml"
 
 
@@ -11,7 +10,7 @@ SEED = config["seed"]
 
 methods = config.pop("methods")
 
-
+# Find the technology of the datasets from their experiments.json
 def get_technology(path):
     import json
     from pathlib import Path
@@ -24,6 +23,7 @@ def get_technology(path):
 TECHNOLOGY = get_technology(config["data_dir"])
 
 
+# Generates desired output based on no. of sample and config (output:domains.tsv)
 def create_input(method):
     input_files = []
     sample_dirs = get_sample_dirs(config["data_dir"])
@@ -38,12 +38,13 @@ def create_input(method):
     return input_files
 
 
+# For each method included, create all desirable outcome locations, because this function is 
+# defined on "use_methods" only, the script will only run the methods in that session in config file
 def create_input_all(wildcards):
     files = []
     for method in config["use_methods"]:
         files += create_input(method)
     return files
-
 
 rule all:
     input:
@@ -73,14 +74,15 @@ def get_config_file(wildcards):
 ##########################################################
 # requirements
 
-
+# Find if the method has an additional shell scripts for installation
 def get_requirements(wildcards):
     if methods[wildcards.method].get("env_additional") is not None:
         return f"{wildcards.method}_requirements.info"
     else:
         return []
 
-
+# required by the get_requirements function, if a `.info` file is required, 
+# then run this rule to set up the additional environment
 rule installation_requirements:
     params:
         install_script=methods[wildcards.method]["env_additional"],
@@ -89,6 +91,7 @@ rule installation_requirements:
     conda:
         GIT_DIR + methods[wildcards.method]["env"]
     shell:
+    # Should it have source {script}?
         """
         {params.install_script} && touch {output}
         """

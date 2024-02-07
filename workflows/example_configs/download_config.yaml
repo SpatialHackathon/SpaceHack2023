@@ -1,2 +1,46 @@
-git_dir: /home/ubuntu/workspace/SpaceHack2023
-results_dir: /home/ubuntu/tmp_data
+git_dir: /users/jsun1/SpaceHack2023
+results_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/
+
+datasets:
+  SEA_AD_data:
+    env: data/SEA_AD_data/SEA_AD_data.yml
+    script: data/SEA_AD_data/SEA_AD_data.py
+  STARmap_2018_mouse_cortex:
+    env: data/STARmap-2018-mouse-cortex/environment.yml
+    script: data/STARmap-2018-mouse-cortex/STARmap-2018-mouse-cortex.py
+  abc_atlas_wmb_thalamus:
+    env: data/abc_atlas_wmb_thalamus/abc_atlas_wmb_thalamus.yml
+    script: data/abc_atlas_wmb_thalamus/abc_atlas_wmb_thalamus.py
+  libd_dlpfc:
+    env: data/libd_dlpfc/libd_dlpfc.yml
+    script: data/libd_dlpfc/libd_dlpfc.r
+  mouse_brain_sagittal_anterior:
+    env: data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior.yml
+    script: data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior.py
+  mouse_brain_sagittal_posterior:
+    env: data/mouse_brain_sagittal_posterior/mouse_brain_sagittal_posterior.yml
+    script: data/mouse_brain_sagittal_posterior/mouse_brain_sagittal_posterior.py
+  mouse_kidney_coronal:
+    env: data/mouse_kidney_coronal/mouse_kidney_coronal.yml
+    script: data/mouse_kidney_coronal/mouse_kidney_coronal.py
+  osmfish_Ssp:
+    env: data/osmfish_Ssp/osmfish_Ssp.yml
+    script: data/osmfish_Ssp/osmfish_Ssp.py
+  sotip_simulation:
+    env: data/sotip_simulation/sotip.yml
+    script: data/sotip_simulation/sotip_simulation.py
+  spatialDLPFC:
+    env: data/spatialDLPFC/spatialDLPFC.yml
+    script: data/spatialDLPFC/spatialDLPFC.r
+  visium_breast_cancer_SEDR:
+    env: data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR.yml
+    script: data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR.py
+  visium_chicken_heart:
+    env: data/visium_chicken_heart/chicken_heart.yml
+    script: data/visium_chicken_heart/chicken_heart.py
+  xenium_breast_cancer:
+    env: data/xenium-breast-cancer/xenium-breast-cancer.yml
+    script: data/xenium-breast-cancer/xenium-breast-cancer.py
+  xenium_mouse_brain_SergioSalas:
+    env: data/xenium-mouse-brain-SergioSalas/environment.yml
+    script: data/xenium-mouse-brain-SergioSalas/xenium-mouse-brain-SergioSalas.py

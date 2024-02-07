@@ -6,7 +6,7 @@ def get_git_directory(config):
     if config.get("git_dir") is not None:
         git_dir = config["git_dir"]
     else:
-        git_dir = os.getenv("GIT_DIR", "/home/ubuntu/workspace/SpaceHack2023")
+        git_dir = os.getenv("GIT_DIR", "/users/jsun1/SpaceHack2023")
 
     if not git_dir.endswith("/"):
         git_dir += "/"

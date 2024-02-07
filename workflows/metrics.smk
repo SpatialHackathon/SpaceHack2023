@@ -2,13 +2,14 @@ import os
 
 from shared.functions import check_files_in_folder, get_git_directory, get_sample_dirs
 
-
+# SMK will merge both files into a big `config` option
 configfile: "path_configs/metrics.yaml"
 configfile: "path_configs/methods.yaml"
 
 
 GIT_DIR = get_git_directory(config)
 
+# Get all the methods and metrics that's being used
 metrics = config["metrics"]
 methods = list(config["methods"].keys())
 

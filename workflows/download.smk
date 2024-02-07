@@ -2,24 +2,26 @@ import os
 
 from shared.functions import get_git_directory
 
-
 configfile: "path_configs/datasets.yaml"
-
 
 print("Run Download Workflow")
 
+# Attach the specific github directory here
 GIT_DIR = get_git_directory(config)
 
+# Select only the "datasets" options in the config files
 datasets = config.pop("datasets")
 
-
+# Get all the dataset folder
 def get_all_input(wildcards):
     all_folder = []
     for dataset in datasets:
         all_folder.append(config["results_dir"] + "/" + dataset)
     return all_folder
 
+############## starting snakemake pipelines ##################
 
+# Defining all output wanted from this snakemake
 rule all:
     input:
         get_all_input,

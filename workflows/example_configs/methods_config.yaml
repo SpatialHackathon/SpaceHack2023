@@ -1,7 +1,7 @@
-data_dir: "/home/ubuntu/tmp_data/libd_dlpfc"
-git_dir: /home/ubuntu/workspace/SpaceHack2023
-seed: 42
-technology: "Visium"
+# Metasetting for methods.smk
+git_dir: /users/jsun1/SpaceHack2023
+data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/datasets/libd_dlpfc
+seed: 2023
 use_methods:
   - "STAGATE"
 config_files:
@@ -60,3 +60,63 @@ config_files:
     config_16: "config/config_16.json"
     config_17: "config/config_17.json"
     config_18: "config/config_18.json"
+
+methods:
+  BANKSY:
+    env: method/BANKSY/banksy.yml
+    script: method/BANKSY/banksy.r
+    env_additional: method/BANKSY/banksy_env.sh
+  BayesSpace:
+    env: method/BayesSpace/BayesSpace.yml
+    script: method/BayesSpace/BayesSpace.r
+  DRSC:
+    env: method/DRSC/DRSC.yml
+    script: method/DRSC/DRSC.r
+    env_additional: method/DRSC/drsc_env.sh
+  GraphST:
+    env: method/GraphST/GraphST.yml
+    script: method/GraphST/method_GraphST.py
+  SCAN_IT:
+    env: method/SCAN-IT/scanit.yml
+    script: method/SCAN-IT/method_scanit.py
+  SEDR:
+    env: method/SEDR/SEDR.yml
+    script: method/SEDR/SEDR_method.py
+  SOTIP:
+    env: method/SOTIP/sotip.yml
+    script: method/SOTIP/method_sotip.py
+  STAGATE:
+    env: method/STAGATE/STAGATE.yml
+    script: method/STAGATE/method_STAGATE.py
+  SpaceFlow:
+    env: method/SpaceFlow/spaceflow.yml
+    script: method/SpaceFlow/method_spaceflow.py
+  SpiceMix:
+    env: method/SpiceMix/SpiceMix.yml
+    script: method/SpiceMix/SpiceMix.py
+  maple:
+    env: method/maple/maple.yml
+    script: method/maple/maple.r
+    env_additional: method/maple/maple_env.sh
+  meringue:
+    env: method/meringue/meringue.yml
+    script: method/meringue/meringue.r
+    env_additional: method/meringue/meringue_env.sh
+  precast:
+    env: method/precast/precast.yml
+    script: method/precast/precast.r
+    env_additional: method/precast/precast_env.sh
+  scMEB:
+    env: method/SC.MEB/SC.MEB.yml
+    script: method/SC.MEB/SC.MEB.r
+    env_additional: method/SC.MEB/scmeb_env.sh
+  scanpy:
+    env: method/scanpy/scanpy_env.yaml
+    script: method/scanpy/method_scanpy.py
+  seurat:
+    env: method/seurat/seurat.yml
+    script: method/seurat/seurat.r
+  spaGCN:
+    env: method/spaGCN/spaGCN.yml
+    script: method/spaGCN/spaGCN.py
+

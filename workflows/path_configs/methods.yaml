@@ -56,3 +56,4 @@ methods:
   spaGCN:
     env: method/spaGCN/spaGCN.yml
     script: method/spaGCN/spaGCN.py
+
