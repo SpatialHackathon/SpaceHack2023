@@ -2,7 +2,7 @@ import os
 
 from shared.functions import get_git_directory, get_ncluster, get_sample_dirs
 
-configfile: "path_configs/methods.yaml"
+configfile: "example_configs/methods_config.yaml"
 
 
 GIT_DIR = get_git_directory(config)
@@ -15,7 +15,7 @@ def get_technology(path):
     import json
     from pathlib import Path
 
-    with open(Path(path) / "experiments.json", "r") as file:
+    with open(Path(path) / "experiment.json", "r") as file:
         info = json.load(file)
     return info["technology"]
 
@@ -38,7 +38,7 @@ def create_input(method):
     return input_files
 
 
-# For each method included, create all desirable outcome locations, because this function is 
+# For each method included, create all desirable outcome locations, because this function is
 # defined on "use_methods" only, the script will only run the methods in that session in config file
 def create_input_all(wildcards):
     files = []
@@ -81,17 +81,15 @@ def get_requirements(wildcards):
     else:
         return []
 
-# required by the get_requirements function, if a `.info` file is required, 
-# then run this rule to set up the additional environment
+# if additional scripts are found, go through this process before generating the results
 rule installation_requirements:
     params:
-        install_script=methods[wildcards.method]["env_additional"],
+        install_script=lambda wildcards: methods[wildcards.method]["env_additional"],
     output:
         temp("{method}_requirements.info"),
     conda:
-        GIT_DIR + methods[wildcards.method]["env"]
+        lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
     shell:
-    # Should it have source {script}?
         """
         {params.install_script} && touch {output}
         """

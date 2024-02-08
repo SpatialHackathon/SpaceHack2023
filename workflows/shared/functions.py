@@ -6,15 +6,16 @@ def get_git_directory(config):
     if config.get("git_dir") is not None:
         git_dir = config["git_dir"]
     else:
-        git_dir = os.getenv("GIT_DIR", "/users/jsun1/SpaceHack2023")
+        # Should change the SpaceHack directory.
+        git_dir = os.getenv("GIT_DIR", "/home/ubuntu/workspace/SpaceHack2023")
 
     if not git_dir.endswith("/"):
         git_dir += "/"
     return git_dir
 
-
+# Adding additional condition here to exclude .ipynb that can be generated via the preprocessing scripts and other hidden unwanted folders
 def get_sample_dirs(data_dir):
-    return [f.path for f in os.scandir(data_dir) if f.is_dir()]
+    return [f.path for f in os.scandir(data_dir) if f.is_dir() and not f.name.startswith('.')]
 
 
 def check_files_in_folder(folder_path, file_list):

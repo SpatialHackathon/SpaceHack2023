@@ -1,11 +1,16 @@
 # Metasetting for methods.smk
-git_dir: /users/jsun1/SpaceHack2023
-data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/datasets/libd_dlpfc
+git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/SpaceHack2023
+data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/wfTestData/libd_dlpfc
 seed: 2023
+
 use_methods:
-  - "STAGATE"
+  - "BayesSpace"
+  - "BANKSY"
+  - "SEDR"
+  - "scanpy"
+
 config_files:
-  spaGCN:
+  BANKSY:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
     config_3: "config/config_3.json"
@@ -14,14 +19,9 @@ config_files:
     config_6: "config/config_6.json"
     config_7: "config/config_7.json"
     config_8: "config/config_8.json"
-    config_9: "config/config_9.json"
-    config_10: "config/config_10.json"
-    config_11: "config/config_11.json"
-    config_12: "config/config_12.json"
-    config_13: "config/config_13.json"
-    config_14: "config/config_14.json"
-    config_15: "config/config_15.json"
-    config_16: "config/config_16.json"
+  DeepST:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
   GraphST:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
@@ -29,16 +29,15 @@ config_files:
     config_4: "config/config_4.json"
     config_5: "config/config_5.json"
     config_6: "config/config_6.json"
-  BANKSY:
-    config_1: "config/config_1.json"
-  meringue:
-    config_1: "config/config_1.json"
   SCAN_IT:
     config_1: "config.json"
-  scanpy:
-    config_1: "configs/config_1.json"
-  SpaceFlow:
-    config_1: "config/config.json"
+  SEDR:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+    config_4: "config/config_4.json"
+    config_5: "config/config_5.json"
+    config_6: "config/config_6.json"
   SOTIP:
     config_1: "config/config.json"
   STAGATE:
@@ -60,6 +59,40 @@ config_files:
     config_16: "config/config_16.json"
     config_17: "config/config_17.json"
     config_18: "config/config_18.json"
+  SpaceFlow:
+    config_1: "config/config.json"
+  SpiceMix:
+    config_1: "config/config_1.json"
+  meringue:
+    config_1: "config/config_1.json"
+  scanpy:
+    config_1: "configs/config_1.json"
+  precast:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+  seurat:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+    config_4: "config/config_4.json"
+  spaGCN:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+    config_4: "config/config_4.json"
+    config_5: "config/config_5.json"
+    config_6: "config/config_6.json"
+    config_7: "config/config_7.json"
+    config_8: "config/config_8.json"
+    config_9: "config/config_9.json"
+    config_10: "config/config_10.json"
+    config_11: "config/config_11.json"
+    config_12: "config/config_12.json"
+    config_13: "config/config_13.json"
+    config_14: "config/config_14.json"
+    config_15: "config/config_15.json"
+    config_16: "config/config_16.json"
+
 
 methods:
   BANKSY:
@@ -73,6 +106,9 @@ methods:
     env: method/DRSC/DRSC.yml
     script: method/DRSC/DRSC.r
     env_additional: method/DRSC/drsc_env.sh
+  DeepST:
+    env: method/DeepST/DeepST.py
+    script: method/DeepST/DeepST.yml
   GraphST:
     env: method/GraphST/GraphST.yml
     script: method/GraphST/method_GraphST.py

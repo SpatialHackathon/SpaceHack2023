@@ -1,3 +1,3 @@
-data_dir: "/work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/datasets/libd_dfplc"
-git_dir: /home/ubuntu/workspace/SpaceHack2023
+data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/wfTestData/libd_dlpfc
+git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/SpaceHack2023
 n_pcs: "20"

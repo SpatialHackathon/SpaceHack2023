@@ -3,7 +3,7 @@ import os
 from shared.functions import check_files_in_folder, get_git_directory, get_sample_dirs
 
 
-configfile: "config.yaml"
+configfile: "example_configs/preprocessing_config.yaml"
 
 
 GIT_DIR = get_git_directory(config)

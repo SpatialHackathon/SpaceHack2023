@@ -1,15 +1,15 @@
 import os
-
 from shared.functions import get_git_directory
 
-configfile: "path_configs/datasets.yaml"
+# listed all the available datasets here
+configfile: "example_configs/download_config.yaml"
 
 print("Run Download Workflow")
 
 # Attach the specific github directory here
 GIT_DIR = get_git_directory(config)
 
-# Select only the "datasets" options in the config files
+# Leave only datasets
 datasets = config.pop("datasets")
 
 # Get all the dataset folder
@@ -31,8 +31,8 @@ rule download:
     output:
         dir=directory(config["results_dir"] + "/{dataset}"),
     conda:
-        lambda wildcards: GIT_DIR + "/" + datasets[wildcards.dataset]["env"]
+        lambda wildcards: GIT_DIR + datasets[wildcards.dataset]["env"]
     params:
-        script=lambda wildcards: GIT_DIR + "/" + datasets[wildcards.dataset]["script"],
+        script=lambda wildcards: GIT_DIR + datasets[wildcards.dataset]["script"],
     shell:
         "{params.script} -o {output.dir}"
