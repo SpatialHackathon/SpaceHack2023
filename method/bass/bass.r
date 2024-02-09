@@ -167,6 +167,8 @@ init_method <- config$init_method
 beta_method <- config$beta_method
 geneSelect <- config$geneSelect
 scaleFeature <- config$scaleFeature
+nPC <- config$nPC
+nSE <- config$nSE
 
 # SpatialExperiment
 spe <- get_SpatialExperiment(
@@ -188,8 +190,8 @@ BASS <- createBASSObject(
 
 # Data pre-processing:
 BASS <- BASS.preprocess(BASS, doLogNormalize = TRUE,
-  geneSelect = geneSelect, nSE = 3000, doPCA = TRUE, 
-  scaleFeature = as.logical(scaleFeature), nPC = 20)
+  geneSelect = geneSelect, nSE = nSE, doPCA = TRUE, 
+  scaleFeature = as.logical(scaleFeature), nPC = nPC)
 
 # Run BASS algorithm
 BASS <- BASS.run(BASS)

@@ -3,5 +3,7 @@
   "init_method": "mclust",
   "beta_method": "SW",
   "geneSelect": "sparkx",
-  "scaleFeature": 0
+  "scaleFeature": 0,
+  "nSE": 3000,
+  "nPC": 20
 }
