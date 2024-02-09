@@ -201,8 +201,9 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
     #rownames(norm_expression) <- c(SingleCellExperiment::rowData(sce)[,"SYMBOL"])
   }
   gobj = Giotto::createGiottoObject(
-      expression = list("raw" = raw_expr,
-                        "normalized" = norm_expression),
+      expression = list("raw" = raw_expr#,
+                        #"normalized" = norm_expression
+                       ),
       cell_metadata = cell_metadata,
       spatial_locs = as.data.frame(SpatialExperiment::spatialCoords(spe)),
       feat_metadata = feat_metadata,
@@ -219,7 +220,7 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
 gobj <- createGiotto_fn(spe, instructions = instrs)
 
 # Normalize
-# gobj <- Giotto::normalizeGiotto(gobj)
+gobj <- Giotto::normalizeGiotto(gobj)
 # Alternatively, use the Giotto normalization
 
 # PCA
