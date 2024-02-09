@@ -74,8 +74,8 @@ option_list <- list(
   )
 )
 
-# TODO adjust description
-description <- "stardust: "
+# Description
+description <- "stardust: SNN + louvain on integrated minkowski distance matrices of PCA and spatial coordinates"
 
 opt_parser <- OptionParser(
   usage = description,
