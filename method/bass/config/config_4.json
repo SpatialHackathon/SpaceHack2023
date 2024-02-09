@@ -1,0 +1,7 @@
+{
+  "C": 20,
+  "init_method": "mclust",
+  "beta_method": "SW",
+  "geneSelect": "hvg",
+  "scaleFeature": 0
+}

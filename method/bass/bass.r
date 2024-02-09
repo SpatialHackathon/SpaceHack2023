@@ -6,6 +6,7 @@
 suppressPackageStartupMessages({
     library(optparse)
     library(jsonlite)
+    library(SpatialExperiment)
     library(BASS)
 })
 
@@ -72,7 +73,7 @@ option_list <- list(
   )
 )
 
-description <- "Spatially informed clustering with igraph"
+description <- "BASS: Bayesian Analytics for Spatial Segmentation"
 
 opt_parser <- OptionParser(
   usage = description,
@@ -94,7 +95,6 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
-  neighbors <- as(Matrix::readMM(neighbors_file), "CsparseMatrix")
 }
 
 if (!is.na(opt$matrix)) {
@@ -104,19 +104,54 @@ if (!is.na(opt$matrix)) {
 
 if (!is.na(opt$dim_red)) {
   dimred_file <- opt$dim_red
-  dimred <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
 }
 if (!is.na(opt$image)) {
   image_file <- opt$image
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
-    #config <- fromJSON(config_file)
+  config <- fromJSON(config_file)
 }
-coord_file <- opt$coordinates
-coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
-coordinates <- as.matrix(coordinates)
-coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
+
+get_SpatialExperiment <- function(
+    feature_file,
+    observation_file,
+    coord_file,
+    matrix_file = NA,
+    reducedDim_file = NA,
+    assay_name = "counts",
+    reducedDim_name = "reducedDim") {
+  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
+  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
+
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
+  coordinates <- as.matrix(coordinates[rownames(colData), ])
+  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
+    
+  spe <- SpatialExperiment::SpatialExperiment(
+    rowData = rowData, colData = colData, spatialCoords = coordinates
+  )
+
+  if (!is.na(matrix_file)) {
+    assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    #assay(spe, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
+  }
+
+  # Filter features and samples
+  if ("selected" %in% colnames(rowData(spe))) {
+    spe <- spe[as.logical(rowData(spe)$selected), ]
+  }
+  if ("selected" %in% colnames(colData(spe))) {
+    spe <- spe[, as.logical(colData(spe)$selected)]
+  }
+
+  if (!is.na(reducedDim_file)) {
+    dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
+    reducedDim(spe, reducedDim_name) <- as.matrix(dimRed[colnames(spe), ])
+  }
+  return(spe)
+}
+
 
 technology <- opt$technology
 n_clusters <- opt$n_clusters
@@ -126,19 +161,35 @@ seed <- opt$seed
 set.seed(seed)
 
 ## Your code goes here
-
 R <- n_clusters
-C <- 20
+C <- config$C
+init_method <- config$init_method
+beta_method <- config$beta_method
+geneSelect <- config$geneSelect
+scaleFeature <- config$scaleFeature
+
+# SpatialExperiment
+spe <- get_SpatialExperiment(
+    feature_file = feature_file,
+    observation_file = observation_file,
+    coord_file = coord_file,
+    matrix_file = matrix_file#,
+    #reducedDim_file = dimred_file
+)
+
 
 # Set up BASS object
-BASS <- createBASSObject(matrix, coordinates, C = C, R = R,
-  beta_method = "SW", init_method = "mclust", 
-  nsample = 10000)
+BASS <- createBASSObject(
+    list("experiment" = SummarizedExperiment::assay(spe, "counts")), 
+    list("experiment" = SpatialExperiment::spatialCoords(spe)),
+    C = C, R = R,
+    beta_method = beta_method, init_method = init_method, 
+    burnin = 2000, nsample = 10000)
 
 # Data pre-processing:
 BASS <- BASS.preprocess(BASS, doLogNormalize = TRUE,
-  geneSelect = "sparkx", nSE = 3000, doPCA = TRUE, 
-  scaleFeature = FALSE, nPC = 20)
+  geneSelect = geneSelect, nSE = 3000, doPCA = TRUE, 
+  scaleFeature = as.logical(scaleFeature), nPC = 20)
 
 # Run BASS algorithm
 BASS <- BASS.run(BASS)
@@ -148,8 +199,10 @@ BASS <- BASS.run(BASS)
 # 2.Summarize the posterior samples to obtain the spatial domain labels
 BASS <- BASS.postprocess(BASS)
 
-labels <- BASS@results$z
-label_df <- data.frame("label" = labels, row.names = rownames(dimred))
+#clabels <- BASS@results$c # cell type clusters
+#zlabels <- BASS@results$z # spatial domain labels
+labels <- unlist(BASS@results$z)
+label_df <- data.frame("label" = labels, row.names = rownames(BASS@xy[[1]]))
 
 
 ## Write output
