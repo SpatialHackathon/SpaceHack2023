@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.3.2
+  - r-optparse
+  - r-jsonlite
+  - r-Seurat
+  - bioconductor-SpatialExperiment
+  - r-remotes
