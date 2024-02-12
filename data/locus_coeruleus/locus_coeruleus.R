@@ -60,32 +60,25 @@ directory_list <- c()
 
 # Write coordinates.tsv, observations.tsv, features.tsv, counts.mtx and labels.tsv
 for (lc in LC_samples){
+
     print(lc)
     dir <- paste0(out_dir, "/", lc)
-    # Please check this again beause I had to flip the coordinates to get the pictures as seen in:
+    # TODO Please check this again beause I had to flip the coordinates to get the pictures as seen in:
     # https://libd.shinyapps.io/locus-c_Visium/. See ggplot below.
     coords_subset <- coords[which(spe@colData$sample_id == lc),]
     write.table(coords_subset, file = paste0(dir, "/coordinates.tsv"), col.names = NA,
                 sep = "\t", quote = FALSE, row.names = TRUE)
-    
-    # Create the scatter plot
-    # plot_df <- coords[which(spe@colData$sample_id == lc),]
-    # plot_df$label <- labels
-    # plot_df
-    # ggplot(plot_df, aes(x = x, y = y, color=label)) +
-    #   geom_point() +
-    #   coord_fixed() +  # Keep aspect ratio equal
-    #   scale_y_reverse()  # Flip the y-axis
-
+  
     # Count matrix has rows = genes/features and cols = cells/observations
-    # Has the header %%MatrixMarket matrix coordinate integer general 
+    # TODO Has the header %%MatrixMarket matrix coordinate integer general 
     counts_subset <- counts[,which(counts_lc == lc)]
     if (lc == "Br6522_LC_1_round1" || lc == "Br6522_LC_2_round1"){
-        split_lc <- unlist(strsplit(as.character(LC_samples[1]), "_"))[1:3]
+        split_lc <- unlist(strsplit(as.character(lc), "_"))[1:3]
         correct_lc <- paste(split_lc, collapse = "_")
         counts_subset <- counts[,which(counts_lc == correct_lc)]
     }
-    t(counts_subset)
+    # Transpose to have rows = cells/observations
+    counts_subset <- t(counts_subset)
     writeMM(counts_subset, file = paste0(dir, "/counts.mtx"))
   
     # Write observations.tsv
@@ -96,6 +89,16 @@ for (lc in LC_samples){
     labels[which(labels == TRUE)] <- "LC"
     labels[which(labels == FALSE)] <- "non_LC"
     write.table(labels, file = paste0(dir, "/labels.tsv"), col.names = NA, sep = "\t", quote = FALSE)
+
+    # TODO #Create the scatter plot
+    # library(ggplot2)
+    # plot_df <- coords[which(spe@colData$sample_id == lc),]
+    # plot_df$label <- labels
+    # plot_df
+    # ggplot(plot_df, aes(x = x, y = y, color=label)) +
+    #   geom_point() +
+    #   coord_fixed() +  # Keep aspect ratio equal
+    #   scale_y_reverse()  # Flip the y-axis
 
     # Fill metadata
     patient_list <- c(patient_list, as.character(unique(spe@colData[which(spe@colData$sample_id == lc),]$donor_id)))
