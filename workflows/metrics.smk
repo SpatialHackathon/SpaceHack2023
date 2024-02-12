@@ -3,8 +3,8 @@ import os
 from shared.functions import check_files_in_folder, get_git_directory, get_sample_dirs
 
 # SMK will merge both files into a big `config` option
-configfile: "path_configs/metrics.yaml"
-configfile: "path_configs/methods.yaml"
+configfile: "example_configs/metrics_config.yaml"
+configfile: "example_configs/methods_config.yaml"
 
 
 GIT_DIR = get_git_directory(config)
@@ -18,7 +18,9 @@ def generate_metrics_results(
     data_dir, metrics_name, methods, file_ext, configfiles=None
 ):
     result_files = []
+    # sample directory
     for sample_dir in get_sample_dirs(data_dir):
+        # method directory
         for method in methods:
             method_dir = os.path.join(sample_dir, method)
             if os.path.exists(method_dir):
@@ -27,10 +29,12 @@ def generate_metrics_results(
                     if check_files_in_folder(method_dir, ["domains.tsv"])
                     else os.listdir(method_dir)
                 )
+                # config directory
                 for dir_to_check in dirs_to_check:
                     if check_files_in_folder(
                         os.path.join(method_dir, dir_to_check), ["domains.tsv"]
                     ):
+                        # Metric config directory
                         config_files = configfiles.keys() if configfiles else [""]
                         for config_file_name in config_files:
                             result_files.append(
@@ -86,11 +90,11 @@ rule metric:
         sample="[a-zA-Z0-9_-]+",
         metric="[a-zA-Z0-9_-]+",
     conda:
-        lambda wildcards: metrics[wildcards.metric]["env"]
+        lambda wildcards: GIT_DIR + metrics[wildcards.metric]["env"]
     params:
         sample_labels=get_sample_labels,
         embeddings=get_method_embedding,
-        script=lambda wildcards: metrics[wildcards.metric]["script"],
+        script=lambda wildcards:GIT_DIR + metrics[wildcards.metric]["script"],
     shell:
         """
         {params.script} \

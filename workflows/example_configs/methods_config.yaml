@@ -5,9 +5,9 @@ seed: 2023
 
 use_methods:
   - "BayesSpace"
-  - "BANKSY"
+#  - "maple"
   - "SEDR"
-  - "scanpy"
+#  - "scanpy"
 
 config_files:
   BANKSY:

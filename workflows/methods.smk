@@ -84,7 +84,7 @@ def get_requirements(wildcards):
 # if additional scripts are found, go through this process before generating the results
 rule installation_requirements:
     params:
-        install_script=lambda wildcards: methods[wildcards.method]["env_additional"],
+        install_script=lambda wildcards: GIT_DIR + methods[wildcards.method]["env_additional"],
     output:
         temp("{method}_requirements.info"),
     conda:

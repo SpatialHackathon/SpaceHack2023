@@ -1,4 +1,4 @@
-data_dir: "/home/ubuntu/tmp_data/libd_dlpfc"
+data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/wfTestData/libd_dlpfc
 git_dir: /home/ubuntu/workspace/SpaceHack2023
 
 metrics:
