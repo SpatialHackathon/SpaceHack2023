@@ -14,7 +14,7 @@ properties:
             # - counts_or_transform
 
     integrated_feature_selection:
-        description: Can the method use existing feature selection?
+        description: Can the method use existing feature selections?
         type: boolean
 
     image:
