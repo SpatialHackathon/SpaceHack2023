@@ -1,6 +1,9 @@
-data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/wfTestData/libd_dlpfc
+# Github repo path, modify based on your env
 git_dir: /home/ubuntu/workspace/SpaceHack2023
+# Dataset path, modify based on your env
+data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/wfTestData/libd_dlpfc
 
+# All metrics to be used. Modify based on your need
 metrics:
   ARI:
     env: metric/ARI/ARI.yml

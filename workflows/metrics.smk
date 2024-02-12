@@ -29,7 +29,7 @@ def generate_metrics_results(
                     if check_files_in_folder(method_dir, ["domains.tsv"])
                     else os.listdir(method_dir)
                 )
-                # config directory
+                # method config directory
                 for dir_to_check in dirs_to_check:
                     if check_files_in_folder(
                         os.path.join(method_dir, dir_to_check), ["domains.tsv"]

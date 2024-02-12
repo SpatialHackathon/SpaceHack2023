@@ -1,6 +1,9 @@
+# Github repo path, modify based on your env
 git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/SpaceHack2023
+# General data folder. All datasets folder will be stored here
 results_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/wfTestData
 
+# datasets to be downloaded. add/delete based on your need
 datasets:
   libd_dlpfc:
     env: data/libd_dlpfc/libd_dlpfc.yml

@@ -1,14 +1,17 @@
-# Metasetting for methods.smk
+# Github repo path, modify based on your env
 git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/SpaceHack2023
+# Dataset path, modify based on your env
 data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/wfTestData/libd_dlpfc
 seed: 2023
 
+# Methods to run for the pipeline, modify based on your need
 use_methods:
   - "BayesSpace"
-#  - "maple"
+  - "maple"
   - "SEDR"
-#  - "scanpy"
+  - "scanpy"
 
+# All config files for existing methods on the repo 12.02.2024
 config_files:
   BANKSY:
     config_1: "config/config_1.json"
@@ -93,7 +96,7 @@ config_files:
     config_15: "config/config_15.json"
     config_16: "config/config_16.json"
 
-
+# All existing methods on the repo 12.02.2024
 methods:
   BANKSY:
     env: method/BANKSY/banksy.yml
