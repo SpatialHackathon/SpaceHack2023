@@ -142,7 +142,7 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, "counts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    assay(spe, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(spe, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
   }
 
   # Filter features and samples
@@ -161,21 +161,24 @@ get_SpatialExperiment <- function(
 seed <- opt$seed
 set.seed(seed)
 
+# Config
+ndims <- config$ndims
+algorithm <- config$algorithm
+method <- ifelse(algorithm == 4, config$method, "matrix")
 
 # Create SpatialExperiment
 spe <- get_SpatialExperiment(
     feature_file = feature_file,
     observation_file = observation_file,
     coord_file = coord_file,
-    reducedDim_file = dimred_file,
-    matrix_file = matrix_file
+    reducedDim_file = dimred_file
 )
 
 # Convert to Seurat object
 seurat_obj <- as.Seurat(spe)
 
 # Find neighbors
-seurat_obj <- FindNeighbors(seurat_obj, dims = 1:10)
+seurat_obj <- FindNeighbors(seurat_obj, dims = 1:ndims)
 
 # Tune k function
 tunek <- function(seurat_obj, k){
@@ -184,8 +187,8 @@ tunek <- function(seurat_obj, k){
     seu <- FindClusters(
         seurat_obj, 
         resolution = r,
-        algorithm = config$algorithm,
-        method = "igraph",
+        algorithm = algorithm,
+        method = method,
         random.seed = seed)
     if(length(unique(Idents(seu))) >= k) break
   }
