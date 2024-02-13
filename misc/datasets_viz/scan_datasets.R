@@ -14,6 +14,8 @@ suppressPackageStartupMessages({
   library(cowplot)
   library(gridExtra)
   library(Matrix)
+  library(tibble)
+  library(data.table)
 })
 
 source("utils.R")
@@ -35,20 +37,23 @@ files_dirs <- lapply(dirs, function(u) {
              path = dirname(lf))
 }) %>% 
   bind_rows %>%
-  mutate(sample = tolower(sample),
+  mutate(dataset_orig = dataset,
+         sample = tolower(sample),
          dataset = tolower(dataset)) %>%
-  arrange(sample, dataset, dir)
+  arrange(sample, dataset, dir) #%>% filter(grepl("xenium",dataset_orig))
 
 
 # quick tabular summary
-files_dirs %>% group_by(dataset, dir) %>% 
-  tally() %>% arrange(dataset, dir) %>% 
+files_dirs %>% group_by(dataset_orig, dir) %>% 
+  tally() %>% arrange(dataset_orig, dir) %>% 
+  #filter(grepl("xenium",dataset_orig)) %>%
   #tally() %>% arrange(desc(n)) %>% 
   print(n = Inf)
 
 # datasets <- split(files_dirs, 
 #                   paste0(files_dirs$dir, ":::", files_dirs$dataset))
 datasets <- split(files_dirs, files_dirs$sample)
+#datasets <- split(files_dirs, files_dirs$sample)
 
 # colour palette with up to 15 groups
 # attribution to:
@@ -83,15 +88,15 @@ for(i in 1:length(datasets)) {
         next
     }
 
-    tc <- tryCatch(read.delim(file.path(ddir, "observations.tsv"), 
-                              stringsAsFactors=FALSE, row.names = 1), 
-                   error = function(e) e)
-    if( "error" %in% class(tc) ) {
-        print(tc)
-        this_df$status[j] <- "error-observations.tsv"
-        datasets[[i]] <- this_df
-        next
-    }
+    #tc <- tryCatch(read.delim(file.path(ddir, "observations.tsv"), 
+    #                          stringsAsFactors=FALSE, row.names = 1), 
+    #               error = function(e) e)
+    #if( "error" %in% class(tc) ) {
+    #    print(tc)
+    #    this_df$status[j] <- "error-observations.tsv"
+    #    datasets[[i]] <- this_df
+    #    next
+    #}
                    
     # read data, annotations
     # ----------------------
@@ -117,9 +122,14 @@ for(i in 1:length(datasets)) {
     # massage labels into max 14+1 categories
     # ----------------------
     if(annof) {
-        anno <- read.delim(file.path(ddir, "labels.tsv"),
-                           sep="\t", row.names=1)
+        #anno <- read.delim(file.path(ddir, "labels.tsv"),
+        #                   sep="\t", row.names=1)
+
+        anno <- fread(file.path(ddir, "labels.tsv")) %>% as_tibble %>% 
+                  filter(!is.na(V1)) %>%
+                  column_to_rownames("V1") %>% as.data.frame
         colnames(anno)[1] <- "label"
+        
         anno$rowname <- rownames(anno)
         df <- df %>% left_join(anno, by = "rowname")
         tb <- table(df$label) %>% sort(decreasing=TRUE)
@@ -169,6 +179,8 @@ for(i in 1:length(datasets)) {
 # make summary table
 # ----------------------
 summary_tab <- bind_rows(datasets)
+saveRDS(summary_tab, "summary_tab.rds")
+                   
 write.csv(summary_tab,
           file=paste0("spacehack-annotations_",gsub(" ","-",date()),".csv"),
           row.names = FALSE, quote = FALSE)
@@ -178,9 +190,16 @@ write.csv(summary_tab,
 # put all plots together
 # ----------------------
 pdf(paste0("spacehack-annotations_",gsub(" ","-",date()),".pdf"), 
-    onefile = TRUE, width = 16, height = 7)
-for (i in seq(length(plotlist)))
+    onefile = TRUE, width = 14, height = 6)
+for (i in 1:length(plotlist))
   show(plotlist[[i]])
 dev.off()
 
-                  
+
+
+# ----------------------
+# capture versions
+# ----------------------
+sessionInfo()
+
+
