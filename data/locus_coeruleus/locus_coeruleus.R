@@ -40,11 +40,30 @@ coords <- as.data.frame(spe@int_colData$spatialCoords)
 colnames(coords) <- c('x', 'y')
 
 counts <- spe@assays@data$counts
-counts_lc <- unlist(lapply(colnames(counts), function(x){paste(unlist(strsplit(x, "_"))[1:3], collapse="_")}))
-observations_lc <- unlist(lapply(colnames(counts), function(x){paste(unlist(strsplit(x, "_"))[4], collapse="_")}))
+
+counts_func <- function(x){
+  fields <- unlist(strsplit(x, "_"))
+  if ( length(fields) == 4 ){
+    return(paste(fields[1:3], collapse = "_"))
+  } else {
+    return(paste(fields[1:4], collapse = "_"))
+  }
+}
+counts_lc <- unlist(lapply(colnames(counts), counts_func))
+
+obs_func <- function(x){
+  fields <- unlist(strsplit(x, "_"))
+  if ( length(fields) == 4 ){
+    return(fields[4])
+  } else{
+    return(fields[5])
+  }
+}
+observations_lc <- unlist(lapply(colnames(counts), obs_func))
 
 LC_samples <- unique(spe@colData$sample_id)
 
+out_dir <- 'out_dir'
 for ( dir in LC_samples ){
     dir <- paste0(out_dir, "/", dir)
     if ( dir.exists(dir) == FALSE ){
@@ -60,28 +79,22 @@ directory_list <- c()
 
 # Write coordinates.tsv, observations.tsv, features.tsv, counts.mtx and labels.tsv
 for (lc in LC_samples){
-
+    
     print(lc)
     dir <- paste0(out_dir, "/", lc)
-    # TODO Please check this again beause I had to flip the coordinates to get the pictures as seen in:
+        # TODO Please check this again beause I had to flip the coordinates to get the pictures as seen in:
     # https://libd.shinyapps.io/locus-c_Visium/. See ggplot below.
     coords_subset <- coords[which(spe@colData$sample_id == lc),]
     write.table(coords_subset, file = paste0(dir, "/coordinates.tsv"), col.names = NA,
                 sep = "\t", quote = FALSE, row.names = TRUE)
   
     # Count matrix has rows = genes/features and cols = cells/observations
-    # TODO Has the header %%MatrixMarket matrix coordinate integer general 
     counts_subset <- counts[,which(counts_lc == lc)]
-    if (lc == "Br6522_LC_1_round1" || lc == "Br6522_LC_2_round1"){
-        split_lc <- unlist(strsplit(as.character(lc), "_"))[1:3]
-        correct_lc <- paste(split_lc, collapse = "_")
-        counts_subset <- counts[,which(counts_lc == correct_lc)]
-    }
+    
     # Transpose to have rows = cells/observations
     counts_subset <- t(counts_subset)
     writeMM(counts_subset, file = paste0(dir, "/counts.mtx"))
   
-    # Write observations.tsv
     observations_subset <- observations_lc[which(counts_lc == lc)]
     write.table(observations_subset, file = paste0(dir, "/observations.tsv"), col.names = NA, sep = "\t", quote = FALSE)
 
