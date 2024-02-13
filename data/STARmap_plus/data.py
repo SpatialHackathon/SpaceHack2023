@@ -17,7 +17,6 @@ from scipy.io import mmwrite
 from zipfile import ZipFile
 from pathlib import Path
 
-# In[]
 # TODO adjust description
 parser = argparse.ArgumentParser(description="Load data for ...")
 
@@ -29,7 +28,6 @@ args = parser.parse_args()
 
 out_dir = Path(args.out_dir)
 
-# In[]
 def download_data(url, destination_folder, file_name, boolzip):
     print(f'[INFO] Downloading annotated data from {url} and put it into {destination_folder}...') 
     
@@ -52,12 +50,8 @@ def download_data(url, destination_folder, file_name, boolzip):
 
     print('...done')
 
-
-# In[]
-out_dir = 'out_dir/'
-
 #def get_data(out_dir):
-def get_data():
+def get_data(out_dir):
     with tempfile.TemporaryDirectory() as tmpdir:
         print('[INFO] created temporary directory', tmpdir)
         print('[START] COMPOSING DATA')
