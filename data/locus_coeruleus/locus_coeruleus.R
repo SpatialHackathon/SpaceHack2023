@@ -38,6 +38,7 @@ spe <- WeberDivechaLCdata_Visium()
 
 coords <- as.data.frame(spe@int_colData$spatialCoords)
 colnames(coords) <- c('x', 'y')
+coords_rownames <- rownames(spe@int_colData$spatialCoords)
 
 counts <- spe@assays@data$counts
 
@@ -50,16 +51,6 @@ counts_func <- function(x){
   }
 }
 counts_lc <- unlist(lapply(colnames(counts), counts_func))
-
-obs_func <- function(x){
-  fields <- unlist(strsplit(x, "_"))
-  if ( length(fields) == 4 ){
-    return(fields[4])
-  } else{
-    return(fields[5])
-  }
-}
-observations_lc <- unlist(lapply(colnames(counts), obs_func))
 
 LC_samples <- unique(spe@colData$sample_id)
 
@@ -82,9 +73,10 @@ for (lc in LC_samples){
     
     print(lc)
     dir <- paste0(out_dir, "/", lc)
-        # TODO Please check this again beause I had to flip the coordinates to get the pictures as seen in:
-    # https://libd.shinyapps.io/locus-c_Visium/. See ggplot below.
+
+    # Write coordinates.tsv
     coords_subset <- coords[which(spe@colData$sample_id == lc),]
+    rownames(coords_subset) <- coords_rownames[which(spe@colData$sample_id == lc)]
     write.table(coords_subset, file = paste0(dir, "/coordinates.tsv"), col.names = NA,
                 sep = "\t", quote = FALSE, row.names = TRUE)
   
@@ -95,23 +87,17 @@ for (lc in LC_samples){
     counts_subset <- t(counts_subset)
     writeMM(counts_subset, file = paste0(dir, "/counts.mtx"))
   
-    observations_subset <- observations_lc[which(counts_lc == lc)]
+    observations_subset <- spe@colData[which(counts_lc == lc),]
+    rownames(observations_subset) <- lapply(rownames(observations_subset), function(x){tail(unlist(strsplit(x,"_")),1)})
     write.table(observations_subset, file = paste0(dir, "/observations.tsv"), col.names = NA, sep = "\t", quote = FALSE)
 
     labels <- spe@colData$annot_region[which(spe@colData$sample_id == lc)]
     labels[which(labels == TRUE)] <- "LC"
     labels[which(labels == FALSE)] <- "non_LC"
-    write.table(labels, file = paste0(dir, "/labels.tsv"), col.names = NA, sep = "\t", quote = FALSE)
 
-    # TODO #Create the scatter plot
-    # library(ggplot2)
-    # plot_df <- coords[which(spe@colData$sample_id == lc),]
-    # plot_df$label <- labels
-    # plot_df
-    # ggplot(plot_df, aes(x = x, y = y, color=label)) +
-    #   geom_point() +
-    #   coord_fixed() +  # Keep aspect ratio equal
-    #   scale_y_reverse()  # Flip the y-axis
+    labels_df <- data.frame(label = labels)
+    rownames(labels_df) <- rownames(observations_subset)
+    write.table(labels_df, file = paste0(dir, "/labels.tsv"), col.names = NA, sep = "\t", quote = FALSE)
 
     # Fill metadata
     patient_list <- c(patient_list, as.character(unique(spe@colData[which(spe@colData$sample_id == lc),]$donor_id)))
@@ -119,7 +105,8 @@ for (lc in LC_samples){
     directory_list <- c(directory_list, dir)
 
     # Write features.tsv
-    features <- rownames(spe@assays@data$counts) 
+    features <- as.data.frame(spe@rowRanges)
+    rownames(features) <- spe@rowRanges$gene_id
     write.table(features, file = paste0(dir,"/features.tsv"), col.names = NA, sep = "\t", quote = FALSE)
 }
 
