@@ -1,7 +1,0 @@
-{
-    "matrix": "transform",
-    "integrated_feature_selection": true,
-    "image": false,
-    "neighbors": true,
-    "config_file": true
-}
