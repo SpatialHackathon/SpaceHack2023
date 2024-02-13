@@ -175,7 +175,10 @@ spe <- get_SpatialExperiment(
 
 ## Your code goes here
 countMatrix <- as.data.frame(SummarizedExperiment::assay(spe, "counts"))
-spotPositions <- as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")])
+spotPositions <- ifelse(technology %in% c("ST", "Visium"), 
+                        as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")]),
+                        as.data.frame(SpatialExperiment::spatialCoords(spe))
+                       )
 
 # Tune k function
 tunek <- function(k){
