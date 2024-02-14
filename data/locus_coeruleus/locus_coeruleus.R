@@ -54,7 +54,6 @@ counts_lc <- unlist(lapply(colnames(counts), counts_func))
 
 LC_samples <- unique(spe@colData$sample_id)
 
-out_dir <- 'out_dir'
 for ( dir in LC_samples ){
     dir <- paste0(out_dir, "/", dir)
     if ( dir.exists(dir) == FALSE ){
