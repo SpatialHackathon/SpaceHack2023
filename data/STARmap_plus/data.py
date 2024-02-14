@@ -67,8 +67,6 @@ def get_data(out_dir):
                 'well05','sagittal3','well01brain','well1_5','well2_5','sagittal1','spinalcord',
                 'well11','sagittal2','well3_5','well08']
         
-        samples = ['well7_5']
-        
         n_cluster = []
         directories = []
 
