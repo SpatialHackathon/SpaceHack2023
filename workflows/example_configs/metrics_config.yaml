@@ -1,2 +1,9 @@
-data_dir: "/home/ubuntu/tmp_data/libd_dlpfc"
-git_dir: /home/ubuntu/workspace/SpaceHack2023
+# Github repo path, modify based on your env
+git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
+# Dataset path, modify based on your env
+data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/libd_dlpfc
+
+use_metrics:
+  - "ARI"
+  - "Calinski-Harabasz"
+  - "Davies-Bouldin"
