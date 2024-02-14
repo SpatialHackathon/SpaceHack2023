@@ -1,0 +1,23 @@
+channels:
+  - conda-forge
+  - pytorch
+  - default
+dependencies:
+  - python=3.11.3
+  - pytorch=2.0.0
+  - numpy=1.24.4
+  - scanpy=1.9.6
+  - python-igraph=0.11.3
+  - leidenalg=0.10.1
+  - louvain=0.8.1
+  - anndata=0.9.1
+  - rpy2=3.5.11
+  - pandas=2.0.3
+  - scipy=1.10.1
+  - scikit-learn=1.2.2
+  - tqdm=4.65
+  - r-base=4.3.2
+  - r-mclust=6.0.1
+  - pip
+  - pip:
+    - git+https://github.com/JinmiaoChenLab/SEDR@8c273af3c520b663b2e83a4fbfdf462e0c7b8b7a

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # this was implemented by heylf
 
 import argparse

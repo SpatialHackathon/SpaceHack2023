@@ -1,0 +1,17 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+
+description: Which (optional) parameters can the metric use
+type: object
+properties:
+
+    groundtruth: 
+        description: Does the metric need groundtruth labels?
+        type: boolean
+
+    embedding:
+        description: Does the metric need embeddings?
+        type: boolean
+
+    config_file:
+        description: Does the method take an additional config file?
+        type: boolean

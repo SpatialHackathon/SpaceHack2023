@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 import os
 import sys
@@ -82,7 +84,7 @@ def convert_data(out_dir):
             df_coordinates_tsv.to_csv(sample_output_folder/'coordinates.tsv',sep="\t",index_label="")
         
             # Matrix
-            scipy.io.mmwrite(f"{sample_output_folder}/counts.mtx",adata.X)
+            scipy.io.mmwrite(f"{sample_output_folder}/counts.mtx",scipy.sparse.coo_matrix(adata.X)) # MR: made sparse
     
             print(f'{sample} ready.')
     

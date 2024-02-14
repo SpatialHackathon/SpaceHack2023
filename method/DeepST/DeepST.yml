@@ -1,0 +1,38 @@
+channels:
+  - conda-forge
+  - pytorch
+  - default
+dependencies:
+  - python=3.9.18
+  - pip
+  - pip: 
+    - --extra-index-url https://download.pytorch.org/whl/cpu
+    - --find-links https://data.pyg.org/whl/torch-1.13.0+cpu.html
+    - torch==1.13.0
+    - torchvision==0.14.0+cpu
+    - torchaudio==0.13.0+cpu
+    - pyg_lib==0.3.1+pt113cpu
+    - torch_scatter==2.1.2
+    - torch_sparse==0.6.18
+    - torch_cluster==1.6.3
+    - torch_spline_conv==1.2.2+pt113cpu
+    - torch_geometric==2.4.0
+    - scanpy==1.9.2
+    - anndata==0.8.0
+    - bokeh==2.3.1
+    - h5py==3.8.0
+    - imageio==2.9.0
+    - leidenalg==0.9.1
+    - matplotlib==3.7.0
+    - numpy==1.23.5
+    - python-igraph==0.10.4
+    - scikit-learn==1.2.1
+    - scikit-network==0.28.3
+    - scipy==1.10.1
+    - seaborn==0.12.2
+    - tqdm==4.64.1
+    - umap-learn==0.5.3
+    - psutil==5.9.4
+    - pandas==1.5.3
+    - louvain==0.8.1
+    - Pillow==9.5.0

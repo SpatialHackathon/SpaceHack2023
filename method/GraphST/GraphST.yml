@@ -15,6 +15,7 @@ dependencies:
   - tqdm=4.66.1
   - matplotlib-base=3.8.2
   - louvain=0.8.1
+  - leidenalg=0.10.1
   - r-base=4.3.2
   - r-mclust=6.0.1
   - pip

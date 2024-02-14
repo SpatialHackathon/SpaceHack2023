@@ -1,0 +1,30 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+
+description: Which (optional) parameters can the method use
+type: object
+properties:
+
+    matrix: 
+        description: What input does the method take
+        type: string
+        enum:
+            - counts
+            - transform
+            - dimensionality_reduction
+            # - counts_or_transform
+
+    integrated_feature_selection:
+        description: Can the method use existing feature selections?
+        type: boolean
+
+    image:
+        description: Can the method use H&E images?
+        type: boolean
+
+    neighbors:
+        description: Can the method use existing neighbor definitions?
+        type: boolean
+
+    config_file:
+        description: Does the method take an additional config file?
+        type: boolean
