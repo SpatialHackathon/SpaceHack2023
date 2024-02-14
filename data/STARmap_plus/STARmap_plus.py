@@ -18,8 +18,9 @@ from scipy.io import mmwrite
 from pathlib import Path
 
 # In[]
-# TODO adjust description
-parser = argparse.ArgumentParser(description="Load data for ...")
+parser = argparse.ArgumentParser(description="Load data for STARmap+ dataset. This dataset contains spatial gene \
+                                 expression profiles of 1,022 genes mapped in 3D at a voxel size of \
+                                 194 X 194 X 345 nm3 in 1.09 million high-quality cells in the mouse CNS.")
 
 parser.add_argument(
     "-o", "--out_dir", help="Output directory to write files to.", required=True
@@ -129,6 +130,7 @@ def get_data(out_dir):
 
         # TODO data from mouse so no patient --> should patient be NA?
         # TODO position I assumed is the tissue type, which is here brain. Is that correct?
+        # TODO ncluster = number of main celltype cluster, they also hat sub celltypes. Is that correct?
         with open(f'{tmpdir}/metadata.csv', 'r') as f_in:
             f_in.readline()
             f_in.readline()
@@ -136,7 +138,7 @@ def get_data(out_dir):
                 data = l.strip('\n').split(",")
                 if ( "_".join(data[0].split("_")[:-1]) not in tmp_samples):
                     tmp_samples.append("_".join(data[0].split("_")[:-1]))
-                    position.append(data[7])
+                    position.append(data[8])
                     patient.append(data[2])
 
         sort_metadata = [tmp_samples.index(x) for x in samples]
