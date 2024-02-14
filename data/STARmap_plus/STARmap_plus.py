@@ -15,7 +15,6 @@ import pandas as pd
 import numpy as np
 
 from scipy.io import mmwrite
-from zipfile import ZipFile
 from pathlib import Path
 
 # In[]
@@ -31,7 +30,7 @@ args = parser.parse_args()
 out_dir = Path(args.out_dir)
 
 # In[]
-def download_data(url, destination_folder, file_name, boolzip):
+def download_data(url, destination_folder, file_name):
     print(f'[INFO] Downloading annotated data from {url} and put it into {destination_folder}...') 
     
     # Create the destination folder if it doesn't exist
@@ -41,15 +40,10 @@ def download_data(url, destination_folder, file_name, boolzip):
     # Get the file name from the URL
     file_name = os.path.join(destination_folder, file_name)
 
-    # Download the zip file
+    # Download the file
     response = requests.get(url)
     with open(file_name, 'wb') as file:
         file.write(response.content)
-
-    if ( boolzip ):
-        # Extract the contents of the zip file
-        with ZipFile(file_name, 'r') as zip_ref:
-            zip_ref.extractall(destination_folder)
 
     print('...done')
 
@@ -77,7 +71,7 @@ def get_data(out_dir):
                 os.makedirs(f'{out_dir}/{sample}')
 
             download_data(f'https://zenodo.org/records/8327576/files/{sample}_spatial.csv?download=1', 
-                        f'{tmpdir}', f'{sample}_spatial.csv', False)
+                        f'{tmpdir}', f'{sample}_spatial.csv')
         
             sample_dir = f'{out_dir}/{sample}'
             directories.append(sample_dir)
@@ -110,7 +104,7 @@ def get_data(out_dir):
             n_cluster.append(len(set(clusters)))
 
             download_data(f'https://zenodo.org/records/8327576/files/{sample}raw_expression_pd.csv?download=1', 
-                        f'{tmpdir}', f'{sample}raw_expression_pd.csv', False)
+                        f'{tmpdir}', f'{sample}raw_expression_pd.csv')
 
             # Write counts.mtx
             df = pd.read_table(f'{tmpdir}/{sample}raw_expression_pd.csv', sep=',', index_col=0)
@@ -127,7 +121,7 @@ def get_data(out_dir):
 
         ## Metadata files
         download_data(f'https://zenodo.org/records/8327576/files/metadata.csv?download=1', 
-                    f'{tmpdir}', 'metadata.csv', False)  
+                    f'{tmpdir}', 'metadata.csv')  
 
         tmp_samples = []
         position = []
