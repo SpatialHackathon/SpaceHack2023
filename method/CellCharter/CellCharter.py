@@ -120,11 +120,9 @@ def get_anndata(args):
 import cellcharter as cc
 import anndata as ad
 import scanpy as sc
+import squidpy as sq
 import pandas as pd
 import numpy as np
-from sklearn.metrics.pairwise import euclidean_distances
-from scipy.sparse import csr_matrix
-from itertools import chain
 import random
 
 random.seed(seed)
@@ -133,84 +131,38 @@ random.seed(seed)
 adata = get_anndata(args)
 adata.var_names_make_unique()
 
-# Session: Raw data input. Assume it to be filtered data with unified QC
-if "reduced_dimensions" not in adata.obsm_keys(): 
-    import scvi
-    
-    # Assume filtered or not?
-    # sc.pp.filter_genes(adata, min_counts=3)
-    #sc.pp.filter_cells(adata, min_counts=3)
+# raw count input
+import scvi
 
-    # preprocessing for scvi
-    adata.layers["counts"] = adata.X.copy()
+# Assume filtered or not?
+# sc.pp.filter_genes(adata, min_counts=3)
+#sc.pp.filter_cells(adata, min_counts=3)
 
-    # Set up scvi model for reduced_dimension embedding
-    scvi.settings.seed = seed
-    scvi.model.SCVI.setup_anndata(
-        adata, 
-        layer="counts"
-    )
-    
-    model = scvi.model.SCVI(adata)
-    model.train(early_stopping=True, enable_progress_bar=True)
-    adata.obsm['reduced_dimensions'] = model.get_latent_representation(adata).astype(np.float32)
+# preprocessing for scvi
+adata.layers["counts"] = adata.X.copy()
 
+# Set up scvi model for reduced_dimension embedding
+scvi.settings.seed = seed
+scvi.model.SCVI.setup_anndata(
+    adata,
+    layer="counts"
+)
 
-if "spatial_connectivities" not in adata.obsp.keys():
-    import squidpy as sq
-    coord = "grid" if technology in ["Visium", "ST"] else "generic"
-    delTri = technology not in ["Visium", "ST"] 
-    
-    sq.gr.spatial_neighbors(adata, 
-                            coord_type = coord, 
-                            delaunay=delTri)
-    
-    if delTri:
-        cc.gr.remove_long_links(adata)
+model = scvi.model.SCVI(adata)
+model.train(early_stopping=True, enable_progress_bar=True)
+adata.obsm['reduced_dimensions'] = model.get_latent_representation(adata).astype(np.float32)
 
-else: 
-    # TODO: Only calculates distance and remove edges if the graph is constructed via delaunay triangulation 
-    if technology not in ["Visium", "ST"]:
-        
-        coords = adata.obsm["spatial"]
-        N = coords.shape[0]
-        Adj = adata.obsp["spatial_connectivities"] 
-        
-        # Calculate euclidean distances
-        dists = np.array(list(chain(*(
-            euclidean_distances(coords[Adj.indices[Adj.indptr[i] : Adj.indptr[i + 1]], :], 
-                                coords[np.newaxis, i, :])
-            for i in range(N)
-            if len(Adj.indices[Adj.indptr[i] : Adj.indptr[i + 1]])
-        )))).squeeze()
-        
-        Dst = csr_matrix((dists, Adj.indices, Adj.indptr), shape=(N, N))
-        Dst.setdiag(0.0)
-        
-        # Fitting into the respective data slot
-        adata.obsp["spatial_distances"] = Dst
-        adata.uns["spatial_neighbors"] = {
-                "connectivities_key": "spatial_connectivities",
-                "distances_key": "spatial_distances",
-                "params": {"coord_type": "generic", 
-                           "delaunay": True, 
-                           "transform": None,
-                           "technology": technology},
-            }
-        
-        # Remove links between cells at a distance bigger than 99% of all positive distances.
-        cc.gr.remove_long_links(adata, distance_percentile = 0.99)
-    
-    else:
-        adata.uns["spatial_neighbors"] = {
-            "connectivities_key": "spatial_connectivities",
-            "distances_key": None,
-            "params": {"coord_type": "grid", 
-                       "delaunay": False, 
-                       "transform": None,
-                       "technology": technology},
-        }
+# Find neighbors
+coord = "grid" if technology in ["Visium", "ST"] else "generic"
+delTri = technology not in ["Visium", "ST"] 
 
+sq.gr.spatial_neighbors(adata, 
+                        coord_type = coord, 
+                        delaunay=delTri)
+
+# Trim if only delaunay is used
+if delTri:
+    cc.gr.remove_long_links(adata)
 
 # Aggregate neighborhoods
 cc.gr.aggregate_neighbors(adata, 
