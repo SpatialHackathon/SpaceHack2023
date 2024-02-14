@@ -3,7 +3,6 @@
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
 # Author_and_contribution: Florian Heyl (heylf); created code
 
-# In[]
 import argparse
 import os
 import tempfile
@@ -17,20 +16,6 @@ import numpy as np
 from scipy.io import mmwrite
 from pathlib import Path
 
-# In[]
-parser = argparse.ArgumentParser(description="Load data for STARmap+ dataset. This dataset contains spatial gene \
-                                 expression profiles of 1,022 genes mapped in 3D at a voxel size of \
-                                 194 X 194 X 345 nm3 in 1.09 million high-quality cells in the mouse CNS.")
-
-parser.add_argument(
-    "-o", "--out_dir", help="Output directory to write files to.", required=True
-)
-
-args = parser.parse_args()
-
-out_dir = Path(args.out_dir)
-
-# In[]
 def download_data(url, destination_folder, file_name):
     print(f'[INFO] Downloading annotated data from {url} and put it into {destination_folder}...') 
     
@@ -47,8 +32,6 @@ def download_data(url, destination_folder, file_name):
         file.write(response.content)
 
     print('...done')
-
-# In[]
 
 #def get_data(out_dir):
 def get_data(out_dir):
@@ -157,12 +140,11 @@ def get_data(out_dir):
 
         print('[FINISH]')        
 
-# In[]
 def main():
     # Set up command-line argument parser
-    parser = argparse.ArgumentParser(
-        description="""Xenium breast cancer data, annotated by 10x."""
-    )
+    parser = argparse.ArgumentParser(description="Load data for STARmap+ dataset. This dataset contains spatial gene \
+                                 expression profiles of 1,022 genes mapped in 3D at a voxel size of \
+                                 194 X 194 X 345 nm3 in 1.09 million high-quality cells in the mouse CNS.")
 
     # Add arguments for input and output folders
     parser.add_argument('-o','--out_dir', help="Output directory to write files to.",required=True)
