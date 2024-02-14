@@ -1,8 +1,11 @@
 import os
+import json
 
 from shared.functions import get_git_directory, get_ncluster, get_sample_dirs
 
-
+# script specific setting
+configfile: "example_configs/methods_config.yaml"
+# All methods available
 configfile: "path_configs/methods.yaml"
 
 
@@ -11,12 +14,12 @@ SEED = config["seed"]
 
 methods = config.pop("methods")
 
-
+# Find the technology of the datasets from their experiments.json
 def get_technology(path):
     import json
     from pathlib import Path
 
-    with open(Path(path) / "experiments.json", "r") as file:
+    with open(Path(path) / "experiment.json", "r") as file:
         info = json.load(file)
     return info["technology"]
 
@@ -24,6 +27,7 @@ def get_technology(path):
 TECHNOLOGY = get_technology(config["data_dir"])
 
 
+# Generates desired output based on no. of sample and config (output:domains.tsv)
 def create_input(method):
     input_files = []
     sample_dirs = get_sample_dirs(config["data_dir"])
@@ -38,12 +42,13 @@ def create_input(method):
     return input_files
 
 
+# For each method included, create all desirable outcome locations, because this function is
+# defined on "use_methods" only, the script will only run the methods in that session in config file
 def create_input_all(wildcards):
     files = []
     for method in config["use_methods"]:
         files += create_input(method)
     return files
-
 
 rule all:
     input:
@@ -51,12 +56,18 @@ rule all:
 
 
 def get_sample_image(wildcards):
-    files = ["H_E.tiff", "H_E.png"]
-    for file in files:
-        image = config["data_dir"] + "/" + wildcards.sample + "/" + file
-        if os.path.isfile(image):
-            return "--image " + image
-    return ""
+    # Using schema options:
+    with open(GIT_DIR + methods[wildcards.method]["optargs"], "r") as file:
+        opt = json.load(file)
+
+    if opt["image"]:
+      files = ["H_E.tiff", "H_E.png"]
+      for file in files:
+          image = config["data_dir"] + "/" + wildcards.sample + "/" + file
+          if os.path.isfile(image):
+              return "--image " + image
+    else:
+      return ""
 
 
 def get_config_file(wildcards):
@@ -73,21 +84,21 @@ def get_config_file(wildcards):
 ##########################################################
 # requirements
 
-
+# Find if the method has an additional shell scripts for installation
 def get_requirements(wildcards):
     if methods[wildcards.method].get("env_additional") is not None:
         return f"{wildcards.method}_requirements.info"
     else:
         return []
 
-
+# if additional scripts are found, go through this process before generating the results
 rule installation_requirements:
     params:
-        install_script=methods[wildcards.method]["env_additional"],
+        install_script=lambda wildcards: GIT_DIR + methods[wildcards.method]["env_additional"],
     output:
         temp("{method}_requirements.info"),
     conda:
-        GIT_DIR + methods[wildcards.method]["env"]
+        lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
     shell:
         """
         {params.install_script} && touch {output}
