@@ -1,0 +1,7 @@
+{
+    "matrix": "dimensionality_reduction",
+    "integrated_feature_selection": true,
+    "image": false,
+    "neighbors": true,
+    "config_file": true
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: ENTER YOUR NAME AND CONTRIBUTION HERE
+# Author_and_contribution: Zaira Seferbekova; wrote the code for SOTIP
 
 import argparse
 
