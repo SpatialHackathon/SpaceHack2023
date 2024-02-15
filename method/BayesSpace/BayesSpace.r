@@ -84,10 +84,16 @@ embedding_file <- file.path(out_dir, "embedding.tsv")
 
 # Use these filepaths as input ...
 coord_file <- opt$coordinates
-matrix_file <- opt$matrix
 feature_file <- opt$features
 observation_file <- opt$observations
-neighbors_file <- opt$neighbors
+
+if (!is.na(opt$neighbors)) {
+  neighbors_file <- opt$neighbors
+}
+
+if (!is.na(opt$matrix)) {
+  matrix_file <- opt$matrix
+}
 
 if (!is.na(opt$dim_red)) {
   dimred_file <- opt$dim_red
