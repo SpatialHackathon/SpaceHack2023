@@ -108,41 +108,110 @@ rule installation_requirements:
 ##########################################################
 # methods
 
+# Get optargs options based on optargs files
 def get_optargs(wildcards):
     with open(GIT_DIR + methods[wildcards.method]["optargs"], "r") as file:
         opt = json.load(file)
     return(opt)
 
-# Get input script based on schema file
+# Get matrix in the input session
+def get_matrix_input(wildcards):
+    opt = get_optargs(wildcards)
+
+    matrix_input = []
+    # Find preprocessing steps
+    match opt["matrix"]:
+        case "counts":
+            matrix_input=config["data_dir"] + f"/{wildcards.sample}/counts.mtx"
+        case "transform":
+            matrix_input=config["data_dir"] + f"/{wildcards.sample}/log1p/counts.mtx"
+        case "dimensionality_reduction":
+            matrix_input=config["data_dir"] + f"/{wildcards.sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv"
+
+    if matrix_input == []:
+        raise(ValueError("no valid matrix option! Check your optargs.json file!"))
+
+    return matrix_input
+
+# Get features
+def get_feature_input(wildcards):
+    opt = get_optargs(wildcards)
+
+    # feature input option
+    if opt["integrated_feature_selection"]:
+        feature_input=config["data_dir"] + f"/{wildcards.sample}/log1p/hvg/features.tsv"
+    else:
+        feature_input=config["data_dir"] + f"/{wildcards.sample}/features.tsv"
+
+    return feature_input
+
+# Get neighbors
+def get_neighbor_input(wildcards):
+    opt = get_optargs(wildcards)
+
+    neighbor_input = []
+    # feature input option
+    if opt["neighbors"]:
+        neighbor_input=config["data_dir"] + f"/{wildcards.sample}/delaunay_triangulation/spatial_connectivities.mtx"
+
+    return neighbor_input
 
 rule method_with_config:
     input:
         coordinates=config["data_dir"] + "/{sample}/coordinates.tsv",
         observations=config["data_dir"] + "/{sample}/observations.tsv",
         requirements=get_requirements,
-        matrix=branch(
-            lookup(dpath="matrix", within=get_optargs),
-            cases={
-                "counts": config["data_dir"] + "/{sample}/counts.mtx",
-                "transform": config["data_dir"] + "/{sample}/{transform}/counts.mtx",
-                "dimensionality_reduction": None
-            }),
-        dim_red=branch(
-            lookup(dpath="matrix"=="dimensionality_reduction", within=get_optargs),
-            then= config["data_dir"] + "/{sample}/{transform}/hvg/{dim_red}/dimensionality_reduction.tsv",
-            ),
-        features=branch(
-            lookup(dpath="integrated_feature_selection", within=get_optargs),
-            then=config["data_dir"] + "/{sample}/{transform}/hvg/features.tsv"
-            ),
-        neighbors=branch(
-            lookup(dpath="neighbors", within=get_optargs),
-            then=config["data_dir"] + "/{sample}/{neighbors}/spatial_connectivities.mtx",
-            ),
+        matrix=get_matrix_input,
+        features=get_feature_input,
+        neighbors=get_neighbor_input,
     output:
         dir=directory(config["data_dir"] + "/{sample}/{method}/{config_file_name}"),
         file=config["data_dir"] + "/{sample}/{method}/{config_file_name}/domains.tsv",
     params:
+        matrix=lambda wildcards: "-m " if get_optargs(wildcards)["matrix"]!="dimensionality_reduction" else "--dim_red ",
+        neighbors=lambda wildcards: "-n " if get_optargs(wildcards)["neighbors"] else "",
+        n_clusters=lambda wildcards: get_ncluster(
+            config["data_dir"] + "/samples.tsv", wildcards.sample
+            ),
+        technology=TECHNOLOGY,
+        seed=SEED,
+        configfile=get_config_file,
+        image=get_sample_image,
+        script=lambda wildcards: GIT_DIR + methods[wildcards.method]["script"]
+    conda:
+        lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
+    wildcard_constraints:
+        config_file_name="config_[a-zA-Z0-9_-]+",
+    shell:
+        """
+        {params.script} \
+            -c {input.coordinates} \
+            {params.matrix}{input.matrix} \
+            -f {input.features} \
+            -o {input.observations} \
+            -d {output.dir} \
+            {params.image} \
+            {params.neighbors}{input.neighbors} \
+            --n_clusters {params.n_clusters} \
+            --technology {params.technology} \
+            --seed {params.seed} \
+            --config {params.configfile}
+        """
+
+rule method_without_config:
+    input:
+        coordinates=config["data_dir"] + "/{sample}/coordinates.tsv",
+        observations=config["data_dir"] + "/{sample}/observations.tsv",
+        requirements=get_requirements,
+        matrix=get_matrix_input,
+        features=get_feature_input,
+        neighbors=get_neighbor_input,
+    output:
+        dir=directory(config["data_dir"] + "/{sample}/{method}"),
+        file=config["data_dir"] + "/{sample}/{method}/domains.tsv",
+    params:
+        matrix=lambda wildcards: "-m " if get_optargs(wildcards)["matrix"]!="dimensionality_reduction" else "--dim_red ",
+        neighbors=lambda wildcards: "-n " if get_optargs(wildcards)["neighbors"] else "",
         n_clusters=lambda wildcards: get_ncluster(
             config["data_dir"] + "/samples.tsv", wildcards.sample
             ),
@@ -154,61 +223,17 @@ rule method_with_config:
     conda:
         lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
     wildcard_constraints:
-        config_file_name="config_[a-zA-Z0-9_-]+",
-    shell:
-        """
-        {params.script} \
-            -c {input.coordinates} \
-            -m {input.matrix} \
-            -f {input.features} \
-            -o {input.observations} \
-            -n {input.neighbors} \
-            -d {output.dir} \
-            {params.image} \
-            --dim_red {input.dim_red} \
-            --n_clusters {params.n_clusters} \
-            --technology {params.technology} \
-            --seed {params.seed} \
-            --config {params.configfile}
-        """
-
-rule method_without_config:
-    input:
-        coordinates=config["data_dir"] + "/{sample}/coordinates.tsv",
-        matrix=config["data_dir"] + "/{sample}/log1p/counts.mtx",
-        features=config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
-        observations=config["data_dir"] + "/{sample}/observations.tsv",
-        neighbors=config["data_dir"]
-        + "/{sample}/delaunay_triangulation/spatial_connectivities.mtx",
-        dim_red=config["data_dir"]
-        + "/{sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv",
-        requirements=get_requirements,
-    output:
-        dir=directory(config["data_dir"] + "/{sample}/{method}"),
-        file=config["data_dir"] + "/{sample}/{method}/domains.tsv",
-    params:
-        n_clusters=lambda wildcards: get_ncluster(
-            config["data_dir"] + "/samples.tsv", wildcards.sample
-        ),
-        technology=TECHNOLOGY,
-        seed=SEED,
-        image=get_sample_image,
-        script=lambda wildcards: GIT_DIR + methods[wildcards.method]["script"],
-    conda:
-        lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
-    wildcard_constraints:
         method="[a-zA-Z0-9_-]+",
     shell:
         """
         {params.script} \
             -c {input.coordinates} \
-            -m {input.matrix} \
+            {params.matrix}{input.matrix} \
             -f {input.features} \
             -o {input.observations} \
-            -n {input.neighbors} \
             -d {output.dir} \
             {params.image} \
-            --dim_red {input.dim_red} \
+            {params.neighbors}{input.neighbors} \
             --n_clusters {params.n_clusters} \
             --technology {params.technology} \
             --seed {params.seed}
