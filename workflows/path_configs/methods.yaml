@@ -1,4 +1,5 @@
 # All existing methods on the repo 14.02.2024
+# Make sure the methods name is the same as the folder name
 methods:
   BANKSY:
     env: method/BANKSY/banksy.yml
@@ -23,7 +24,7 @@ methods:
     env: method/GraphST/GraphST.yml
     script: method/GraphST/method_GraphST.py
     optargs: method/GraphST/GraphST_optargs.json
-  SCAN_IT:
+  SCAN-IT:
     env: method/SCAN-IT/scanit.yml
     script: method/SCAN-IT/method_scanit.py
     optargs: method/SCAN-IT/scanit_optargs.json
@@ -62,7 +63,7 @@ methods:
     script: method/precast/precast.r
     env_additional: method/precast/precast_env.sh
     optargs: method/precast/precast_optargs.json
-  scMEB:
+  SC.MEB:
     env: method/SC.MEB/SC.MEB.yml
     script: method/SC.MEB/SC.MEB.r
     env_additional: method/SC.MEB/scmeb_env.sh
@@ -90,6 +91,7 @@ methods:
     optargs: method/DeepST/DeepST_optargs.json
 
 # All config files for existing methods on the repo 14.02.2024
+# make sure the config_files name is the same as methods name
 config_files:
   BANKSY:
     config_1: "config/config_1.json"
@@ -110,7 +112,7 @@ config_files:
     config_4: "config/config_4.json"
     config_5: "config/config_5.json"
     config_6: "config/config_6.json"
-  SCAN_IT:
+  SCAN-IT:
     config_1: "config.json"
   SEDR:
     config_1: "config/config_1.json"
