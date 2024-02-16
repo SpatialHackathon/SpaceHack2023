@@ -150,7 +150,7 @@ def get_anndata(args):
 
         del adata.obsp["spatial_connectivities"]
 
-        adata = PopariDataset(adata, "raw")
+        adata = PopariDataset(adata, "processed")
 
     return adata
 
