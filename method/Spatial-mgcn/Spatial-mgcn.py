@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created script
+# Author_and_contribution: Kirti Biharie; Added Spatial-MGCN
 
 import argparse
 
+CALC_ARI = False
+
 parser = argparse.ArgumentParser(
-    description="""SpaGCN (https://www.nature.com/articles/s41592-021-01255-8)
-Requirements: Visium or ST. Images can be used."""
+    description="""Spatial-MGCN (https://doi.org/10.1093/bib/bbad262)"""
 )
 
 parser.add_argument(
@@ -51,6 +53,14 @@ parser.add_argument(
     required=False,
 )
 
+# Uncomment to calculate ARI every epoch as in original implementation
+if CALC_ARI:
+    parser.add_argument(
+        "-g", "--groundtruth",
+        help="Groundtruth.",
+        required=False,
+    )
+
 args = parser.parse_args()
 
 from pathlib import Path
@@ -65,34 +75,31 @@ n_clusters = args.n_clusters
 technology = args.technology
 seed = args.seed
 
-
 ## Your code goes here
 import json
 
 with open(args.config, "r") as f:
     config = json.load(f)
 
-if config["refine"] and technology not in ["Visium", "ST"]:
-    raise Exception(
-        f"Invalid parameter combination. Refinement only works with Visium and ST not {technology}"
-    )
-
-# TODO how to determine beta
-beta = 49
-
-
 import random
-
 import numpy as np
 import pandas as pd
-import SpaGCN as spg
 import torch
-
+import tempfile
+import os
+import sys
+import scanpy as sc
+import scipy as sp
+import torch.optim
+import sklearn.cluster
+import sklearn.metrics
+import tqdm
 
 def get_anndata(args):
     import anndata as ad
-    import scipy as sp
+    
     from PIL import Image
+    import scipy.io
 
     X = sp.io.mmread(args.matrix)
     if sp.sparse.issparse(X):
@@ -115,8 +122,8 @@ def get_anndata(args):
         .to_numpy()
     )
 
-    adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial_pixel": coordinates}
+    adata = ad.AnnData( # Rename spatial_pixel to spatial for Spatial-mgcn
+        X=X, obs=observations, var=features, obsm={"spatial": coordinates}
     )
 
     if args.image is not None:
@@ -129,88 +136,119 @@ def get_anndata(args):
 
 adata = get_anndata(args)
 
+if CALC_ARI:
+    labels = pd.read_table(args.groundtruth, index_col=0)
+    adata = adata[adata.obs_names.isin(labels.index)]
+    labels = labels.loc[adata.obs_names]
 
 # Set seed
 random.seed(seed)
 torch.manual_seed(seed)
 np.random.seed(seed)
+torch.cuda.manual_seed(seed)
 
-if adata.uns["image"] is not None:
-    adj = spg.calculate_adj_matrix(
-        adata.obs["col"],
-        adata.obs["row"],
-        adata.obsm["spatial_pixel"][:, 0],
-        adata.obsm["spatial_pixel"][:, 1],
-        image=adata.uns["image"],
-        alpha=config["alpha"],
-        beta=beta,
-        histology=True,
-    )
-else:
-    adj = spg.calculate_adj_matrix(adata.obs["col"], adata.obs["row"], histology=False)
+# Work in a temprary folder
+with tempfile.TemporaryDirectory() as tmpdir:
+    gitdir = f"{str(tmpdir)}/Spatial-MGCN"
 
+    # Clone the repository to the specific commit
+    os.system(
+    f"""
+    git clone https://github.com/cs-wangbo/Spatial-MGCN.git {gitdir}
+    cd {gitdir} 
+    git reset --hard cf4412d
+    """)
 
-clf = spg.SpaGCN()
+    # Set working directory as Spatial-MGCN directory
+    sys.path.append(f"{gitdir}/Spatial-MGCN")
+    import utils
+    import models
 
-# Find the l value given p
-l = spg.search_l(config["p"], adj)
-clf.set_l(l)
+    # Normalize data: min_cells, calculate HVG and scale
+    sc.pp.filter_genes(adata, min_cells=100)
+    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=config["fdim"])
+    adata = adata[:, adata.var['highly_variable']].copy()
+    adata.X = adata.X / np.sum(adata.X, axis=1).reshape(-1, 1) * 10000
+    adata.X = sp.sparse.csr_matrix(adata.X)
+    sc.pp.scale(adata, zero_center=False, max_value=10)
 
+    # Calculate graphs
+    fadj = utils.features_construct_graph(adata.X, k=config["k"]) 
+    sadj, graph_nei, graph_neg = utils.spatial_construct_graph1(adata, radius=config["radius"])
 
-# Run
-if config["method"] == "louvain":
-    # Search for suitable resolution
-    res = spg.search_res(
-        adata, adj, l, n_clusters, r_seed=seed, t_seed=seed, n_seed=seed
-    )
-    clf.train(
-        adata,
-        adj,
-        init_spa=True,
-        init=config["method"],
-        res=res,
-        n_neighbors=config["n_neighbors"],
-        num_pcs=config["n_pcs"],
-    )
-else:
-    clf.train(
-        adata,
-        adj,
-        init_spa=True,
-        init=config["method"],
-        n_clusters=n_clusters,
-        num_pcs=config["n_pcs"],
-    )
-y_pred, prob = clf.predict()
+    adata.obsm["fadj"] = fadj
+    adata.obsm["sadj"] = sadj
+    adata.obsm["graph_nei"] = graph_nei.numpy()
+    adata.obsm["graph_neg"] = graph_neg.numpy()
 
-adata.obs["cluster"] = pd.Series(y_pred, index=adata.obs_names, dtype="category")
+    features = torch.FloatTensor(adata.X.todense())
+    
+    nfadj = utils.normalize_sparse_matrix(fadj + sp.eye(fadj.shape[0]))
+    nfadj = sp.sparse.csr_matrix(nfadj)
+    nfadj = utils.sparse_mx_to_torch_sparse_tensor(nfadj)
+    
+    nsadj = utils.normalize_sparse_matrix(sadj + sp.eye(sadj.shape[0]))
+    nsadj = sp.sparse.csr_matrix(nsadj)
+    nsadj = utils.sparse_mx_to_torch_sparse_tensor(nsadj)
+    
+    graph_nei = torch.LongTensor(adata.obsm['graph_nei'])
+    graph_neg = torch.LongTensor(adata.obsm['graph_neg'])
 
-if technology in ["Visium", "ST"] and config["refine"]:
-    # Do cluster refinement(optional)
-    adj_2d = spg.calculate_adj_matrix(
-        adata.obs["col"], adata.obs["row"], histology=False
-    )
+    # Create model
+    cuda = torch.cuda.is_available()
 
-    shape = "hexagon" if technology == "Visium" else "square"
-    refined_pred = spg.refine(
-        sample_id=adata.obs_names.tolist(),
-        pred=adata.obs["cluster"].tolist(),
-        dis=adj_2d,
-        shape=shape,
-    )
+    if cuda:
+            features = features.cuda()
+            nsadj = nsadj.cuda()
+            nfadj = nfadj.cuda()
+            graph_nei = graph_nei.cuda()
+            graph_neg = graph_neg.cuda()
+    
+    model = models.Spatial_MGCN(nfeat=config["fdim"],
+                             nhid1=config["nhid1"],
+                             nhid2=config["nhid2"],
+                             dropout=config["dropout"])
+    
+    if cuda:
+        model.cuda()
+    
+    optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
 
-    adata.obs["refined_cluster"] = pd.Series(
-        refined_pred, index=adata.obs_names, dtype="category"
-    )
+    # Train model
+    epoch_max = 0
+    ari_max = 0
+    idx_max = []
+    mean_max = []
+    emb_max = []
 
-    label_df = adata.obs[["refined_cluster"]]
+    for epoch in tqdm.tqdm(range(config["epochs"])):
+        model.train()
+        optimizer.zero_grad()
+        com1, com2, emb, pi, disp, mean = model(features, nsadj, nfadj)
+        zinb_loss = utils.ZINB(pi, theta=disp, ridge_lambda=0).loss(features, mean, mean=True)
+        reg_loss = utils.regularization_loss(emb, graph_nei, graph_neg)
+        con_loss = utils.consistency_loss(com1, com2)
+        total_loss = config["alpha"] * zinb_loss + config["beta"] * con_loss + config["gamma"] * reg_loss
+        emb = pd.DataFrame(emb.cpu().detach().numpy()).fillna(0).values
+        total_loss.backward()
+        optimizer.step()
+        
+        kmeans = sklearn.cluster.KMeans(n_clusters=args.n_clusters, n_init=10).fit(emb)
+        idx = kmeans.labels_
 
-else:
-    label_df = adata.obs[["cluster"]]
+        if CALC_ARI:
+            ari_res = sklearn.metrics.adjusted_rand_score(labels.to_numpy()[:,0], idx)
+            if ari_res > ari_max:
+                ari_max = ari_res
+                idx_max = idx
+                emb_max = emb
+        else:
+            idx_max = idx
+            emb_max = emb
+    
+    # Write output
+    emb_df = pd.DataFrame(emb_max, index=adata.obs_names)
+    label_df = pd.DataFrame(idx_max, index=adata.obs_names, columns=["label"])
 
-
-## Write output
-out_dir.mkdir(parents=True, exist_ok=True)
-
-label_df.columns = ["label"]
-label_df.to_csv(label_file, sep="\t", index_label="")
+    emb_df.to_csv(embedding_file, sep="\t", index_label="")
+    label_df.to_csv(label_file, sep="\t", index_label="")
