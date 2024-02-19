@@ -21,7 +21,7 @@ use_methods:
   #- "maple"
   #- "meringue"
   #- "precast"
-  #- "scanpy"
+  - "scanpy"
   #- "SC.MEB"
   #- "seurat"
   #- "spaGCN"
