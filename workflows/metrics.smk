@@ -1,4 +1,5 @@
 import os
+import json
 
 from shared.functions import check_files_in_folder, get_git_directory, get_sample_dirs
 
@@ -16,12 +17,20 @@ methods = list(config["methods"].keys())
 
 
 def generate_metrics_results(
-    data_dir, metrics_name, methods, file_ext, configfiles=None
+    data_dir, metrics_name, methods, file_ext
 ):
+    # getting metrics optargs.json file 
+    with open(GIT_DIR + metrics[metrics_name]["optargs"], "r") as file:
+        opt = json.load(file)
+
     result_files = []
     # sample directory
     for sample_dir in get_sample_dirs(data_dir):
-        # method directory
+        # Check if ground truth is needed
+        if opt["groundtruth"] and "labels.tsv" not in os.listdir(sample_dir):
+                continue
+
+        # Check all method results
         for method in methods:
             method_dir = os.path.join(sample_dir, method)
             if os.path.exists(method_dir):
@@ -32,11 +41,19 @@ def generate_metrics_results(
                 )
                 # method config directory
                 for dir_to_check in dirs_to_check:
+                    # Check if embedding is needed 
+                    if opt["embedding"] and "embedding.tsv" not in os.listdir(os.path.join(method_dir, dir_to_check)):
+                        continue
+
+                    # Check if results exist
                     if check_files_in_folder(
                         os.path.join(method_dir, dir_to_check), ["domains.tsv"]
                     ):
+
                         # Metric config directory
-                        config_files = configfiles.keys() if configfiles else [""]
+                        config_files = config['config_files'][metrics_name].keys() if opt["config_file"] else [""]
+
+                        # Generating final metric results path
                         for config_file_name in config_files:
                             result_files.append(
                                 os.path.join(
@@ -53,14 +70,10 @@ def generate_metrics_results(
 def generate_all_input(wildcards):
     all_input = []
     for metric in config["use_metrics"]:
-        if metric in config['configfiles'].keys():
-            all_input += generate_metrics_results(
-                config["data_dir"], metric, methods, file_ext="txt", configfiles=config['configfiles'][metric]
-            )
-        else:
-            all_input += generate_metrics_results(
-                config["data_dir"], metric, methods, file_ext="txt"
-            )
+        all_input += generate_metrics_results(
+            data_dir=config["data_dir"], metrics_name=metric, 
+            methods=methods, file_ext="txt"
+        )
     return all_input
 
 
@@ -69,20 +82,58 @@ rule all:
         generate_all_input,
 
 
+def get_metric(wildcards):
+    # Trim metric_config if it has config path to it
+    metric = wildcards.metric_config
+    if "config" in metric:
+        metric = metric[:metric.find("/")]
+
+    return(metric)
+
 def get_sample_labels(wildcards):
-    samples_folder = os.path.join(config["data_dir"], wildcards.sample)
-    if "labels.tsv" in os.listdir(samples_folder):
+    # getting metrics optargs.json file 
+    metric = get_metric(wildcards)
+    with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
+        opt = json.load(file)
+
+    if opt["groundtruth"]:
+        samples_folder = os.path.join(config["data_dir"], wildcards.sample)
+        if "labels.tsv" not in os.listdir(samples_folder):
+            stop("wrong optargs file (groundtruth)")
+
         return "-g " + os.path.join(samples_folder, "labels.tsv")
     else:
         return ""
 
 
 def get_method_embedding(wildcards):
-    method_config_folder = os.path.join(
-        config["data_dir"], wildcards.sample, wildcards.method_config
-    )
-    if "embedding.tsv" in os.listdir(method_config_folder):
+    # getting metrics optargs.json file
+    metric = get_metric(wildcards)
+    with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
+        opt = json.load(file)
+
+    if opt["embedding"]:
+        method_config_folder = os.path.join(
+            config["data_dir"], wildcards.sample, wildcards.method_config
+        )
+        if "embedding.tsv" not in os.listdir(method_config_folder):
+            stop("wrong optargs file (embedding)!")
+
         return "-e " + os.path.join(method_config_folder, "embedding.tsv")
+    else:
+        return ""
+
+def get_metric_config(wildcards):
+    # getting metrics optargs.json file
+    metric = get_metric(wildcards)
+    with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
+        opt = json.load(file)
+
+    if opt["config_file"]:
+        config_key = wildcards.metric_config[wildcards.metric_config.find("/")+1: ]
+        if len(config)==0:
+            stop("Wrong optargs or no config folder found")
+        return "-c " + GIT_DIR + "metric/" + metric + "/" + config["config_files"][metric][config_key]
     else:
         return ""
 
@@ -91,21 +142,24 @@ rule metric:
     input:
         domains=config["data_dir"] + "/{sample}/{method_config}/domains.tsv",
     output:
-        file=config["data_dir"] + "/{sample}/{method_config}/{metric}/results.txt",
+        file=config["data_dir"] + "/{sample}/{method_config}/{metric_config}/results.txt",
     wildcard_constraints:
         sample="[a-zA-Z0-9_-]+",
-        metric="[a-zA-Z0-9_-]+",
+        method_config="[a-zA-Z0-9_-]+(\/config_[a-zA-Z0-9_-]+)?",
+        metric_config="[a-zA-Z0-9_-]+(\/config_[a-zA-Z0-9_-]+)?",
     conda:
-        lambda wildcards: GIT_DIR + metrics[wildcards.metric]["env"]
+        lambda wildcards: GIT_DIR + metrics[get_metric(wildcards)]["env"]
     params:
         sample_labels=get_sample_labels,
         embeddings=get_method_embedding,
-        script=lambda wildcards:GIT_DIR + metrics[wildcards.metric]["script"],
+        config=get_metric_config,
+        script=lambda wildcards:GIT_DIR + metrics[get_metric(wildcards)]["script"],
     shell:
         """
         {params.script} \
             -l {input.domains} \
             {params.sample_labels} \
             {params.embeddings} \
+            {params.config} \
             -o {output.file}
         """

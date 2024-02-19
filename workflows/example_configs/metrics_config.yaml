@@ -5,5 +5,18 @@ data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/libd_dlpfc
 
 use_metrics:
   - "ARI"
-  - "Calinski-Harabasz"
-  - "Davies-Bouldin"
+#  - "Completeness"
+#  - "Entropy"
+  - "FMI"
+#  - "Homogeneity"
+#  - "MCC"
+#  - "NMI"
+#  - "domain-specific-f1"
+#  - "jaccard"
+  - "V_measure"                        #Config, GT
+#  - "LISI"                             #Config, embed, GT
+  - "cluster-specific-silhouette"      #embed, no GT
+#  - "Calinski-Harabasz"
+#  - "Davies-Bouldin"
+#  - "CHAOS"                            #phyiscal coord only
+#  - "PAS"
