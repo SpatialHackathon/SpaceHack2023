@@ -112,7 +112,6 @@ def get_anndata(args):
 
 adata = get_anndata(args)
 
-
 # Load config file
 import json
 
