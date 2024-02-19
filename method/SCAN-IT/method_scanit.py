@@ -112,6 +112,7 @@ def get_anndata(args):
 
 adata = get_anndata(args)
 
+
 # Load config file
 import json
 
@@ -130,6 +131,9 @@ import torch
 
 use_cuda = torch.cuda.is_available()
 device = 'cuda' if use_cuda else 'cpu'
+
+# Assuming transform=log1p, here's the scaling step: https://github.com/zcang/SCAN-IT/blob/main/examples/Slide-seq/scanit.ipynb
+sc.pp.scale(adata)
 
 # Construct the spatial graph
 scanit.tl.spatial_graph(adata, method='alpha shape', alpha_n_layer=2, knn_n_neighbors=5)
