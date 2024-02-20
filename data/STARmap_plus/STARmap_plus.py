@@ -96,7 +96,6 @@ def get_data(out_dir):
             df = df.transpose()
             mmwrite(f'{sample_dir}/counts.mtx', scipy.sparse.csr_matrix(df))
 
-            # TODO no further information from the data for features.tsv
             # Write out features.tsv
             with open(f'{sample_dir}/features.tsv', 'w') as f_out_features :
                 f_out_features.write('\tgene_version\n')
@@ -111,9 +110,6 @@ def get_data(out_dir):
         position = []
         patient = []
 
-        # TODO data from mouse so no patient --> should patient be NA?
-        # TODO position I assumed is the tissue type, which is here brain. Is that correct?
-        # TODO ncluster = number of main celltype cluster, they also hat sub celltypes. Is that correct?
         with open(f'{tmpdir}/metadata.csv', 'r') as f_in:
             f_in.readline()
             f_in.readline()
