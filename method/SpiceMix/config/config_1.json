@@ -4,8 +4,5 @@
     "device": "cuda:0",
     "dtype": "float64",
     "num_preiterations": 5,
-    "num_iterations": 200,
-    "preprocess": {
-        "hvgs": 3500
-    }
+    "num_iterations": 200
 }

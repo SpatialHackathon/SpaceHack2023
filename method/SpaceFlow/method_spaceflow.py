@@ -145,7 +145,7 @@ sf.adata_preprocessed = adata
 sf.spatial_graph = spatial_graph
 
 # Train the network
-sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, edge_subset_sz=1000000, embedding_save_filepath=out_dir)
+sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, edge_subset_sz=1000000, embedding_save_filepath=embedding_file)
 
 if config is not None:
     res = int(config['res'])
@@ -158,7 +158,7 @@ else:
 warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
 
 # Segment the domains given the resolution
-sf.segmentation(domain_label_save_filepath=out_dir, n_neighbors=nn, resolution=res)
+sf.segmentation(domain_label_save_filepath=label_file, n_neighbors=nn, resolution=res)
 
 label_df = pd.DataFrame(sf.domains)  # DataFrame with index (cell-id/barcode) and 1 column (label)
 embedding_df = pd.DataFrame(sf.embedding, index=adata.obs_names) # DataFrame with index (cell-id/barcode) and n columns
