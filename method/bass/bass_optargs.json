@@ -1,5 +1,5 @@
 {
-    "matrix": "counts",
+    "matrix": "dimensionality_reduction",
     "integrated_feature_selection": true,
     "image": false,
     "neighbors": false,

@@ -119,7 +119,7 @@ get_SpatialExperiment <- function(
     coord_file,
     matrix_file = NA,
     reducedDim_file = NA,
-    assay_name = "counts",
+    assay_name = "logcounts",
     reducedDim_name = "reducedDim") {
   rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
   colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
@@ -175,24 +175,28 @@ spe <- get_SpatialExperiment(
     feature_file = feature_file,
     observation_file = observation_file,
     coord_file = coord_file,
-    matrix_file = matrix_file#,
-    #reducedDim_file = dimred_file
+    matrix_file = matrix_file,
+    reducedDim_file = dimred_file
 )
 
 
 # Set up BASS object
+#list("experiment" = SummarizedExperiment::assay(spe, "logcounts")),
 BASS <- createBASSObject(
-    list("experiment" = SummarizedExperiment::assay(spe, "counts")), 
+    list("experiment" = t(SingleCellExperiment::reducedDim(spe))), 
     list("experiment" = SpatialExperiment::spatialCoords(spe)),
     C = C, R = R,
     beta_method = beta_method, init_method = init_method, 
     burnin = 2000, nsample = 10000)
 
 # Data pre-processing:
-BASS <- BASS.preprocess(BASS, doLogNormalize = TRUE,
-  geneSelect = geneSelect, nSE = nSE, doPCA = TRUE, 
-  scaleFeature = as.logical(scaleFeature), nPC = nPC)
 
+#BASS <- BASS.preprocess(
+#    BASS, doLogNormalize = FALSE,
+#    doBatchCorrect = FALSE,
+#    geneSelect = geneSelect, nHVG = nSE, nSE = nSE, doPCA = TRUE, 
+#    scaleFeature = as.logical(scaleFeature), nPC = nPC)
+BASS@X_run <- t(SingleCellExperiment::reducedDim(spe))
 # Run BASS algorithm
 BASS <- BASS.run(BASS)
 
