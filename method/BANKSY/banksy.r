@@ -135,7 +135,7 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    assay(spe, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    #assay(spe, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
   }
 
   # Filter features and samples
@@ -168,8 +168,14 @@ k_geom <- config$k_geom
 npcs <- config$npcs
 resolution <- config$resolution
 method <- config$method
-assay_name <- "logcounts"
+assay_name <- "normcounts"
 set.seed(seed)
+
+# Normalization to mean library size
+spe <- computeLibraryFactors(spe)
+assay(spe, aname) <- normalizeCounts(spe, log = FALSE)
+
+# Run BANKSY
 spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom)
 spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = npcs)
 spe <- Banksy::clusterBanksy(spe, lambda = lambda, use_pcs = TRUE, npcs = npcs, resolution = resolution, seed = seed, method = method)
