@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: ENTER YOUR NAME AND CONTRIBUTION HERE
+# Author_and_contribution: Zaira Seferbekova; wrote the code for SOTIP
 
 import argparse
 
@@ -171,7 +171,7 @@ adata_phEMD = MED_phEMD_mp(
 adata.obsp['ME_EMD_mat'] = adata_phEMD.obsm['X_ME_EMD_mat']
 
 # Compute the MEG, each node is a ME, edge is the connectivity
-sc.pp.neighbors(adata, n_neighbors=n_neighbors)
+sc.pp.neighbors(adata, n_neighbors=n_neighbors, use_rep="reduced_dimensions")
 knn_indices, knn_dists, forest = sc.neighbors.compute_neighbors_umap(adata_phEMD.obsm['X_ME_EMD_mat'], n_neighbors=n_neighbors, metric='precomputed')
 adata.obsp['distances'], adata.obsp['connectivities'] = sc.neighbors._compute_connectivities_umap(
     knn_indices,

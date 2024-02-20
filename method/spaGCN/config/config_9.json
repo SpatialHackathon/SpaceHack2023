@@ -1,0 +1,1 @@
+{"method": "kmeans", "refine": false, "alpha": 1, "p": 0.5, "n_pcs": 50}

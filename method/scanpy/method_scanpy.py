@@ -180,7 +180,7 @@ else:
     print("No clustering method defined or your method is not available, performing leiden")
     sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
 
-label_df = adata.obs["leiden"]
+label_df = adata.obs[["leiden"]]
 
 
 # embedding_df = None  # optional, DataFrame with index (cell-id/barcode) and n columns
