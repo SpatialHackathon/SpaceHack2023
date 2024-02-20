@@ -193,7 +193,6 @@ def get_anndata(args):
 
 adata = get_anndata(args)
 
-
 # Set seed
 random.seed(seed)
 np.random.seed(seed)
