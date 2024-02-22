@@ -138,6 +138,10 @@ import scvi
 # sc.pp.filter_genes(adata, min_counts=3)
 #sc.pp.filter_cells(adata, min_counts=3)
 
+#GPU possibility
+use_cuda = torch.cuda.is_available()
+
+
 # preprocessing for scvi
 adata.layers["counts"] = adata.X.copy()
 
@@ -149,7 +153,7 @@ scvi.model.SCVI.setup_anndata(
 )
 
 model = scvi.model.SCVI(adata)
-model.train(early_stopping=True, enable_progress_bar=True)
+model.train(early_stopping=True, enable_progress_bar=False)
 adata.obsm['reduced_dimensions'] = model.get_latent_representation(adata).astype(np.float32)
 
 # Find neighbors
@@ -179,7 +183,7 @@ model = cc.tl.Cluster(
     convergence_tolerance=config["convergence_tolerance"], 
     covariance_regularization=config["covariance_regularization"]
     # if running on gpu
-    #trainer_params=dict(accelerator='gpu', devices=1)
+    trainer_params=dict(accelerator='gpu', devices=1) if use_cuda else None
     )
 
 model.fit(adata, use_rep='X_cellcharter')
