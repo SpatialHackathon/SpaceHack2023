@@ -51,7 +51,7 @@ def generate_metrics_results(
                     ):
 
                         # Metric config directory
-                        config_files = config['config_files'][metrics_name].keys() if opt["config_file"] else [""]
+                        config_files = config["config_files"][metrics_name].keys() if opt["config_file"] else [""]
 
                         # Generating final metric results path
                         for config_file_name in config_files:
@@ -145,7 +145,7 @@ def get_sample_coordinate(wildcards):
 
     if "physical_coordinate" in opt.keys():
         if opt["physical_coordinate"]:
-            return "--coordinates" + config["data_dir"] + f"/{wildcards.sample}/coordinates.tsv"
+            return "--coordinates " + config["data_dir"] + f"/{wildcards.sample}/coordinates.tsv"
         else:
             return ""
     else:
@@ -167,7 +167,7 @@ rule metric:
         embeddings=get_method_embedding,
         config=get_metric_config,
         script=lambda wildcards:GIT_DIR + metrics[get_metric(wildcards)]["script"],
-        physical_coordiante=get_sample_coordinate
+        physical_coordinate=get_sample_coordinate
     shell:
         """
         {params.script} \
@@ -175,6 +175,6 @@ rule metric:
             {params.sample_labels} \
             {params.embeddings} \
             {params.config} \
-            {params.physical_coordinate}
+            {params.physical_coordinate} \
             -o {output.file}
         """
