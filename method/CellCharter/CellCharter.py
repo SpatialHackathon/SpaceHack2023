@@ -124,6 +124,7 @@ import squidpy as sq
 import pandas as pd
 import numpy as np
 import random
+import torch
 
 random.seed(seed)
 
@@ -153,7 +154,7 @@ scvi.model.SCVI.setup_anndata(
 )
 
 model = scvi.model.SCVI(adata)
-model.train(early_stopping=True, enable_progress_bar=False)
+model.train(early_stopping=True, enable_progress_bar=False, progress_bar_refresh_rate=0)
 adata.obsm['reduced_dimensions'] = model.get_latent_representation(adata).astype(np.float32)
 
 # Find neighbors
@@ -181,7 +182,7 @@ model = cc.tl.Cluster(
     n_clusters=n_clusters, 
     random_state=seed,
     convergence_tolerance=config["convergence_tolerance"], 
-    covariance_regularization=config["covariance_regularization"]
+    covariance_regularization=config["covariance_regularization"],
     # if running on gpu
     trainer_params=dict(accelerator='gpu', devices=1) if use_cuda else None
     )
