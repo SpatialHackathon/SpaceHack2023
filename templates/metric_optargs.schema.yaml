@@ -13,5 +13,10 @@ properties:
         type: boolean
 
     config_file:
-        description: Does the method take an additional config file?
+        description: Does the metric take an additional config file?
+        type: boolean
+
+    # Optional, only added when your metric requires this
+    physical_coordinate:
+        description: Does the metric take physcial coordination of the sample?
         type: boolean

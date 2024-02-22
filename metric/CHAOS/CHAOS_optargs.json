@@ -1,6 +1,7 @@
 {
     "groundtruth": false,
     "embedding": false,
-    "config_file": false
+    "config_file": false,
+    "physical_coordinate": true
 }
 
