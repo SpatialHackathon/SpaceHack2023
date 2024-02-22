@@ -7,9 +7,9 @@ import argparse
 import os
 import json
 
-# TODO adjust description
 ###### Template arguments ##################################################
-parser = argparse.ArgumentParser(description="Method ...")
+parser = argparse.ArgumentParser(description="conST: an interpretable multi-modal contrastive learning \
+                                 framework for spatial transcriptomics")
 
 parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
@@ -168,16 +168,9 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 print('Using device: ' + device)
 params.device = device
 
-# set seed before every run
-def seed_torch(seed):
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
-seed_torch(params.seed)
+os.environ['PYTHONHASHSEED'] = str(seed)
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 # TODO this is what conST uses for data preprocessing
 def adata_preprocess(i_adata, min_cells=3, pca_n_comps=300):
@@ -222,6 +215,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
     # Use image data if provided
     if params.use_img:
+        # TODO please check if this is the correct way to use the image data
         img_transformed = adata.uns["image"]
         img_transformed = (img_transformed - img_transformed.mean()) / img_transformed.std() * adata_X.std() + adata_X.mean()
         conST_net = conST_training(adata_X, graph_dict, params, n_clusters, img_transformed)
