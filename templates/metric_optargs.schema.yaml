@@ -16,7 +16,7 @@ properties:
         description: Does the metric take an additional config file?
         type: boolean
 
-    # Optional, only added when your metric requires this
+    # Optional, only add when your metric requires this
     physical_coordinate:
         description: Does the metric take physcial coordination of the sample?
         type: boolean
