@@ -137,6 +137,19 @@ def get_metric_config(wildcards):
     else:
         return ""
 
+def get_sample_coordinate(wildcards):
+    # getting metrics optargs.json file
+    metric = get_metric(wildcards)
+    with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
+        opt = json.load(file)
+
+    if "physical_coordinate" in opt.keys():
+        if opt["physical_coordinate"]:
+            return "--coordinates" + config["data_dir"] + f"/{wildcards.sample}/coordinates.tsv"
+        else:
+            return ""
+    else:
+        return ""
 
 rule metric:
     input:
@@ -154,6 +167,7 @@ rule metric:
         embeddings=get_method_embedding,
         config=get_metric_config,
         script=lambda wildcards:GIT_DIR + metrics[get_metric(wildcards)]["script"],
+        physical_coordiante=get_sample_coordinate
     shell:
         """
         {params.script} \
@@ -161,5 +175,6 @@ rule metric:
             {params.sample_labels} \
             {params.embeddings} \
             {params.config} \
+            {params.physical_coordinate}
             -o {output.file}
         """
