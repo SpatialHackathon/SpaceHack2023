@@ -7,16 +7,16 @@ use_metrics:
   - "ARI"
 #  - "Completeness"
 #  - "Entropy"
-  - "FMI"
+#  - "FMI"
 #  - "Homogeneity"
 #  - "MCC"
 #  - "NMI"
 #  - "domain-specific-f1"
 #  - "jaccard"
-  - "V_measure"                        #Config, GT
+#  - "V_measure"                        #Config, GT
 #  - "LISI"                             #Config, embed, GT
-  - "cluster-specific-silhouette"      #embed, no GT
+#  - "cluster-specific-silhouette"      #embed, no GT
 #  - "Calinski-Harabasz"
 #  - "Davies-Bouldin"
 #  - "CHAOS"                            #phyiscal coord only
-#  - "PAS"
+#  - "PAS"      # buggy TODO
