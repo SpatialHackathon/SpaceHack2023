@@ -13,9 +13,22 @@ import tempfile
 
 # 6 available but only 2 contain region label and coordinates
 
-sample_info=pd.read_csv('sample_info.csv')
+sample_name = ['E9.5_E1S1', 'E9.5_E2S1', 'E9.5_E2S2', 'E9.5_E2S3', 'E9.5_E2S4',
+       'E10.5_E1S1', 'E10.5_E1S2', 'E10.5_E1S3', 'E10.5_E2S1',
+       'E11.5_E1S1', 'E11.5_E1S2', 'E11.5_E1S3', 'E11.5_E1S4',
+       'E12.5_E1S1', 'E12.5_E1S2', 'E12.5_E1S3', 'E12.5_E1S4',
+       'E12.5_E1S5', 'E12.5_E2S1', 'E13.5_E1S1', 'E13.5_E1S2',
+       'E13.5_E1S3', 'E13.5_E1S4', 'E14.5_E1S1', 'E14.5_E1S2',
+       'E14.5_E1S3', 'E14.5_E1S4', 'E14.5_E1S5', 'E14.5_E2S1',
+       'E14.5_E2S2', 'E15.5_E1S1', 'E15.5_E1S2', 'E15.5_E1S3',
+       'E15.5_E1S4', 'E15.5_E2S1', 'E16.5_E1S1', 'E16.5_E1S2',
+       'E16.5_E1S3', 'E16.5_E1S4', 'E16.5_E1S5', 'E16.5_E2S10',
+       'E16.5_E2S11', 'E16.5_E2S12', 'E16.5_E2S13', 'E16.5_E2S1',
+       'E16.5_E2S2', 'E16.5_E2S3', 'E16.5_E2S4', 'E16.5_E2S5',
+       'E16.5_E2S6', 'E16.5_E2S7', 'E16.5_E2S8', 'E16.5_E2S9']
 
-LINKS = sample_info["download"].tolist()
+LINKS = [f"https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000058/stomics/{sample}.MOSTA.h5ad" for sample in sample_name]
+
 
 
 META_DICT = {"technology":"Stereo-seq"}
@@ -35,7 +48,7 @@ def download_links(links, temp_dir):
         except Exception as e:
             print(f"Error downloading {link}: {e}")
 
-def process_adata(adata_path,output_folder,iteration,sample_df,sample_info):
+def process_adata(adata_path,output_folder,iteration,sample_df,sample_name):
     folder_name = os.path.splitext(os.path.basename(adata_path))[0]
     complete_path = os.path.join(output_folder,folder_name)
     os.makedirs(complete_path, exist_ok=True)
@@ -74,7 +87,7 @@ def process_adata(adata_path,output_folder,iteration,sample_df,sample_info):
 
     # add info for sample.tsv
     # Your sample_data_basis dictionary
-    sample_data_basis = {"sample":sample_info["sample_name"].iloc[iteration],"n_clusters": adata.obs.annotation.nunique(), "directory": folder_name}
+    sample_data_basis = {"sample":sample_name[iteration],"n_clusters": adata.obs.annotation.nunique(), "directory": folder_name}
     
     # Creating a DataFrame from the dictionary
     sample_data = pd.DataFrame([sample_data_basis])
@@ -114,7 +127,7 @@ def main():
         sample_df = pd.DataFrame(columns=SAMPLE_COLUMNS,index=range(len(LINKS)))
         anndatas = [os.path.join(temp_dir, file) for file in os.listdir(temp_dir) if file.endswith(".h5ad")]
         for iteration, adata in enumerate(anndatas):
-            process_adata(adata, args.out_dir,iteration,sample_df,sample_info)
+            process_adata(adata, args.out_dir,iteration,sample_df,sample_name)
         
     
         # write json 
