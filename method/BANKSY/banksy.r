@@ -173,7 +173,7 @@ set.seed(seed)
 
 # Normalization to mean library size
 spe <- computeLibraryFactors(spe)
-assay(spe, aname) <- normalizeCounts(spe, log = FALSE)
+assay(spe, assay_name) <- normalizeCounts(spe, log = FALSE)
 
 # Run BANKSY
 spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom)
