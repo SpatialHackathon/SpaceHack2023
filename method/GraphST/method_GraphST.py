@@ -156,6 +156,9 @@ def get_anndata(args):
 adata = get_anndata(args)
 adata.var_names_make_unique()
 
+# Assuming transform=log1p, here's the scaling step: https://github.com/JinmiaoChenLab/GraphST/blob/main/GraphST/preprocess.py
+sc.pp.scale(adata, zero_center=False, max_value=10)
+
 # Set seed
 random.seed(seed)
 torch.manual_seed(seed)
