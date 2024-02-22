@@ -205,11 +205,11 @@ with tempfile.TemporaryDirectory() as tmpdir:
     from src.utils_func import res_search_fixed_clus, plot_clustering
     from src.training import conST_training
 
-    # Graph construction
-    graph_dict = graph_construction(adata.obsm['spatial'], adata.shape[0], params)
-
     # Preprocessing
     adata_X = adata_preprocess(adata, min_cells=5, pca_n_comps=params.cell_feat_dim)
+
+    # Graph construction
+    graph_dict = graph_construction(adata.obsm['spatial'], adata.shape[0], params)
 
     params.cell_num = adata.shape[0]
 
