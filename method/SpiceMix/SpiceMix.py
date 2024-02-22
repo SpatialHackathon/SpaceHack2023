@@ -22,27 +22,36 @@ parser.add_argument(
 parser.add_argument(
     "-o", "--observations", help="Path to observations (as tsv).", required=True
 )
-
 parser.add_argument(
     "-n",
     "--neighbors",
     help="Path to neighbor definitions. Square matrix (not necessarily symmetric) where each row contains the neighbors of this observation (as mtx).",
     required=False,
 )
-
 parser.add_argument("-d", "--out_dir", help="Output directory.", required=True)
-
+parser.add_argument(
+    "--dim_red",
+    help="Reduced dimensionality representation (e.g. PCA).",
+    required=False,
+)
+parser.add_argument("--image", help="Path to H&E staining.", required=False)
 parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
+)
+parser.add_argument(
+    "--technology",
+    help="The technology of the dataset (Visium, ST, imaging-based).",
+    required=True,
 )
 parser.add_argument(
     "--seed", help="Seed to use for random operations.", required=True, type=int
 )
 parser.add_argument(
     "--config",
-    help="Config file used to pass additional parameters.",
-    required=True,
+    help="Optional config file (json) used to pass additional parameters.",
+    required=False,
 )
+
 
 args = parser.parse_args()
 
@@ -141,7 +150,7 @@ def get_anndata(args):
 
         del adata.obsp["spatial_connectivities"]
 
-        adata = PopariDataset(adata, "raw")
+        adata = PopariDataset(adata, "processed")
 
     return adata
 

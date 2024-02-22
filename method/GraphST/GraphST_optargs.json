@@ -1,5 +1,5 @@
 {
-    "matrix": "dimensionality_reduction",
+    "matrix": "transform",
     "integrated_feature_selection": true,
     "image": false,
     "neighbors": true,
