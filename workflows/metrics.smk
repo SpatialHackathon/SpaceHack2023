@@ -3,11 +3,13 @@ import json
 
 from shared.functions import check_files_in_folder, get_git_directory, get_sample_dirs
 
+
 # this specific pipeline setting
 configfile: "example_configs/metrics_config.yaml"
 # All methods and metrics available
 configfile: "path_configs/metrics.yaml"
 configfile: "path_configs/methods.yaml"
+
 
 GIT_DIR = get_git_directory(config)
 
@@ -16,10 +18,8 @@ metrics = config["metrics"]
 methods = list(config["methods"].keys())
 
 
-def generate_metrics_results(
-    data_dir, metrics_name, methods, file_ext
-):
-    # getting metrics optargs.json file 
+def generate_metrics_results(data_dir, metrics_name, methods, file_ext):
+    # getting metrics optargs.json file
     with open(GIT_DIR + metrics[metrics_name]["optargs"], "r") as file:
         opt = json.load(file)
 
@@ -28,7 +28,7 @@ def generate_metrics_results(
     for sample_dir in get_sample_dirs(data_dir):
         # Check if ground truth is needed
         if opt["groundtruth"] and "labels.tsv" not in os.listdir(sample_dir):
-                continue
+            continue
 
         # Check all method results
         for method in methods:
@@ -41,8 +41,10 @@ def generate_metrics_results(
                 )
                 # method config directory
                 for dir_to_check in dirs_to_check:
-                    # Check if embedding is needed 
-                    if opt["embedding"] and "embedding.tsv" not in os.listdir(os.path.join(method_dir, dir_to_check)):
+                    # Check if embedding is needed
+                    if opt["embedding"] and "embedding.tsv" not in os.listdir(
+                        os.path.join(method_dir, dir_to_check)
+                    ):
                         continue
 
                     # Check if results exist
@@ -51,7 +53,11 @@ def generate_metrics_results(
                     ):
 
                         # Metric config directory
-                        config_files = config["config_files"][metrics_name].keys() if opt["config_file"] else [""]
+                        config_files = (
+                            config["config_files"][metrics_name].keys()
+                            if opt["config_file"]
+                            else [""]
+                        )
 
                         # Generating final metric results path
                         for config_file_name in config_files:
@@ -71,8 +77,10 @@ def generate_all_input(wildcards):
     all_input = []
     for metric in config["use_metrics"]:
         all_input += generate_metrics_results(
-            data_dir=config["data_dir"], metrics_name=metric, 
-            methods=methods, file_ext="txt"
+            data_dir=config["data_dir"],
+            metrics_name=metric,
+            methods=methods,
+            file_ext="txt",
         )
     return all_input
 
@@ -86,12 +94,13 @@ def get_metric(wildcards):
     # Trim metric_config if it has config path to it
     metric = wildcards.metric_config
     if "config" in metric:
-        metric = metric[:metric.find("/")]
+        metric = metric[: metric.find("/")]
 
-    return(metric)
+    return metric
+
 
 def get_sample_labels(wildcards):
-    # getting metrics optargs.json file 
+    # getting metrics optargs.json file
     metric = get_metric(wildcards)
     with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
         opt = json.load(file)
@@ -123,6 +132,7 @@ def get_method_embedding(wildcards):
     else:
         return ""
 
+
 def get_metric_config(wildcards):
     # getting metrics optargs.json file
     metric = get_metric(wildcards)
@@ -130,12 +140,20 @@ def get_metric_config(wildcards):
         opt = json.load(file)
 
     if opt["config_file"]:
-        config_key = wildcards.metric_config[wildcards.metric_config.find("/")+1: ]
-        if len(config)==0:
+        config_key = wildcards.metric_config[wildcards.metric_config.find("/") + 1 :]
+        if len(config) == 0:
             stop("Wrong optargs or no config folder found")
-        return "-c " + GIT_DIR + "metric/" + metric + "/" + config["config_files"][metric][config_key]
+        return (
+            "-c "
+            + GIT_DIR
+            + "metric/"
+            + metric
+            + "/"
+            + config["config_files"][metric][config_key]
+        )
     else:
         return ""
+
 
 def get_sample_coordinate(wildcards):
     # getting metrics optargs.json file
@@ -145,17 +163,23 @@ def get_sample_coordinate(wildcards):
 
     if "physical_coordinate" in opt.keys():
         if opt["physical_coordinate"]:
-            return "--coordinates " + config["data_dir"] + f"/{wildcards.sample}/coordinates.tsv"
+            return (
+                "--coordinates "
+                + config["data_dir"]
+                + f"/{wildcards.sample}/coordinates.tsv"
+            )
         else:
             return ""
     else:
         return ""
 
+
 rule metric:
     input:
         domains=config["data_dir"] + "/{sample}/{method_config}/domains.tsv",
     output:
-        file=config["data_dir"] + "/{sample}/{method_config}/{metric_config}/results.txt",
+        file=config["data_dir"]
+        + "/{sample}/{method_config}/{metric_config}/results.txt",
     wildcard_constraints:
         sample="[a-zA-Z0-9_-]+",
         method_config="[a-zA-Z0-9_-]+(\/config_[a-zA-Z0-9_-]+)?",
@@ -166,8 +190,8 @@ rule metric:
         sample_labels=get_sample_labels,
         embeddings=get_method_embedding,
         config=get_metric_config,
-        script=lambda wildcards:GIT_DIR + metrics[get_metric(wildcards)]["script"],
-        physical_coordinate=get_sample_coordinate
+        script=lambda wildcards: GIT_DIR + metrics[get_metric(wildcards)]["script"],
+        physical_coordinate=get_sample_coordinate,
     shell:
         """
         {params.script} \
