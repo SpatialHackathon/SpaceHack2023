@@ -149,6 +149,16 @@ random.seed(seed)
 import scanpy as sc
 import json
 
+# import res-n_clust tuning function
+import sys
+from pathlib import Path
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
+
 # get the json config
 with open (args.config, "r") as c:
     config = json.load(c)
@@ -160,7 +170,7 @@ with open (args.config, "r") as c:
     # throw warning about not using the num_clusters as a parameter, because scanpy uses leiden or louvain and needs the resolution parameter, which is defined in the config.json. There exists a good function to perform an extensive search for the right resolution parameter to define the desired num_clusters, but we still have licensing issues. For more, see the SpaceHack2.0 GitHub issue #139
 import warnings
 
-warnings.warn("Scanpy uses leiden/louvain for clustering, which relies on the resolution parameter in the config file. The parameter num_clusters will be ignored.", UserWarning)
+# warnings.warn("Scanpy uses leiden/louvain for clustering, which relies on the resolution parameter in the config file. The parameter num_clusters will be ignored.", UserWarning)
 
 # scanpy starts here
 if not args.dim_red:
@@ -173,14 +183,18 @@ else:
 
 #two options - leiden or loivain
 if config['clustering'] == "louvain":
-    sc.tl.louvain(adata, resolution=config["resolution"], random_state=seed, key_added='louvain')
+    label_df = binary_search(adata, n_clust_target=n_clusters, method="louvain", seed = seed)
+    # sc.tl.louvain(adata, resolution=config["resolution"], random_state=seed, key_added='louvain')
 elif config['clustering'] == "leiden":
-    sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
+    label_df = binary_search(adata, n_clust_target=n_clusters, method="leiden", seed = seed)
+    # sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
 else: 
     print("No clustering method defined or your method is not available, performing leiden")
-    sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
+    label_df = binary_search(adata, n_clust_target=n_clusters, method="leiden", seed = seed)
 
-label_df = adata.obs[["leiden"]]
+# sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
+
+# label_df = adata.obs[["leiden"]]
 
 
 # embedding_df = None  # optional, DataFrame with index (cell-id/barcode) and n columns

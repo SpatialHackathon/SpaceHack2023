@@ -8,7 +8,7 @@ def binary_search(
     tolerance = 1e-3,
     seed = 2023,
 ):
-"""
+    """
     Uses binary search to find the resolution parameter that results in the target number of clusters.
 
     Parameters
@@ -46,7 +46,7 @@ def binary_search(
     Returns
     ------------
     y: a pandas dataframe with one clumn denoting the clustering results from best resolution and with barcode as index.
-"""
+    """
     import scanpy as sc
     import numpy as np
     import warnings
@@ -54,13 +54,8 @@ def binary_search(
     y = None
 
     def do_clustering(res):
-        match method:
-            case "louvain":
-                sc.tl.louvain(adata, resolution=res, random_state=seed)
-                y = adata.obs[["louvain"]].astype(int)
-            case "leiden":
-                sc.tl.leiden(adata, resolution=res, random_state=seed)
-                y = adata.obs[["leiden"]].astype(int)
+        getattr(sc.tl, method)(adata, resolution=res, random_state=seed)
+        y = adata.obs[[method]].astype(int)
         n_clust = len(np.unique(y))
         return y, n_clust
 
