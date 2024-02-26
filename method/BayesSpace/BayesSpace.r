@@ -27,7 +27,7 @@ option_list <- list(
   ),
   make_option(
     c("-n", "--neighbors"),
-    type = "character", default = NULL,
+    type = "character", default = NA,
     help = "Path to neighbor definitions. Square matrix (not necessarily symmetric) where each row contains the neighbors of this observation (as mtx)."
   ),
   make_option(
