@@ -125,10 +125,21 @@ import random
 random.seed(seed)
 
 import scanpy as sc
+import anndata as ad
 from SpaceFlow import SpaceFlow
 import pandas as pd
 import warnings
 import torch
+
+# import res-n_clust tuning function
+import sys
+from pathlib import Path
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
 
 use_cuda = torch.cuda.is_available()
 device = 1 if use_cuda else 0
@@ -155,12 +166,15 @@ else:
     nn = 15
 
 # Raise a warning that clustering is based on resolution and not n_clusters
-warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
+# warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
 
 # Segment the domains given the resolution
-sf.segmentation(domain_label_save_filepath=label_file, n_neighbors=nn, resolution=res)
+embedding_adata = ad.AnnData(sf.embedding)
+sc.pp.neighbors(embedding_adata, n_neighbors=nn, use_rep="X")
+label_df = binary_search(embedding_adata, n_clust_target=n_clusters, method="leiden", seed = seed)
+# sf.segmentation(domain_label_save_filepath=label_file, n_neighbors=nn, resolution=res)
 
-label_df = pd.DataFrame(sf.domains)  # DataFrame with index (cell-id/barcode) and 1 column (label)
+# label_df = pd.DataFrame(sf.domains)  # DataFrame with index (cell-id/barcode) and 1 column (label)
 embedding_df = pd.DataFrame(sf.embedding, index=adata.obs_names) # DataFrame with index (cell-id/barcode) and n columns
 
 ## Write output
