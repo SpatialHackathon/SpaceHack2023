@@ -175,9 +175,10 @@ spe <- get_SpatialExperiment(
 
 ## Your code goes here
 countMatrix <- as.data.frame(SummarizedExperiment::assay(spe, "counts"))
-spotPositions <- as.data.frame(SpatialExperiment::spatialCoords(spe))
 if (technology %in% c("ST", "Visium")){
     spotPositions <- as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")])
+} else {
+    spotPositions <- as.data.frame(SpatialExperiment::spatialCoords(spe))
 }
 # spotPositions <- ifelse(technology %in% c("ST", "Visium"), 
 #                        as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")]),
