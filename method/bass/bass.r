@@ -170,10 +170,6 @@ scaleFeature <- config$scaleFeature
 nPC <- config$nPC
 nSE <- config$nSE
 
-if (!exists("matrix_file")) {
-    matrix_file <- NA
-}
-
 # SpatialExperiment
 spe <- get_SpatialExperiment(
     feature_file = feature_file,
