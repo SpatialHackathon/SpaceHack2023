@@ -174,8 +174,14 @@ spe <- get_SpatialExperiment(
     reducedDim_file = dimred_file
 )
 
+# Create a dummy matrix for seurat object requirement
+if (is.null(assayNames(spe))){
+    assay(spe, "counts", withDimnames = FALSE) <- Matrix::Matrix(0, nrow=nrow(spe), ncol=ncol(spe), sparse=TRUE)
+}
+
+
 # Convert to Seurat object
-seurat_obj <- as.Seurat(spe)
+seurat_obj <- as.Seurat(spe, data=NULL)
 
 # Find neighbors
 seurat_obj <- FindNeighbors(seurat_obj, dims = 1:ndims)
@@ -189,7 +195,8 @@ tunek <- function(seurat_obj, k){
         resolution = r,
         algorithm = algorithm,
         method = method,
-        random.seed = seed)
+        random.seed = seed,
+        verbose = FALSE)
     if(length(unique(Idents(seu))) >= k) break
   }
   return(seu)
