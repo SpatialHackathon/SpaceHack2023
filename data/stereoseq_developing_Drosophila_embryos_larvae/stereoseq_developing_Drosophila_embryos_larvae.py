@@ -13,10 +13,9 @@ import tempfile
 
 # 6 available but only 2 contain region label and coordinates
 
-sample_info=pd.read_csv('sample_info.csv')
+sample_name = ['E14-16h_a','L3_b','L1_a','l2_a','E16-18h_a']
 
-LINKS = sample_info["download"].tolist()
-
+LINKS = [f"https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000060/stomics/{sample}_count_normal_stereoseq.h5ad" for sample in sample_name]
 
 META_DICT = {"technology":"Stereo-seq"}
 
@@ -35,7 +34,7 @@ def download_links(links, temp_dir):
         except Exception as e:
             print(f"Error downloading {link}: {e}")
 
-def process_adata(adata_path,output_folder,iteration,sample_df,sample_info):
+def process_adata(adata_path,output_folder,iteration,sample_df,sample_name):
     folder_name = os.path.splitext(os.path.basename(adata_path))[0]
     complete_path = os.path.join(output_folder,folder_name)
     os.makedirs(complete_path, exist_ok=True)
@@ -51,8 +50,8 @@ def process_adata(adata_path,output_folder,iteration,sample_df,sample_info):
     vars["selected"] = "true"
     vars.to_csv(f"{complete_path}/features.tsv",sep="\t",index_label="")
 
-    # Coordinates
-    coords = pd.DataFrame(adata.obsm["spatial"],columns=["x","y"])
+    # 3d Coordinates
+    coords = pd.DataFrame(adata.obsm["spatial"],columns=["x","y","z"])
     coords.index = adata.obs.index
     coords.to_csv(f"{complete_path}/coordinates.tsv",sep="\t",index_label="")
 
@@ -67,14 +66,18 @@ def process_adata(adata_path,output_folder,iteration,sample_df,sample_info):
         matrix_to_write = adata.layers["counts"]
         file_path = f"{complete_path}/counts.mtx"
         scipy.io.mmwrite(file_path, matrix_to_write)
+    elif "raw_counts" in adata.layers:
+        matrix_to_write = adata.layers["counts"]
+        file_path = f"{complete_path}/counts.mtx"
+        scipy.io.mmwrite(file_path, matrix_to_write)
         print(f"Matrix written to {file_path}")
     else:
-        print("Neither 'count' nor 'counts' key found in adata.layers.")
+        print("Neither 'count','counts' nor 'raw_counts' key found in adata.layers.")
 
 
     # add info for sample.tsv
     # Your sample_data_basis dictionary
-    sample_data_basis = {"sample":sample_info["sample_name"].iloc[iteration],"n_clusters": adata.obs.annotation.nunique(), "directory": folder_name}
+    sample_data_basis = {"sample":sample_name[iteration],"n_clusters": adata.obs.annotation.nunique(), "directory": folder_name}
     
     # Creating a DataFrame from the dictionary
     sample_data = pd.DataFrame([sample_data_basis])
@@ -114,7 +117,7 @@ def main():
         sample_df = pd.DataFrame(columns=SAMPLE_COLUMNS,index=range(len(LINKS)))
         anndatas = [os.path.join(temp_dir, file) for file in os.listdir(temp_dir) if file.endswith(".h5ad")]
         for iteration, adata in enumerate(anndatas):
-            process_adata(adata, args.out_dir,iteration,sample_df,sample_info)
+            process_adata(adata, args.out_dir,iteration,sample_df,sample_name)
         
     
         # write json 
