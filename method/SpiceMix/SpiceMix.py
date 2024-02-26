@@ -173,6 +173,7 @@ torch_context = {
     "dtype": dtype,
 }
 
+torch_context["device"] = device if torch.cuda.is_available() else 'cpu'
 
 with tempfile.TemporaryDirectory() as temp_dir:
     temp_path = Path(temp_dir)
