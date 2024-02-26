@@ -161,13 +161,23 @@ get_SpatialExperiment <- function(
 seed <- opt$seed
 set.seed(seed)
 # TODO if the method requires the seed elsewhere please pass it on
+
+if (!exists("matrix_file")) {
+    matrix_file <- NA
+}
+
 # You can use the data as SpatialExperiment
 spe <- get_SpatialExperiment(feature_file = feature_file,observation_file = observation_file,
                                     coord_file = coord_file, reducedDim_file = dimred_file, matrix_file = matrix_file)
 
+# Create a dummy matrix for seurat object requirement
+if (is.null(assayNames(spe))){
+    assay(spe, "counts", withDimnames = FALSE) <- Matrix::Matrix(0, nrow=nrow(spe), ncol=ncol(spe), sparse=TRUE)
+}
+
 ## Your code goes here
 # TODO
-seurat_obj <- as.Seurat(spe)
+seurat_obj <- as.Seurat(spe, data=NULL)
 
 # Insert image coordinates
 seurat_obj@images$image =  new(
