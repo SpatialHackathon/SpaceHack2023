@@ -1,2 +1,22 @@
-data_dir: "/home/ubuntu/tmp_data/libd_dlpfc"
-git_dir: /home/ubuntu/workspace/SpaceHack2023
+# Github repo path, modify based on your env
+git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
+# Dataset path, modify based on your env
+data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/libd_dlpfc
+
+use_metrics:
+  - "ARI"
+#  - "Completeness"
+#  - "Entropy"
+#  - "FMI"
+#  - "Homogeneity"
+#  - "MCC"
+#  - "NMI"
+#  - "domain-specific-f1"
+#  - "jaccard"
+#  - "V_measure"                        #Config, GT
+#  - "LISI"                             #Config, embed, GT
+#  - "cluster-specific-silhouette"      #embed, no GT
+#  - "Calinski-Harabasz"
+#  - "Davies-Bouldin"
+#  - "CHAOS"                            #phyiscal coord only
+#  - "PAS"      # buggy TODO

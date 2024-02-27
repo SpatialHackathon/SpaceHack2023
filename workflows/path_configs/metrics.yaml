@@ -1,43 +1,75 @@
+# All metrics as of 14.02.2024
 metrics:
   ARI:
     env: metric/ARI/ARI.yml
     script: metric/ARI/ARI.py
+    optargs: metric/ARI/ARI_optargs.json
   CHAOS:
     env: metric/CHAOS/CHAOS.yml
     script: metric/CHAOS/CHAOS.r
+    optargs: metric/CHAOS/CHAOS_optargs.json
   Calinski-Harabasz:
     env: metric/Calinski-Harabasz/Calinski-Harabasz.yml
     script: metric/Calinski-Harabasz/Calinski-Harabasz.py
+    optargs: metric/Calinski-Harabasz/Calinski-Harabasz_optargs.json
   Completeness:
     env: metric/Completeness/Completeness.yml
     script: metric/Completeness/Completeness.py
+    optargs: metric/Completeness/Completeness_optargs.json
   Davies-Bouldin:
     env: metric/Davies-Bouldin/Davies-Bouldin.yml
     script: metric/Davies-Bouldin/Davies-Bouldin.py
+    optargs: metric/Davies-Bouldin/Davies-Bouldin_optargs.json
   Entropy:
     env: metric/Entropy/Entropy.yml
     script: metric/Entropy/Entropy.py
+    optargs: metric/Entropy/Entropy_optargs.json
   FMI:
     env: metric/FMI/FMI.yml
     script: metric/FMI/FMI.py
+    optargs: metric/FMI/FMI_optargs.json
   Homogeneity:
     env: metric/Homogeneity/Homogeneity.yml
     script: metric/Homogeneity/Homogeneity.py
+    optargs: metric/Homogeneity/Homogeneity_optargs.json
   MCC:
     env: metric/MCC/MCC.yaml
     script: metric/MCC/MCC.py
+    optargs: metric/MCC/MCC_optargs.json
   NMI:
     env: metric/NMI/NMI.yml
     script: metric/NMI/NMI.r
+    optargs: metric/NMI/NMI_optargs.json
   PAS:
     env: metric/PAS/PAS.yml
     script: metric/PAS/PAS.r
+    optargs: metric/PAS/PAS_optargs.json
   cluster-specific-silhouette:
     env: metric/cluster-specific-silhouette/cluster-specific-silhouette.yml
     script: metric/cluster-specific-silhouette/cluster-specific-silhouette.r
+    optargs: metric/cluster-specific-silhouette/cluster-specific-silhouette_optargs.json
   domain-specific-f1:
     env: metric/domain-specific-f1/domain-specific-f1.yml
     script: metric/domain-specific-f1/domain-specific-f1.r
+    optargs: metric/domain-specific-f1/domain-specific-f1_optargs.json
   jaccard:
     env: metric/jaccard/jaccard.yaml
     script: metric/jaccard/jaccard.py
+    optargs: metric/jaccard/jaccard_optargs.json
+  V_measure:
+    env: metric/V_measure/V_measure.yml
+    script: metric/V_measure/V_measure.py
+    optargs: metric/V_measure/V_measure_optargs.json
+  LISI:
+    env: metric/LISI/LISI.yml
+    script: metric/LISI/LISI.r
+    optargs: metric/LISI/LISI_optargs.json
+
+# All metrics config file as of 14.02.2024
+config_files:
+  V_measure:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+  LISI:
+    config_1: "config/config_1.json"
