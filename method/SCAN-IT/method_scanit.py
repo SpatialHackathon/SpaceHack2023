@@ -128,6 +128,16 @@ import pandas as pd
 import warnings
 import torch
 
+# import res-n_clust tuning function
+import sys
+from pathlib import Path
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
+
 use_cuda = torch.cuda.is_available()
 device = 'cuda' if use_cuda else 'cpu'
 
@@ -151,12 +161,12 @@ else:
 sc.pp.neighbors(adata, use_rep='X_scanit', n_neighbors=nn)
 
 # Raise a warning that clustering is based on resolution and not n_clusters
-warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
+# warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
 
 # Run clustering
-sc.tl.leiden(adata, resolution=res)
+label_df = binary_search(adata, n_clust_target=n_clusters, method="leiden", seed = seed)
 
-label_df = adata.obs[['leiden']]  # DataFrame with index (cell-id/barcode) and 1 column (label)
+
 embedding_df = pd.DataFrame(adata.obsm['X_scanit'], index=adata.obs_names)  # DataFrame with index (cell-id/barcode) and n columns
 
 ## Write output
