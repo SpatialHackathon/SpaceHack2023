@@ -7,5 +7,5 @@
 # conda activate banksy_env
 
 # Install the required R packages
-Rscript -e "remotes::install_github('prabhakarlab/Banksy', dependencies = FALSE, ref = 'beee50c14cf44eeac0c805619614e209458014ef')"
+Rscript -e "remotes::install_github('prabhakarlab/Banksy', dependencies = FALSE, ref = 'dbda6fde952e65f45409d9bca8e1f821746755cc')"
 

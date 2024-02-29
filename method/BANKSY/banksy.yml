@@ -1,4 +1,3 @@
-name: banksy_env
 channels:
   - conda-forge
   - bioconda
@@ -20,4 +19,4 @@ dependencies:
   - r::r-rcpphungarian=0.3
   - numpy=1.26.3
   - r-mclust=6.0.1
-  - r-igraph=1.5.1
+  - r-igraph=2.0.2
