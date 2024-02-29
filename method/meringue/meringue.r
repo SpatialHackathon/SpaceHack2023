@@ -88,10 +88,6 @@ embedding_file <- file.path(out_dir, "embedding.tsv")
 # if additional output files are required write it also to out_dir
 
 # Use these filepaths as input ...
-coord_file <- opt$coordinates
-feature_file <- opt$features
-observation_file <- opt$observations
-
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
   neighbors <- as(Matrix::readMM(neighbors_file), "CsparseMatrix")
@@ -109,10 +105,6 @@ if (!is.na(opt$config)) {
     config <- fromJSON(config_file)
 }
 
-if (!is.na(opt$matrix)) {
-  matrix_file <- opt$matrix
-    #matrix <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-}
 
 technology <- opt$technology
 n_clusters <- opt$n_clusters
