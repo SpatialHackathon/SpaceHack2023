@@ -6,6 +6,8 @@
 suppressPackageStartupMessages({
     library(optparse)
     library(jsonlite)
+    library(SingleCellExperiment)
+    library(Matrix)
     library(SpatialExperiment)
     library(Banksy)
 })
@@ -159,15 +161,15 @@ seed <- opt$seed
 
 # You can use the data as SpatialExperiment
 spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
-                                    coord_file = coord_file,matrix_file = matrix_file)
+                                    coord_file = coord_file, matrix_file = matrix_file)
 
 
 ## Your code goes here
 lambda <- config$lambda
 k_geom <- config$k_geom
 npcs <- config$npcs
-resolution <- config$resolution
 method <- config$method
+use_agf <- config$use_agf
 assay_name <- "normcounts"
 set.seed(seed)
 
@@ -176,16 +178,69 @@ spe <- scuttle::computeLibraryFactors(spe)
 assay(spe, assay_name) <- scuttle::normalizeCounts(spe, log = FALSE)
 
 # Run BANKSY
-spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom)
-spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = npcs)
-spe <- Banksy::clusterBanksy(spe, lambda = lambda, use_pcs = TRUE, npcs = npcs, resolution = resolution, seed = seed, method = method)
+print(use_agf)
+spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom, compute_agf = use_agf)
+spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = npcs, use_agf = use_agf)
+
+
+# Resolution optimization
+binary_search <- function(
+    spe,
+    do_clustering,
+    n_clust_target,
+    resolution_boundaries,
+    num_rs = 100,
+    tolerance = 1e-3,
+    ...) {
+
+  # Initialize boundaries
+  lb <- rb <- NULL
+  n_clust <- -1
+
+  lb <- resolution_boundaries[1]
+  rb <- resolution_boundaries[2]
+
+  i <- 0
+  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
+    mid <- sqrt(lb * rb)
+    message("Resolution: ", mid)
+    result <- do_clustering(spe, resolution = mid, ...)
+    # Adjust cluster_ids extraction per method
+    cluster_ids <- colData(result)[, clusterNames(result)]
+    n_clust <- length(unique(cluster_ids))
+    if (n_clust == n_clust_target || lb == rb) break
+    if (n_clust > n_clust_target) {
+      rb <- mid
+    } else {
+      lb <- mid
+    }
+    i <- i + 1
+  }
+
+  # Warning if target not met
+  if (n_clust != n_clust_target) {
+    warning(sprintf("Warning: n_clust = %d not found in binary search, return best approximation with res = %f and n_clust = %d. (rb = %f, lb = %f, i = %d)", n_clust_target, mid, n_clust, rb, lb, i))
+  }
+  return(result)
+}
 
 
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
 #cnames <- colnames(colData(spe))
-label_df <- data.frame("label" = colData(spe)[, clusterNames(spe)], row.names=colnames(spe))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
-embedding_df <- as.data.frame(t(assay(spe, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
+result <- binary_search(spe, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
+                        do_clustering = Banksy::clusterBanksy, 
+                        # Banksy specific
+                        lambda = lambda, 
+                        use_pcs = TRUE, 
+                        npcs = npcs, 
+                        seed = seed, 
+                        method = method, 
+                        assay_name = assay_name, 
+                        use_agf = use_agf)
+
+label_df <- data.frame("label" = colData(result)[, clusterNames(result)], row.names=rownames(colData(result)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
+if (use_agf) embedding_df <- as.data.frame(t(assay(result, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 
 ## Write output
