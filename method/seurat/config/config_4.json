@@ -1,5 +1,4 @@
 {
   "algorithm": 4,
-  "ndims": 10,
-  "method": "igraph"
+  "ndims": 20
 }
