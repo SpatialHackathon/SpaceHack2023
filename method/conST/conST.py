@@ -147,6 +147,46 @@ params = args
 for key, value in config.items():
     setattr(params, key, value)
 
+# default parameters of conST which are not necessary to be changed
+default = {
+    "k": 10,  # parameter k in spatial graph
+    "epochs": 200,  # Number of epochs to train.
+    "cell_feat_dim": -1,  # Will be overwritten by adata_preprocess()
+    "feat_hidden1": 100,  # Dim of DNN hidden 1-layer.
+    "feat_hidden2": 20,  # Dim of DNN hidden 2-layer.
+    "gcn_hidden1": 32,  # Dim of GCN hidden 1-layer.
+    "gcn_hidden2": 8,  # Dim of GCN hidden 2-layer.
+    "p_drop": 0.2,  # Dropout rate.
+    "img_w": 0.1,  # Weight of image features.
+    "use_pretrained": True,  # Use pretrained weights.
+    "feat_w": 10,  # Weight of DNN loss.
+    "gcn_w": 0.1,  # Weight of GCN loss.
+    "dec_kl_w": 10,  # Weight of DEC loss.
+    "gcn_lr": 0.01,  # Initial GNN learning rate.
+    "gcn_decay": 0.01,  # Initial decay rate.
+    "dec_cluster_n": 10,  # DEC cluster number.
+    "dec_interval": 20,  # DEC interval nnumber.
+    "dec_tol": 0.00,  # DEC tol.
+    "beta": 100,  # beta value for l2c
+    "cont_l2l": 0.3,  # Weight of local contrastive learning loss.
+    "cont_l2c": 0.1,  # Weight of context contrastive learning loss.
+    "cont_l2g": 0.1,  # Weight of global contrastive learning loss.
+    "edge_drop_p1": 0.1,  # drop rate of adjacent matrix of the first view
+    "edge_drop_p2": 0.1,  # drop rate of adjacent matrix of the second view
+    "node_drop_p1": 0.2,  # drop rate of node features of the first view
+    "node_drop_p2": 0.3,  # drop rate of node features of the second view
+    "eval_resolution": 1,  # This will be overwriten by res_search_fixed_clus() which should = fixed ncluster
+    "eval_graph_n": 20,  # Eval graph kN tol.
+    "shape": "square"
+}
+    
+# Add default to params
+for key, value in default.items():
+    setattr(params, key, value)
+
+if args.technology == "Visium":
+    params.shape = 'hexagon'
+
 # Tool imports
 import random
 import torch
@@ -172,21 +212,14 @@ os.environ['PYTHONHASHSEED'] = str(seed)
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
 
-# TODO this is what conST uses for data preprocessing
-def adata_preprocess(i_adata, min_cells=3, pca_n_comps=300):
+def adata_preprocess(i_adata, min_cells):
     print('===== Preprocessing Data ')
     sc.pp.filter_genes(i_adata, min_cells=min_cells)
     adata_X = sc.pp.normalize_total(i_adata, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
     adata_X = sc.pp.scale(adata_X)
-    adata_X = sc.pp.pca(adata_X, n_comps=pca_n_comps)
+    adata_X = sc.tl.pca(adata_X)
+    params.cell_feat_dim = len(adata_X[0,:])  # needed for the pretraining()
     return adata_X
-
-# TODO should data processing be changed to the processing of scanpy?
-# scanpy starts here
-# if not args.dim_red:
-#     sc.pp.normalize_total(adata)
-#     sc.pp.log1p(adata)
-#     sc.tl.pca(adata)
 
 # Work in a temprary folder
 with tempfile.TemporaryDirectory() as tmpdir:
@@ -206,7 +239,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     from src.training import conST_training
 
     # Preprocessing
-    adata_X = adata_preprocess(adata, min_cells=5, pca_n_comps=params.cell_feat_dim)
+    adata_X = adata_preprocess(adata, 5)
 
     # Graph construction
     graph_dict = graph_construction(adata.obsm['spatial'], adata.shape[0], params)
@@ -215,7 +248,6 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
     # Use image data if provided
     if params.use_img:
-        # TODO please check if this is the correct way to use the image data
         img_transformed = adata.uns["image"]
         img_transformed = (img_transformed - img_transformed.mean()) / img_transformed.std() * adata_X.std() + adata_X.mean()
         conST_net = conST_training(adata_X, graph_dict, params, n_clusters, img_transformed)
