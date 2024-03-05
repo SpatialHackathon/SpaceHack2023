@@ -1,6 +1,6 @@
 channels:
-  - conda-forge
   - bioconda
+  - conda-forge
 dependencies:
   - _libgcc_mutex=0.1
   - _openmp_mutex=4.5
@@ -30,7 +30,7 @@ dependencies:
   - bwidget=1.9.14
   - bzip2=1.0.8
   - c-ares=1.25.0
-  - ca-certificates=2023.11.17
+  - ca-certificates=2024.2.2
   - cairo=1.18.0
   - curl=8.5.0
   - expat=2.5.0
@@ -70,6 +70,7 @@ dependencies:
   - leidenalg=0.10.2
   - lerc=4.0.0
   - libblas=3.9.0
+  - libcblas=3.9.0
   - libcurl=8.5.0
   - libdeflate=1.19
   - libedit=3.1.20191231
@@ -107,10 +108,11 @@ dependencies:
   - libzlib=1.2.13
   - make=4.3
   - ncurses=6.4
-  - numpy=1.26.2
+  - numpy=1.26.4
   - oniguruma=6.9.9
   - openjpeg=2.5.0
-  - openssl=3.2.0
+  - openssl=3.2.1
+  - pandas=2.2.1
   - pandoc=3.1.3
   - pango=1.50.14
   - pcre2=10.42
@@ -120,8 +122,11 @@ dependencies:
   - pkg-config=0.29.2
   - pthread-stubs=0.4
   - python=3.12.1
+  - python-dateutil=2.8.2
   - python-igraph=0.11.3
+  - python-tzdata=2024.1
   - python_abi=3.12
+  - pytz=2024.1
   - pyyaml=6.0.1
   - r-abind=1.4_5
   - r-askpass=1.2.0
@@ -289,6 +294,7 @@ dependencies:
   - readline=8.2
   - sed=4.8
   - setuptools=69.0.3
+  - six=1.16.0
   - sysroot_linux-64=2.12
   - texttable=1.7.0
   - tk=8.6.13

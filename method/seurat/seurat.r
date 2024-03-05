@@ -133,7 +133,6 @@ get_SpatialExperiment <- function(
     
     if (!is.na(reducedDim_file)) {
     dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
-    #reducedDim(spe, reducedDim_name) <- as.matrix(dimRed[colnames(spe), ])
   }
   spe <- SpatialExperiment::SpatialExperiment(
     rowData = rowData, colData = colData, spatialCoords = coordinates,
@@ -142,7 +141,6 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, "counts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    assay(spe, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
   }
 
   # Filter features and samples
@@ -153,7 +151,6 @@ get_SpatialExperiment <- function(
     spe <- spe[, as.logical(colData(spe)$selected)]
   }
 
-  
   return(spe)
 }
 
@@ -164,7 +161,6 @@ set.seed(seed)
 # Config
 ndims <- config$ndims
 algorithm <- config$algorithm
-method <- ifelse(algorithm == 4, config$method, "matrix")
 
 # Create SpatialExperiment
 spe <- get_SpatialExperiment(
@@ -186,24 +182,58 @@ seurat_obj <- as.Seurat(spe, data=NULL)
 # Find neighbors
 seurat_obj <- FindNeighbors(seurat_obj, dims = 1:ndims)
 
-# Tune k function
-tunek <- function(seurat_obj, k){
 
-  for(r in seq(0.1, 2, by = 0.01)) {
-    seu <- FindClusters(
-        seurat_obj, 
-        resolution = r,
-        algorithm = algorithm,
-        method = method,
-        random.seed = seed,
-        verbose = FALSE)
-    if(length(unique(Idents(seu))) >= k) break
+# Resolution optimization
+binary_search <- function(
+    seurat_obj,
+    do_clustering,
+    n_clust_target,
+    resolution_boundaries,
+    num_rs = 100,
+    tolerance = 1e-3,
+    ...) {
+
+  # Initialize boundaries
+  lb <- rb <- NULL
+  n_clust <- -1
+
+  lb <- resolution_boundaries[1]
+  rb <- resolution_boundaries[2]
+
+  i <- 0
+  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
+    mid <- sqrt(lb * rb)
+    message("Resolution: ", mid)
+    results <- do_clustering(seurat_obj, resolution = mid, ...)
+    cluster_ids <- Idents(results)
+    # Adjust cluster_ids extraction per method
+    n_clust <- length(unique(cluster_ids))
+    message("Cluster: ", n_clust)
+    if (n_clust == n_clust_target || lb == rb) break
+    if (n_clust > n_clust_target) {
+      rb <- mid
+    } else {
+      lb <- mid
+    }
+    i <- i + 1
   }
-  return(seu)
+
+  # Warning if target not met
+  if (n_clust != n_clust_target) {
+    warning(sprintf("Warning: n_clust = %d not found in binary search, return best approximation with res = %f and n_clust = %d. (rb = %f, lb = %f, i = %d)", n_clust_target, mid, n_clust, rb, lb, i))
+  }
+  return(results)
 }
 
-# Find k clusters
-seurat_obj <- tunek(seurat_obj, n_clusters)
+
+# Clustering
+seurat_obj <- binary_search(
+    seurat_obj, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
+    do_clustering = FindClusters, 
+    # Seurat specific
+    algorithm = algorithm,
+    method = "igraph",
+    random.seed = seed)
 
 # save data
 label_df <- data.frame("label" = Idents(seurat_obj), row.names=colnames(seurat_obj))
