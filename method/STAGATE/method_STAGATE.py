@@ -78,12 +78,21 @@ import random
 import numpy as np
 import pandas as pd
 import scanpy as sc
-import sys
 # Use tensorflow or pyG
 import tensorflow.compat.v1 as tf
 tf.compat.v1.disable_eager_execution()
 # the location of R (used for the mclust clustering)
 import scipy as sp
+
+# import res-n_clust tuning function
+import sys
+from pathlib import Path
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
 
 def get_anndata(args):
     import anndata as ad
@@ -152,8 +161,9 @@ if config["method"] == "mclust":
     adata = sg.mclust_R(adata, used_obsm='STAGATE', num_cluster=n_clusters, random_seed=seed)
     label_df = adata.obs[["mclust"]]
 elif config["method"] == "louvain":
-    sc.tl.louvain(adata, resolution=config["res"])
-    label_df = adata.obs[["louvain"]]
+    label_df = binary_search(adata, n_clust_target=n_clusters, method="louvain", seed = seed)
+    #sc.tl.louvain(adata, resolution=config["res"])
+    #label_df = adata.obs[["louvain"]]
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)

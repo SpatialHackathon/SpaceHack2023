@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created template
-# Author_and_contribution: Zaira Seferbekova; wrote the code for SpaceFlow
+# Author_and_contribution: Jieran Sun; implemented method cellCharter
 
 import argparse
 
 # TODO adjust description
-parser = argparse.ArgumentParser(description="Method ...")
+parser = argparse.ArgumentParser(description="Method CellCharter: https://doi.org/10.1038/s41588-023-01588-4")
 
 parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
@@ -50,32 +50,30 @@ parser.add_argument(
     required=False,
 )
 
+################# Get args #######################
+
 args = parser.parse_args()
-
-from pathlib import Path
-
-out_dir = Path(args.out_dir)
-
-# Output files
-label_file = out_dir / "domains.tsv"
-embedding_file = out_dir / "embedding.tsv"
 
 n_clusters = args.n_clusters
 technology = args.technology
 seed = args.seed
-
-# Load config file
+# Def config
 import json
-
 with open(args.config, "r") as f:
     config = json.load(f)
-    
+
+# Set up output files
+from pathlib import Path
+out_dir = Path(args.out_dir)
+label_file = out_dir / "domains.tsv"
+embedding_file = out_dir / "embedding.tsv"
+
+################# Define functions #################
 def get_anndata(args):
     import anndata as ad
     import numpy as np
     import pandas as pd
-    from scipy.io import mmread
-    from scipy.sparse import issparse
+    import scipy as sp
     from PIL import Image
 
     observations = pd.read_table(args.observations, index_col=0)
@@ -87,11 +85,13 @@ def get_anndata(args):
         .to_numpy()
     )
 
-    adata = ad.AnnData(obs=observations, var=features, obsm={"spatial": coordinates})
+    adata = ad.AnnData(obs=observations, 
+                       var=features, 
+                       obsm={"spatial": coordinates})
 
     if args.matrix is not None:
-        X = mmread(args.matrix)
-        if issparse(X):
+        X = sp.io.mmread(args.matrix)
+        if sp.sparse.issparse(X):
             X = X.tocsr()
         adata.X = X
 
@@ -110,78 +110,94 @@ def get_anndata(args):
         )
 
     if args.image is not None:
-        adata.uns["image"] = np.array(Image.open(args.img))
+        adata.uns["image"] = np.array(Image.open(args.image))
     else:
         adata.uns["image"] = None
 
     return adata
 
-
-adata = get_anndata(args)
-
-
-# Set the seed
-import random
-random.seed(seed)
-
-import scanpy as sc
+## Your code goes here
+import cellcharter as cc
 import anndata as ad
-from SpaceFlow import SpaceFlow
+import scanpy as sc
+import squidpy as sq
 import pandas as pd
-import warnings
+import numpy as np
+import random
 import torch
 
-# import res-n_clust tuning function
-import sys
-from pathlib import Path
+random.seed(seed)
 
-# Add the parent directory of the current file to sys.path
-method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
-sys.path.append(str(method_dir))
+# Load data
+adata = get_anndata(args)
+adata.var_names_make_unique()
 
-from search_res import binary_search
+# raw count input
+import scvi
 
+# Assume filtered or not?
+# sc.pp.filter_genes(adata, min_counts=3)
+#sc.pp.filter_cells(adata, min_counts=3)
+
+#GPU possibility
 use_cuda = torch.cuda.is_available()
-device = 1 if use_cuda else 0
 
-# Create a SpaceFlow object 
-sf = SpaceFlow.SpaceFlow(adata=adata)
 
-# Construct a geometry-aware spatial proximity graph
-spatial_locs = adata.obsm['spatial']
-spatial_graph = sf.graph_alpha(spatial_locs, n_neighbors=10)
+# preprocessing for scvi
+adata.layers["counts"] = adata.X.copy()
 
-# Save all to the object
-sf.adata_preprocessed = adata
-sf.spatial_graph = spatial_graph
+# Set up scvi model for reduced_dimension embedding
+scvi.settings.seed = seed
+scvi.model.SCVI.setup_anndata(
+    adata,
+    layer="counts"
+)
 
-# Train the network
-sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, edge_subset_sz=1000000, embedding_save_filepath=embedding_file)
+model = scvi.model.SCVI(adata)
+model.train(early_stopping=True, enable_progress_bar=False, progress_bar_refresh_rate=0)
+adata.obsm['reduced_dimensions'] = model.get_latent_representation(adata).astype(np.float32)
 
-if config is not None:
-    res = int(config['res'])
-    nn = int(config['n_neighbours'])
-else:
-    res = 0.5
-    nn = 15
+# Find neighbors
+coord = "grid" if technology in ["Visium", "ST"] else "generic"
+delTri = technology not in ["Visium", "ST"] 
 
-# Raise a warning that clustering is based on resolution and not n_clusters
-# warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
+sq.gr.spatial_neighbors(adata, 
+                        coord_type = coord, 
+                        delaunay=delTri)
 
-# Segment the domains given the resolution
-embedding_adata = ad.AnnData(sf.embedding)
-sc.pp.neighbors(embedding_adata, n_neighbors=nn, use_rep="X")
-label_df = binary_search(embedding_adata, n_clust_target=n_clusters, method="leiden", seed = seed)
-# sf.segmentation(domain_label_save_filepath=label_file, n_neighbors=nn, resolution=res)
+# Trim if only delaunay is used
+if delTri:
+    cc.gr.remove_long_links(adata)
 
-# label_df = pd.DataFrame(sf.domains)  # DataFrame with index (cell-id/barcode) and 1 column (label)
-embedding_df = pd.DataFrame(sf.embedding, index=adata.obs_names) # DataFrame with index (cell-id/barcode) and n columns
+# Aggregate neighborhoods
+cc.gr.aggregate_neighbors(adata, 
+                          n_layers=config["n_layers"], 
+                          aggregations=config["aggregations"],
+                          use_rep='reduced_dimensions', 
+                          out_key='X_cellcharter', 
+                          sample_key=None)
+
+# clustering
+model = cc.tl.Cluster(
+    n_clusters=n_clusters, 
+    random_state=seed,
+    convergence_tolerance=config["convergence_tolerance"], 
+    covariance_regularization=config["covariance_regularization"],
+    # if running on gpu
+    trainer_params=dict(accelerator='gpu', devices=1) if use_cuda else None
+    )
+
+model.fit(adata, use_rep='X_cellcharter')
+
+# label prediction
+label_df = pd.DataFrame({"label" : model.predict(adata, use_rep='X_cellcharter')}) 
+label_df.index = adata.obs.index
+
+embedding_df = pd.DataFrame(adata.obsm["X_cellcharter"])
+embedding_df.index = adata.obs_names
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)
 
-label_df.columns = ["label"]
 label_df.to_csv(label_file, sep="\t", index_label="")
-
-if embedding_df is not None:
-    embedding_df.to_csv(embedding_file, sep="\t", index_label="")
+embedding_df.to_csv(embedding_file, sep="\t", index_label="")
