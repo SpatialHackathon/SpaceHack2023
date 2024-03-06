@@ -253,7 +253,7 @@ HMRF_spatial_genes <- Giotto::doHMRF(
     feat_type = "rna",
     betas = c(0, 2, config$beta),
     # expression_values = "normalized", # not used when dim_reduction_to_use is given
-    spatial_genes = my_spatial_genes,
+    spatial_genes = km_spatialgenes,
     dim_reduction_to_use = "pca",
     dim_reduction_name = "PCA",
     dimensions_to_use = 1:dims_used,
