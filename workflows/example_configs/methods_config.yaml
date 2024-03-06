@@ -8,22 +8,23 @@ seed: 2023
 # Methods to run for the pipeline, modify based on your need
 use_methods:
 #  - "bass"
-  - "BayesSpace"
+#  - "BayesSpace"
 #  - "DRSC"
 #  - "GraphST"
 #  - "SEDR"
 #  - "SOTIP"
-#  - "SpiceMix"     # GPU access
+#  - "SpiceMix"
+#  - "meringue"
 #  - "maple"
 #  - "precast"
 #  - "SC_MEB"
 #  - "spaGCN"
 #  - "stardust"
 #  - "DeepST"
+#  - "CellCharter"
 #  - "STAGATE"       # res not n_clust
 #  - "scanpy"
 #  - "SpaceFlow"
-#  - "seurat"        # config 5 TODO
+#  - "seurat"
 #  - "BANKSY"
-#  - "SCAN-IT"       # buggy:data shape TODO
-#  - "meringue"      # buggy:no library found??? TODO
+#  - "SCAN-IT"
