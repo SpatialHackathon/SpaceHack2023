@@ -244,7 +244,7 @@ gobj <- Giotto::createSpatialNetwork(
 )
 
 # identify genes with a spatial coherent expression profile (Not necessary - default uses all 'selected' features)
-#km_spatialgenes <- Giotto::binSpect(gobj, bin_method = 'rank')
+km_spatialgenes <- Giotto::binSpect(gobj, bin_method = 'rank')
 
 #my_spatial_genes <- km_spatialgenes[1:100]$feats
 HMRF_spatial_genes <- Giotto::doHMRF(
@@ -253,7 +253,7 @@ HMRF_spatial_genes <- Giotto::doHMRF(
     feat_type = "rna",
     betas = c(0, 2, config$beta),
     # expression_values = "normalized", # not used when dim_reduction_to_use is given
-    spatial_genes = NULL, #my_spatial_genes,
+    spatial_genes = my_spatial_genes,
     dim_reduction_to_use = "pca",
     dim_reduction_name = "PCA",
     dimensions_to_use = 1:dims_used,
