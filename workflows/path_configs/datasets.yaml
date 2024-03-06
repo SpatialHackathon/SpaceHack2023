@@ -35,9 +35,9 @@ datasets:
   visium_chicken_heart:
     env: data/visium_chicken_heart/chicken_heart.yml
     script: data/visium_chicken_heart/chicken_heart.py
-  xenium_breast_cancer:
+  xenium-breast-cancer:
     env: data/xenium-breast-cancer/xenium-breast-cancer.yml
     script: data/xenium-breast-cancer/xenium-breast-cancer.py
-  xenium_mouse_brain_SergioSalas:
+  xenium-mouse-brain-SergioSalas:
     env: data/xenium-mouse-brain-SergioSalas/environment.yml
     script: data/xenium-mouse-brain-SergioSalas/xenium-mouse-brain-SergioSalas.py
