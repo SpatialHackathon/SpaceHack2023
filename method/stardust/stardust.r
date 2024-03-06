@@ -180,45 +180,65 @@ if (technology %in% c("ST", "Visium")){
 } else {
     spotPositions <- as.data.frame(SpatialExperiment::spatialCoords(spe))
 }
-# spotPositions <- ifelse(technology %in% c("ST", "Visium"), 
-#                        as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")]),
-#                        as.data.frame(SpatialExperiment::spatialCoords(spe))
-#                       )
 
-# Tune k function
-tunek <- function(k){
+# Resolution optimization
+binary_search <- function(
+    countMatrix,
+    do_clustering,
+    n_clust_target,
+    resolution_boundaries,
+    num_rs = 100,
+    tolerance = 1e-3,
+    ...) {
 
-  for(r in seq(0.2, 1.5, by = 0.1)) {
-    # execute stardust by passing to the method the count matrix, the spot positions, 
-    # the weight of spatial information relative to the transcriptional 
-    # similarity (spaceWeight can be a real number between 0 and 1), 
-    # the PCA dimensions and the resolution for the Louvain algorithm
-    if (method == "weight"){
-        weight <- config$weight
-        output <- weightStardust(
-            countMatrix = countMatrix, 
-            spotPositions = spotPositions, 
-            spaceWeight = weight, 
-            pcaDimensions = npcs, 
-            res = r)
-        }
-    
-                                                  
-    # alternatively, execute stardust by passing to the method the count matrix, the spot positions,
-    # the PCA dimensions and the resolution for the Louvain algorithm
-    if (method == "auto"){
-        output <- autoStardust(
-            countMatrix = countMatrix, 
-            spotPositions = spotPositions, 
-            pcaDimensions = npcs, 
-            res = r)
-        }
-        if(length(unique(output@active.ident)) >= k) break
-      }
-  return(output)
+  # Initialize boundaries
+  lb <- rb <- NULL
+  n_clust <- -1
+
+  lb <- resolution_boundaries[1]
+  rb <- resolution_boundaries[2]
+
+  i <- 0
+  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
+    mid <- sqrt(lb * rb)
+    message("Resolution: ", mid)
+    set.seed(seed)
+    results <- do_clustering(countMatrix, res = mid, ...)
+    cluster_ids <- results@active.ident
+    # Adjust cluster_ids extraction per method
+    n_clust <- length(unique(cluster_ids))
+    message("Cluster: ", n_clust)
+    if (n_clust == n_clust_target || lb == rb) break
+    if (n_clust > n_clust_target) {
+      rb <- mid
+    } else {
+      lb <- mid
+    }
+    i <- i + 1
+  }
+
+  # Warning if target not met
+  if (n_clust != n_clust_target) {
+    warning(sprintf("Warning: n_clust = %d not found in binary search, return best approximation with res = %f and n_clust = %d. (rb = %f, lb = %f, i = %d)", n_clust_target, mid, n_clust, rb, lb, i))
+  }
+  return(results)
 }
 
-output <- tunek(n_clusters)
+# Clustering
+
+if (method == "weight"){
+    do_clustering <- weightStardust
+    formals(do_clustering)$spaceWeight <- config$weight
+} else {
+    do_clustering <- autoStardust
+}
+
+output <- binary_search(
+    countMatrix, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
+    do_clustering = do_clustering, 
+    # stardust specific
+    spotPositions = spotPositions,
+    pcaDimensions = npcs)
 
 # save data
 label_df <- data.frame("label" = output@active.ident, row.names=colnames(output))
