@@ -88,10 +88,6 @@ embedding_file <- file.path(out_dir, "embedding.tsv")
 # if additional output files are required write it also to out_dir
 
 # Use these filepaths as input ...
-coord_file <- opt$coordinates
-feature_file <- opt$features
-observation_file <- opt$observations
-
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
   neighbors <- as(Matrix::readMM(neighbors_file), "CsparseMatrix")
@@ -109,9 +105,22 @@ if (!is.na(opt$config)) {
     config <- fromJSON(config_file)
 }
 
+
 technology <- opt$technology
 n_clusters <- opt$n_clusters
 
+if (technology %in% c("Visium", "ST")){
+    pos_file <- opt$observations
+    positions <- read.delim(pos_file, stringsAsFactors = FALSE, row.names = 1)
+} else {
+    pos_file <- opt$coordinates
+    positions <- as.matrix(read.delim(pos_file, sep = "\t", row.names = 1))
+    positions[,c(1:2)] <- as.numeric(positions[,c(1:2)])
+}
+
+if ("selected" %in% colnames(positions)) {
+        positions <- positions[as.logical(positions$selected), c(1, 2)]
+  }
 
 # Seed
 seed <- opt$seed
@@ -121,8 +130,64 @@ set.seed(seed)
 k <- config$k
 alpha <- config$alpha
 beta <- config$beta
-labels <- getSpatiallyInformedClusters(dimred, W=neighbors, k=k, alpha=alpha, beta=beta)
-label_df <- data.frame("label" = labels, row.names = rownames(dimred))
+
+# Resolution optimization
+binary_search <- function(
+    dimred,
+    do_clustering,
+    n_clust_target,
+    resolution_boundaries,
+    num_rs = 100,
+    tolerance = 1e-3,
+    ...) {
+
+  # Initialize boundaries
+  lb <- rb <- NULL
+  n_clust <- -1
+
+  lb <- resolution_boundaries[1]
+  rb <- resolution_boundaries[2]
+
+  i <- 0
+  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
+    mid <- sqrt(lb * rb)
+    message("Resolution: ", mid)
+    new_louvain <- igraph::cluster_louvain
+    formals(new_louvain)$resolution <- mid
+    cluster_ids <- do_clustering(dimred, method = new_louvain, ...)
+    # Adjust cluster_ids extraction per method
+    n_clust <- length(unique(cluster_ids))
+    message("Cluster: ", n_clust)
+    if (n_clust == n_clust_target || lb == rb) break
+    if (n_clust > n_clust_target) {
+      rb <- mid
+    } else {
+      lb <- mid
+    }
+    i <- i + 1
+  }
+
+  # Warning if target not met
+  if (n_clust != n_clust_target) {
+    warning(sprintf("Warning: n_clust = %d not found in binary search, return best approximation with res = %f and n_clust = %d. (rb = %f, lb = %f, i = %d)", n_clust_target, mid, n_clust, rb, lb, i))
+  }
+  return(cluster_ids)
+}
+
+# Spatial neighbors
+W <- getSpatialNeighbors(positions, filterDist = 2)
+
+# Clustering
+result <- binary_search(dimred, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
+                        do_clustering = getSpatiallyInformedClusters, 
+                        # Meringue specific
+                        W = W, 
+                        k = k,
+                        alpha = alpha,
+                        beta = beta)
+
+#labels <- getSpatiallyInformedClusters(dimred, W = neighbors, k = k, alpha = alpha, beta = beta)
+label_df <- data.frame("label" = result, row.names = rownames(dimred))
 
 
 ## Write output
