@@ -160,7 +160,7 @@ adata = get_anndata(args)
 num_preiterations = config.pop("num_preiterations", 5)
 num_iterations = config.pop("num_iterations", 200)
 
-device = config.pop("device", "cpu")
+device = config.pop("device", "cpu") if torch.cuda.is_available() else 'cpu'
 dtype = config.pop("dtype", "float32")
 
 if dtype == "float32":
@@ -172,7 +172,6 @@ torch_context = {
     "device": device,
     "dtype": dtype,
 }
-
 
 with tempfile.TemporaryDirectory() as temp_dir:
     temp_path = Path(temp_dir)
