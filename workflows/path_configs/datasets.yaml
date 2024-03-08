@@ -2,42 +2,56 @@ datasets:
   SEA_AD_data:
     env: data/SEA_AD_data/SEA_AD_data.yml
     script: data/SEA_AD_data/SEA_AD_data.py
-  STARmap_2018_mouse_cortex:
+    optargs: data/SEA_AD_data/SEA_AD_data_optargs.json
+  STARmap-2018-mouse-cortex:
     env: data/STARmap-2018-mouse-cortex/environment.yml
     script: data/STARmap-2018-mouse-cortex/STARmap-2018-mouse-cortex.py
+    optargs: data/STARmap-2018-mouse-cortex/STARmap-2018-mouse-cortex_optargs.json
   abc_atlas_wmb_thalamus:
     env: data/abc_atlas_wmb_thalamus/abc_atlas_wmb_thalamus.yml
     script: data/abc_atlas_wmb_thalamus/abc_atlas_wmb_thalamus.py
+    optargs: data/abc_atlas_wmb_thalamus/abc_atlas_wmb_thalamus_optargs.json
   libd_dlpfc:
     env: data/libd_dlpfc/libd_dlpfc.yml
     script: data/libd_dlpfc/libd_dlpfc.r
+    optargs: data/libd_dlpfc/libd_dlpfc_optargs.json
   mouse_brain_sagittal_anterior:
     env: data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior.yml
     script: data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior.py
+    optargs: data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior_optargs.json
   mouse_brain_sagittal_posterior:
     env: data/mouse_brain_sagittal_posterior/mouse_brain_sagittal_posterior.yml
     script: data/mouse_brain_sagittal_posterior/mouse_brain_sagittal_posterior.py
+    optargs: data/mouse_brain_sagittal_posterior/mouse_brain_sagittal_posterior_optargs.json
   mouse_kidney_coronal:
     env: data/mouse_kidney_coronal/mouse_kidney_coronal.yml
     script: data/mouse_kidney_coronal/mouse_kidney_coronal.py
+    optargs: data/mouse_kidney_coronal/mouse_kidney_coronal_optargs.json
   osmfish_Ssp:
     env: data/osmfish_Ssp/osmfish_Ssp.yml
     script: data/osmfish_Ssp/osmfish_Ssp.py
+    optargs: data/osmfish_Ssp/osmfish_Ssp_optargs.json
   sotip_simulation:
     env: data/sotip_simulation/sotip.yml
     script: data/sotip_simulation/sotip_simulation.py
+    optargs: data/sotip_simulation/sotip_simulation_optargs.json
   spatialDLPFC:
     env: data/spatialDLPFC/spatialDLPFC.yml
     script: data/spatialDLPFC/spatialDLPFC.r
+    optargs: data/spatialDLPFC/spatialDLPFC_optargs.json
   visium_breast_cancer_SEDR:
     env: data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR.yml
     script: data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR.py
+    optargs: data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR_optargs.json
   visium_chicken_heart:
     env: data/visium_chicken_heart/chicken_heart.yml
     script: data/visium_chicken_heart/chicken_heart.py
+    optargs: data/visium_chicken_heart/chicken_heart_optargs.json
   xenium-breast-cancer:
     env: data/xenium-breast-cancer/xenium-breast-cancer.yml
     script: data/xenium-breast-cancer/xenium-breast-cancer.py
+    optargs: data/xenium-breast-cancer/xenium-breast-cancer_optargs.json
   xenium-mouse-brain-SergioSalas:
     env: data/xenium-mouse-brain-SergioSalas/environment.yml
     script: data/xenium-mouse-brain-SergioSalas/xenium-mouse-brain-SergioSalas.py
+    optargs: data/xenium-mouse-brain-SergioSalas/xenium-mouse-brain-SergioSalas_optargs.json
