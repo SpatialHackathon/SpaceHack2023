@@ -9,7 +9,6 @@ suppressPackageStartupMessages({
     library(SummarizedExperiment)
     library(SpatialExperiment)
     library(spatialGE)
-    library(spam)
 })
 
 option_list <- list(
@@ -76,7 +75,7 @@ option_list <- list(
 )
 
 # TODO adjust description
-description <- "spatialGE: "
+description <- "spatialGE: Hierarchical clustering on weighted distance matrices"
 
 opt_parser <- OptionParser(
   usage = description,
