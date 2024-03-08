@@ -1,7 +1,7 @@
 # Github repo path, modify based on your env
 git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
 # Dataset path, modify based on your env
-data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/libd_dlpfc
+data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/data/libd_dlpfc
 
 seed: 2023
 

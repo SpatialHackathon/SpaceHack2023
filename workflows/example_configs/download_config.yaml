@@ -1,21 +1,21 @@
 # Github repo path, modify based on your env
 git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
 # General data folder. All datasets folder will be stored here
-results_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow
+results_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/data
 
 # datasets to be downloaded. add/delete based on your need
 use_datasets:
-  - "SEA_AD_data"
-#  - "STARmap_2018_mouse_cortex"
-#  - "abc_atlas_wmb_thalamus"
-#  - "libd_dlpfc"
-#  - "mouse_brain_sagittal_anterior"
-#  - "mouse_brain_sagittal_posterior"
-#  - "mouse_kidney_coronal"
-#  - "osmfish_Ssp"
-#  - "sotip_simulation"
-#  - "spatialDLPFC"
-#  - "visium_breast_cancer_SEDR"
-#  - "visium_chicken_heart"
-#  - "xenium-breast-cancer"
-#  - "xenium-mouse-brain-SergioSalas"
+#  - "SEA_AD_data"                       #fetch data error get_SEA_AD_h5ad()
+#  - "STARmap-2018-mouse-cortex"         # group error
+#  - "xenium-mouse-brain-SergioSalas"    # Temp file error?
+  - "xenium-breast-cancer"               # Some error
+  - "abc_atlas_wmb_thalamus"
+  - "libd_dlpfc"
+  - "mouse_brain_sagittal_anterior"
+  - "mouse_brain_sagittal_posterior"
+  - "mouse_kidney_coronal"
+  - "osmfish_Ssp"
+  - "sotip_simulation"
+  - "spatialDLPFC"
+  - "visium_breast_cancer_SEDR"
+  - "visium_chicken_heart"
