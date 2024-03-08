@@ -80,7 +80,8 @@ if "selected" in features.columns:
 else:
     features = features.index
 
-matrix = pd.DataFrame(matrix.toarray(), columns=features, index=observations)
+matrix = matrix.toarray() if sp.sparse.issparse(matrix) else matrix
+matrix = pd.DataFrame(matrix, columns=features, index=observations)
 
 scaler = StandardScaler().set_output(transform="pandas")
 matrix = scaler.fit_transform(matrix)
