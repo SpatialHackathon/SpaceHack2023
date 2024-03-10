@@ -165,12 +165,14 @@ with tempfile.TemporaryDirectory() as tmpdir:
     import models
 
     # Normalize data: min_cells, calculate HVG and scale
-    sc.pp.filter_genes(adata, min_cells=100)
-    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=config["fdim"])
-    adata = adata[:, adata.var['highly_variable']].copy()
-    adata.X = adata.X / np.sum(adata.X, axis=1).reshape(-1, 1) * 10000
-    adata.X = sp.sparse.csr_matrix(adata.X)
-    sc.pp.scale(adata, zero_center=False, max_value=10)
+    # sc.pp.filter_genes(adata, min_cells=100)
+    # sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=config["fdim"])
+    # adata = adata[:, adata.var['highly_variable']].copy()
+    # adata.X = adata.X / np.sum(adata.X, axis=1).reshape(-1, 1) * 10000
+    # adata.X = sp.sparse.csr_matrix(adata.X)
+    # sc.pp.scale(adata, zero_center=False, max_value=10)
+
+    config["fdim"] = len(adata.var_names)
 
     # Calculate graphs
     fadj = utils.features_construct_graph(adata.X, k=config["k"]) 
