@@ -5,7 +5,7 @@ from shared.functions import check_files_in_folder, get_git_directory, get_sampl
 configfile: "path_configs/datasets.yaml"
 
 GIT_DIR = "/home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023/"
-DATASET_DIR = "/home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/data"
+DATASET_DIR = "/home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/pca_test"
 DATASETS = config.pop("datasets")
 
 def create_visualization(data_dir):
@@ -13,7 +13,7 @@ def create_visualization(data_dir):
 
     file_list = ["coordinates.tsv", "counts.mtx", "features.tsv", "observations.tsv", "qc"]
     if all([check_files_in_folder(sample_dir, file_list) for sample_dir in get_sample_dirs(data_dir)]):
-        return [data_dir + "/visualization/pp_report.pdf"]
+        return [data_dir + ".visualization/pp_report.pdf"]
 
     return input_files
 
@@ -75,8 +75,8 @@ rule merge_pdf:
     input:
         lambda wildcards: [sample_dir + "/visualization/pp_report_sample.pdf" for sample_dir in get_sample_dirs(DATASET_DIR + "/" + wildcards.dataset)]
     output:
-        dir=directory(DATASET_DIR + "/{dataset}/visualization/"),
-        file=DATASET_DIR + "/{dataset}/visualization/pp_report.pdf"
+        dir=directory(DATASET_DIR + "/{dataset}/.visualization/"),
+        file=DATASET_DIR + "/{dataset}/.visualization/pp_report.pdf"
     conda:
         GIT_DIR + "preprocessing/visualization/visualization.yml"
     wildcard_constraints:
@@ -87,3 +87,7 @@ rule merge_pdf:
         -d {output.dir} \
         -p {input}
         """
+
+# Visualzation file will be saved in a hidden folder `.visualization` to avoid 
+# conflict with downstream analysis. To see or download those files, use:
+# `find . -type f -path "*/.visualization/pp_report.pdf" -print0 | tar -czvf pp_reports.tar.gz --null -T -` to create a tar.gz file.
