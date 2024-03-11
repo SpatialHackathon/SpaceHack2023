@@ -74,7 +74,7 @@ def get_opt(wildcards):
 ####################### Preprocessing #######################
 rule all:
     input:
-        #create_neighbors_input,
+        create_neighbors_input,
         create_transformation_log1p_input,
         create_selection_hvg_input,
         create_dimensionality_reduction_pca_input,
