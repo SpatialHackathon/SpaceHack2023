@@ -130,7 +130,7 @@ def get_matrix_input(wildcards):
     # Find preprocessing steps
     match opt["matrix"]:
         case "counts":
-            matrix_input = config["data_dir"] + f"/{wildcards.sample}/counts.mtx"
+            matrix_input = config["data_dir"] + f"/{wildcards.sample}/qc/counts.mtx"
         case "transform":
             matrix_input = config["data_dir"] + f"/{wildcards.sample}/log1p/counts.mtx"
         case "dimensionality_reduction":
@@ -155,7 +155,7 @@ def get_feature_input(wildcards):
             config["data_dir"] + f"/{wildcards.sample}/log1p/hvg/features.tsv"
         )
     else:
-        feature_input = config["data_dir"] + f"/{wildcards.sample}/features.tsv"
+        feature_input = config["data_dir"] + f"/{wildcards.sample}/qc/features.tsv"
 
     return feature_input
 
@@ -177,8 +177,8 @@ def get_neighbor_input(wildcards):
 
 rule method_with_config:
     input:
-        coordinates=config["data_dir"] + "/{sample}/coordinates.tsv",
-        observations=config["data_dir"] + "/{sample}/observations.tsv",
+        coordinates=config["data_dir"] + "/{sample}/qc/coordinates.tsv",
+        observations=config["data_dir"] + "/{sample}/qc/observations.tsv",
         requirements=get_requirements,
         matrix=get_matrix_input,
         features=get_feature_input,
@@ -224,8 +224,8 @@ rule method_with_config:
 
 rule method_without_config:
     input:
-        coordinates=config["data_dir"] + "/{sample}/coordinates.tsv",
-        observations=config["data_dir"] + "/{sample}/observations.tsv",
+        coordinates=config["data_dir"] + "/{sample}/qc/coordinates.tsv",
+        observations=config["data_dir"] + "/{sample}/qc/observations.tsv",
         requirements=get_requirements,
         matrix=get_matrix_input,
         features=get_feature_input,
