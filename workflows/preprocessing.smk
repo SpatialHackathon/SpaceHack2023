@@ -205,6 +205,7 @@ rule dimensionality_reduction_pca:
         observations=config["data_dir"] + "/{sample}/qc/observations.tsv",
     params:
         n_components=config["n_pcs"],
+        seed=config["seed"]
     output:
         folder=directory(
             config["data_dir"] + "/{sample}/log1p/hvg/pca_" + config["n_pcs"]
@@ -223,5 +224,6 @@ rule dimensionality_reduction_pca:
           -f {input.features} \
           -o {input.observations} \
           -n {params.n_components} \
-          -d {output.folder}
+          -d {output.folder} \
+          --seed {params.seed}
         """

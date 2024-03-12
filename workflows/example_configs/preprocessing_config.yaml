@@ -1,10 +1,11 @@
 # Github repo path, modify based on your env
 git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
 # Dataset path, modify based on your env
-dataset_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/data/
+dataset_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/pca_test/
 
-n_pcs: "20"
+n_pcs: "35"
 visualization: true
+seed: 2023
 
 neighbors_infos:
   delaunay_triangulation:
