@@ -107,6 +107,7 @@ if (!is.na(opt$image)) {
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
@@ -117,6 +118,7 @@ n_clusters <- opt$n_clusters
 get_SingleCellExperiment <- function(
     feature_file,
     observation_file,
+    use_features = TRUE,
     coord_file,
     matrix_file = NA,
     assay_name = "counts",
@@ -128,40 +130,56 @@ get_SingleCellExperiment <- function(
   coordinates <- as.matrix(coordinates[rownames(colData), ])
   coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
 
-    spe <- SingleCellExperiment::SingleCellExperiment(
+    sce <- SingleCellExperiment::SingleCellExperiment(
     rowData = rowData, colData = colData, metadata = list("spatialCoords" = coordinates))
 
   if (!is.na(matrix_file)) {
-    assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    assay(spe, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(sce, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(sce, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
   }
 
   # Filter features and samples
-  if ("selected" %in% colnames(rowData(spe))) {
-    spe <- spe[as.logical(rowData(spe)$selected), ]
+  if (("selected" %in% colnames(rowData(sce))) && use_features) {
+    sce <- sce[as.logical(rowData(sce)$selected), ]
   }
-  if ("selected" %in% colnames(colData(spe))) {
-    spe <- spe[, as.logical(colData(spe)$selected)]
+  if ("selected" %in% colnames(colData(sce))) {
+    sce <- sce[, as.logical(colData(sce)$selected)]
   }
 
-  return(spe)
+  return(sce)
 }
 
-
+# Load configuration
+use_features <- config$use_features
+desc <- config$desc
 
 # Seed
 seed <- opt$seed
-set.seed(seed)
 
 # You can use the data as SingleCellExperiment
 sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = observation_file,
-                                    coord_file = coord_file, matrix_file = matrix_file)
+                                    coord_file = coord_file, matrix_file = matrix_file, use_features = FALSE)
+
 
 
 ## Your code goes here
-seurat_obj <- as.Seurat(sce)
-seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
-seu_drsc <- DR.SC::DR.SC(seurat_obj, K = n_clusters, platform = technology)
+seu <- as.Seurat(sce)
+set.seed(seed)
+if (use_features) {
+    seu[["originalexp"]]@var.features <- rownames(rowData(sce)[as.logical(rowData(sce)$selected), ])
+} else if (desc == "FindVariableFeatures") {
+    seu <- FindVariableFeatures(seu, nfeatures = 500, verbose = FALSE)
+} else if (desc == "FindSVGs") {
+    seu <- FindSVGs(seu, nfeatures = 480)
+} else if (desc == "All genes") {
+    seu[["originalexp"]]@var.features <- rownames(rowData(sce))
+} else {
+    stop("Invalid feature selection method in 'desc' configuration.")
+}
+
+# Clustering
+set.seed(seed)
+seu_drsc <- DR.SC::DR.SC(seu, K = n_clusters, platform = technology)
 
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix

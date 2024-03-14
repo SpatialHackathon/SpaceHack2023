@@ -1,6 +1,6 @@
 {
     "matrix": "transform",
-    "integrated_feature_selection": false,
+    "integrated_feature_selection": true,
     "image": false,
     "neighbors": false,
     "config_file": false

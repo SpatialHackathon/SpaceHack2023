@@ -145,7 +145,7 @@ get_SpatialExperiment <- function(
   if (("selected" %in% colnames(rowData(spe))) && use_features) {
     spe <- spe[as.logical(rowData(spe)$selected), ]
   }
-  if (("selected" %in% colnames(colData(spe))) && use_features) {
+  if ("selected" %in% colnames(colData(spe))) {
     spe <- spe[, as.logical(colData(spe)$selected)]
   }
 
