@@ -1,1 +1,1 @@
-{"method": "mclust", "lambda": 0.2, "k_geom": 18, "npcs": 20, "use_agf": true}
+{"desc": "STARmap", "method": "leiden", "lambda": 0.8, "k_geom": 30, "npcs": 50, "use_agf": false, "use_features": false}
