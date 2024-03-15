@@ -5,7 +5,7 @@ from shared.functions import check_files_in_folder, get_git_directory, get_sampl
 configfile: "path_configs/datasets.yaml"
 
 GIT_DIR = "/home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023/"
-DATASET_DIR = "/home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/pca_test"
+DATASET_DIR = "/home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow"
 DATASETS = config.pop("datasets")
 
 def create_visualization(data_dir):
@@ -13,7 +13,7 @@ def create_visualization(data_dir):
 
     file_list = ["coordinates.tsv", "counts.mtx", "features.tsv", "observations.tsv", "qc"]
     if all([check_files_in_folder(sample_dir, file_list) for sample_dir in get_sample_dirs(data_dir)]):
-        return [data_dir + ".visualization/pp_report.pdf"]
+        return [data_dir + "/.visualization/pp_report.pdf"]
 
     return input_files
 

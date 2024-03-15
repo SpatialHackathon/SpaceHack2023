@@ -109,13 +109,17 @@ if not np.all(mito_sum == 0):
 
 # Calculate QC metric for plotting
 sc.pp.calculate_qc_metrics(
-adata, qc_vars=qc_var, inplace=True, percent_top=None, log1p=False
+adata, qc_vars=qc_var, inplace=True, percent_top=None, log1p=True
 )
+#adata.write_h5ad("adata.h5ad")
 
 # Find the QC threshold:
 min_counts = adata.obs[adata.obs["QC"]]["total_counts"].min()
 min_genes  = adata.obs[adata.obs["QC"]]["n_genes_by_counts"].min()
 min_cells  = adata.var[adata.var["QC"]]["n_cells_by_counts"].min()
+
+min_counts_log1p = adata.obs[adata.obs["QC"]]["log1p_total_counts"].min()
+min_genes_log1p  = adata.obs[adata.obs["QC"]]["log1p_n_genes_by_counts"].min()
 
 ############### Plotting visualization ###############
 # TODO: adding line for current QC
@@ -135,13 +139,14 @@ axf[1].axvline(x=min_genes, color='r', linestyle='--')
 axf[1].set_title("Cell: # gene expressed")
 
 # Total expression counts per gene
-sns.scatterplot(data=adata.obs, x="total_counts", y = "n_genes_by_counts", color="k", alpha = 0.8, ax= axf[2])
-sns.kdeplot(data=adata.obs, x="total_counts", y = "n_genes_by_counts", ax= axf[2])
-axf[2].axvline(x=min_counts, color='r', linestyle='--')
-axf[2].axhline(y=min_genes, color='r', linestyle='--')
+sns.scatterplot(data=adata.obs, x="log1p_total_counts", y = "n_genes_by_counts", color="k", alpha = 0.8, ax= axf[2], linewidth=0)
+sns.kdeplot(data=adata.obs, x="log1p_total_counts", y = "n_genes_by_counts", ax= axf[2])
+axf[2].axvline(x=min_counts_log1p, color='r', linestyle='--')
+axf[2].axhline(y=min_genes_log1p, color='r', linestyle='--')
 axf[2].set_title("Cell: total vs #gene per cell")
 
-sns.scatterplot(data=adata.var, x="total_counts", y = "n_cells_by_counts", color="k", alpha = 0.8, ax= axf[3])
+sns.scatterplot(data=adata.var, x="log1p_total_counts", y = "n_cells_by_counts", color="k", alpha = 0.8, ax= axf[3], linewidth=0)
+sns.kdeplot(data=adata.var, x="log1p_total_counts", y = "n_cells_by_counts", ax= axf[3])
 # sns.kdeplot(data=adata.var, x="total_counts", y = "n_cells_by_counts", ax= axf[3])
 axf[3].axhline(y=min_cells, color='r', linestyle='--')
 axf[3].set_title("Gene: total vs #cells per gene")
@@ -157,10 +162,16 @@ sc.pl.spatial(adata, color="QC", spot_size = spot_size, show = False,
 
 # For the last plot
 if "mt" in adata.var.keys() and sum(adata.var["mt"]>0)>0:
-    sc.pl.violin(adata, "pct_counts_mt",show = False, ax= axf[7], jitter=False)
-    max_mt = adata.obs[adata.obs["QC"]]["pct_counts_mt"].max()
+    sns.scatterplot(x=adata.obs["log1p_total_counts"], 
+                    y =np.sqrt(adata.obs["pct_counts_mt"]), 
+                    ax= axf[7], color  = "black", alpha = 0.7, linewidth=0)
+    sns.kdeplot(x=adata.obs["log1p_total_counts"], 
+                    y =np.sqrt(adata.obs["pct_counts_mt"]), 
+                    ax= axf[7])
+    max_mt = np.sqrt(adata.obs[adata.obs["QC"]]["pct_counts_mt"].max())
     axf[7].axhline(y=max_mt, color='r', linestyle='--')
     axf[7].set_title("mt: percentage")
+    # sc.pl.violin(adata, "pct_counts_mt",show = False, ax= axf[7], jitter=False)
 
 elif "cell_count" in adata.obs.keys():
     sc.pl.violin(adata, "cell_count",show = False, title = "gene count distribution", ax= axf[7])
