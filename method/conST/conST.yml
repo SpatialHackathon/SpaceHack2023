@@ -1,0 +1,21 @@
+channels:
+  - conda-forge
+  - pytorch
+  - default
+dependencies:
+  - python=3.9.16
+  - torch=2.2.0
+  - torchvision=0.17.0
+  - torch_geometric=2.5.0
+  - torch_scatter=2.1.2
+  - torch_sparse=0.6.18
+  - scikit-learn=1.4.1
+  - umap-learn=0.5.5
+  - scanpy=1.9.8
+  - seaborn=0.13.2
+  - scipy=1.12.0
+  - networkx=3.2.1
+  - pandas=2.2.0
+  - anndata=0.10.5
+  - timm=0.9.12
+  - leidenalg=0.10.2
