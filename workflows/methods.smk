@@ -136,7 +136,7 @@ def get_matrix_input(wildcards):
         case "dimensionality_reduction":
             matrix_input = (
                 config["data_dir"]
-                + f"/{wildcards.sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv"
+                + f"/{wildcards.sample}/log1p/hvg/pca_35/dimensionality_reduction.tsv"
             )
 
     if matrix_input == []:
