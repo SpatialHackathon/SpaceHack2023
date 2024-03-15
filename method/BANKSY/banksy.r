@@ -120,7 +120,6 @@ get_SpatialExperiment <- function(
     feature_file,
     observation_file,
     coord_file,
-    use_features = TRUE,
     matrix_file = NA,
     reducedDim_file = NA,
     assay_name = "counts",
@@ -142,7 +141,7 @@ get_SpatialExperiment <- function(
   }
 
   # Filter features and samples
-  if (("selected" %in% colnames(rowData(spe))) && use_features) {
+  if ("selected" %in% colnames(rowData(spe))) {
     spe <- spe[as.logical(rowData(spe)$selected), ]
   }
   if ("selected" %in% colnames(colData(spe))) {
@@ -164,14 +163,13 @@ npcs <- config$npcs
 method <- config$method
 use_agf <- config$use_agf
 assay_name <- "normcounts"
-use_features <- config$use_features
 
 # Seed
 seed <- opt$seed
 
 # You can use the data as SpatialExperiment
 spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
-                                    coord_file = coord_file, matrix_file = matrix_file, use_features = use_features)
+                                    coord_file = coord_file, matrix_file = matrix_file)
 
 
 # Extract proper coordinates
@@ -184,7 +182,7 @@ if (technology %in% c("ST", "Visium")){
 ## Your code goes here
 set.seed(seed)
 
-if (!use_features) {
+if (!("selected" %in% colnames(rowData(spe)))) {
     library(Seurat)
     counts <- assay(spe, "counts")
 

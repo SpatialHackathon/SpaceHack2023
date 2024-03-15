@@ -118,7 +118,6 @@ n_clusters <- opt$n_clusters
 get_SingleCellExperiment <- function(
     feature_file,
     observation_file,
-    use_features = TRUE,
     coord_file,
     matrix_file = NA,
     assay_name = "counts",
@@ -139,7 +138,7 @@ get_SingleCellExperiment <- function(
   }
 
   # Filter features and samples
-  if (("selected" %in% colnames(rowData(sce))) && use_features) {
+  if ("selected" %in% colnames(rowData(sce)) && FALSE) { # Don't subset here
     sce <- sce[as.logical(rowData(sce)$selected), ]
   }
   if ("selected" %in% colnames(colData(sce))) {
@@ -150,7 +149,6 @@ get_SingleCellExperiment <- function(
 }
 
 # Load configuration
-use_features <- config$use_features
 desc <- config$desc
 
 # Seed
@@ -158,14 +156,14 @@ seed <- opt$seed
 
 # You can use the data as SingleCellExperiment
 sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = observation_file,
-                                    coord_file = coord_file, matrix_file = matrix_file, use_features = FALSE)
+                                    coord_file = coord_file, matrix_file = matrix_file)
 
 
 
 ## Your code goes here
 seu <- as.Seurat(sce)
 set.seed(seed)
-if (use_features) {
+if ("selected" %in% colnames(rowData(sce))) {
     seu[["originalexp"]]@var.features <- rownames(rowData(sce)[as.logical(rowData(sce)$selected), ])
 } else if (desc == "FindVariableFeatures") {
     seu <- FindVariableFeatures(seu, nfeatures = 500, verbose = FALSE)
