@@ -45,7 +45,10 @@ def convert_data(out_dir):
             json.dump(experiment_json_dict, f)
 
         # create samples.tsv
-        df_sample_tsv = pd.DataFrame(index = ['region_main'],)
+        df_sample_tsv = pd.DataFrame({"sample": "region_main",
+                                     "directory": "region_main",
+                                     "n_clusters": adata.obs.region_level2.unique().shape[0]}, 
+                                    index = ["region_main"])
         df_sample_tsv.to_csv(project_root/'samples.tsv',sep="\t",index_label="")
     
         
@@ -58,17 +61,17 @@ def convert_data(out_dir):
             os.makedirs(sample_output_folder,exist_ok=True)
     
             # Labels:
-            df_labels_tsv = adata.obs[['region_main']]
+            df_labels_tsv = adata.obs[['region_level2']]
             df_labels_tsv.columns=[['label']]
-            df_labels_tsv['label_confidence']=(~adata.obs.region_main.isna()).astype(int)
+            df_labels_tsv['label_confidence']=(~adata.obs.region_level2.isna()).astype(int)
             print(f"Writing labels: {df_labels_tsv.head()}")
             df_labels_tsv.to_csv(sample_output_folder/'labels.tsv',sep="\t",index_label="")
     
             # Observations
             obs = adata.obs.copy()
             obs["selected"] = "true"
-            df_observations_tsv = adata.obs[['Class','cell_area','n_counts']]
-            df_observations_tsv.columns = [['cell_type','cell_area','transcript_counts']]
+            df_observations_tsv = adata.obs #[['Class','cell_area','n_counts']]
+            # df_observations_tsv.columns = [['cell_type','cell_area','transcript_counts']]
             print(f"Writing observations: {df_observations_tsv.head()}")           
             df_observations_tsv.to_csv(sample_output_folder/'observations.tsv',sep="\t",index_label="")
         
