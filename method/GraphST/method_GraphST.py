@@ -129,6 +129,8 @@ def get_anndata(args):
     if "selected" in features.columns:
         X = X[:, features["selected"].to_numpy().nonzero()[0]]
         features = features.loc[lambda df: df["selected"]]
+        # To skip the preprocess step in GraphST
+        adata.var['highly_variable'] = adata.var['selected']
 
     coordinates = (
         pd.read_table(args.coordinates, index_col=0)
@@ -140,24 +142,18 @@ def get_anndata(args):
         X=X, obs=observations, var=features, obsm={"spatial": coordinates}
     )
     
-    # To skip the preprocess step in GraphST
-    adata.var['highly_variable'] = adata.var['selected']
-    
     # To skip the neighbor computation step in GraphST
     if args.neighbors is not None:
-        interaction = sp.io.mmread(neighbors_file).T.tocsr()
+        interaction = sp.io.mmread(args.neighbors).T.tocsr()
         interaction = interaction.toarray()
         adata.obsm["graph_neigh"] = interaction
         adata.obsm['adj'] = interaction
-        
+
     return adata
 
 
 adata = get_anndata(args)
 adata.var_names_make_unique()
-
-# Assuming transform=log1p, here's the scaling step: https://github.com/JinmiaoChenLab/GraphST/blob/main/GraphST/preprocess.py
-sc.pp.scale(adata, zero_center=False, max_value=10)
 
 # Set seed
 random.seed(seed)
