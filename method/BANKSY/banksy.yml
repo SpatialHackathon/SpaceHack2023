@@ -20,3 +20,4 @@ dependencies:
   - numpy=1.26.3
   - r-mclust=6.0.1
   - r-igraph=2.0.2
+  - r-seurat=4.3.0
