@@ -16,6 +16,7 @@ dependencies:
   - rpy2=3.5.11
   - r-base=4.3.2
   - r-mclust=6.0.1
+  - scikit-misc=0.1.4
   - pip
   - pip:
     - git+https://github.com/QIFEIDKN/STAGATE@48ce7f874c83a9f1f68187be00370181261ab7c5

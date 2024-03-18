@@ -71,8 +71,6 @@ seed = args.seed
 ## Your code goes here
 import json
 
-with open(args.config, "r") as f:
-    config = json.load(f)
 
 import random
 import numpy as np
@@ -94,30 +92,51 @@ sys.path.append(str(method_dir))
 
 from search_res import binary_search
 
+# ... or AnnData if you want
 def get_anndata(args):
     import anndata as ad
-    X = sp.io.mmread(args.matrix)
-    if sp.sparse.issparse(X):
-        X = sp.sparse.csr_matrix(X, dtype= 'float32')
+    import numpy as np
+    import pandas as pd
+    import scipy as sp
+    from PIL import Image
+
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
-    # Filter
-    if "selected" in observations.columns:
-        X = X[observations["selected"].to_numpy().nonzero()[0], :]
-        observations = observations.loc[lambda df: df["selected"]]
-    if "selected" in features.columns:
-        X = X[:, features["selected"].to_numpy().nonzero()[0]]
-        features = features.loc[lambda df: df["selected"]]
+
     coordinates = (
         pd.read_table(args.coordinates, index_col=0)
         .loc[observations.index, :]
         .to_numpy()
     )
-    adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial": coordinates}
-    )
-    return adata
 
+    adata = ad.AnnData(obs=observations, var=features, obsm={"spatial": coordinates})
+
+    if args.matrix is not None:
+        X = sp.io.mmread(args.matrix)
+        if sp.sparse.issparse(X):
+            X = X.tocsr()
+        adata.X = X
+
+    if args.neighbors is not None:
+        adata.obsp["spatial_connectivities"] = sp.io.mmread(args.neighbors).T.tocsr()
+
+    # Filter by selected samples/features
+    if "selected" in adata.obs.columns:
+        adata = adata[observations["selected"].astype(bool), :]
+    if "selected" in adata.var.columns:
+        adata = adata[:, features["selected"].astype(bool)]
+
+    if args.dim_red is not None:
+        adata.obsm["reduced_dimensions"] = (
+            pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
+        )
+
+    if args.image is not None:
+        adata.uns["image"] = np.array(Image.open(args.img))
+    else:
+        adata.uns["image"] = None
+
+    return adata
 
 adata = get_anndata(args)
 adata.var_names_make_unique()
@@ -129,45 +148,27 @@ np.random.seed(seed)
 
 import STAGATE as sg
 from scipy.spatial.distance import euclidean
-# To skip the neighbor computation step in STAGATE
-if args.neighbors is not None:
-    neighbors = sp.io.mmread(args.neighbors).T.tocoo()
-    row_indices, col_indices = neighbors.row, neighbors.col
-    coor = adata.obsm['spatial']
-    cell_ids = adata.obs_names
-    Spatial_Net = pd.DataFrame({'Cell1': cell_ids[row_indices],
-                                'Cell2': cell_ids[col_indices],
-                                'Distance': [euclidean(coor[i], coor[j]) for i, j in zip(row_indices, col_indices)]})
-    Spatial_Net = Spatial_Net.loc[Spatial_Net['Distance']>0,]
-    adata.uns['Spatial_Net'] = Spatial_Net
-elif config["model"] == 'Radius':
-    sg.Cal_Spatial_Net(adata, rad_cutoff=config["rad_cutoff"], model=config["model"])
-elif config["model"] == 'KNN':
-    sg.Cal_Spatial_Net(adata, k_cutoff=config["k_cutoff"], model=config["model"])
+
+#Normalization
+if adata.n_vars > 3000:
+    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=3000)
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+
+sg.Cal_Spatial_Net(adata, rad_cutoff=150)
 
 sg.Stats_Spatial_Net(adata)
 
 # Run
-# alpha: the weight of the cell type-aware spatial network
-# pre-resolution: the resolution parameter of pre-clustering
-# with cell type-aware module:
-# adata = sg.train_STAGATE(adata, alpha=0.5, pre_resolution=0.2,
-#                              n_epochs=1000, save_attention=True)
+
 adata = sg.train_STAGATE(adata, alpha=0, random_seed=seed)
 sc.pp.neighbors(adata, use_rep='STAGATE')
-sc.tl.umap(adata)
 
-if config["method"] == "mclust":
-    adata = sg.mclust_R(adata, used_obsm='STAGATE', num_cluster=n_clusters, random_seed=seed)
-    label_df = adata.obs[["mclust"]]
-elif config["method"] == "louvain":
-    label_df = binary_search(adata, n_clust_target=n_clusters, method="louvain", seed = seed)
-    #sc.tl.louvain(adata, resolution=config["res"])
-    #label_df = adata.obs[["louvain"]]
+adata = sg.mclust_R(adata, used_obsm='STAGATE', num_cluster=n_clusters, random_seed=seed)
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)
-
+label_df = adata.obs[["mclust"]]
 label_df.columns = ["label"]
 label_df.to_csv(label_file, sep="\t", index_label="")
 
