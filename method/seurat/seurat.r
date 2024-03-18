@@ -128,19 +128,13 @@ get_SpatialExperiment <- function(
 
   coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
   coordinates <- as.matrix(coordinates[rownames(colData), ])
-  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
 
-    
-    if (!is.na(reducedDim_file)) {
-    dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
-  }
   spe <- SpatialExperiment::SpatialExperiment(
-    rowData = rowData, colData = colData, spatialCoords = coordinates,
-      reducedDims = list(pca = as.matrix(dimRed[rownames(colData), ]))
+    rowData = rowData, colData = colData, spatialCoords = coordinates
   )
 
   if (!is.na(matrix_file)) {
-    assay(spe, "counts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
   }
 
   # Filter features and samples
@@ -151,6 +145,10 @@ get_SpatialExperiment <- function(
     spe <- spe[, as.logical(colData(spe)$selected)]
   }
 
+  if (!is.na(reducedDim_file)) {
+    dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
+    reducedDim(spe, reducedDim_name) <- as.matrix(dimRed[colnames(spe), ])
+  }
   return(spe)
 }
 
@@ -162,12 +160,21 @@ set.seed(seed)
 ndims <- config$ndims
 algorithm <- config$algorithm
 
+if (!exists("matrix_file")) {
+    matrix_file <- NA
+}
+
+if (!exists("dimred_file")) {
+    dimred_file <- NA
+}
+
 # Create SpatialExperiment
 spe <- get_SpatialExperiment(
     feature_file = feature_file,
     observation_file = observation_file,
     coord_file = coord_file,
-    reducedDim_file = dimred_file
+    reducedDim_file = dimred_file,
+    matrix_file=  matrix_file,
 )
 
 # Create a dummy matrix for seurat object requirement
@@ -178,9 +185,14 @@ if (is.null(assayNames(spe))){
 
 # Convert to Seurat object
 seurat_obj <- as.Seurat(spe, data=NULL)
+# saveRDS(seurat_obj, "seurat.rds")
+
+# Preprocessing: SC-Transform + PCA
+seurat_obj <- SCTransform(seurat_obj, assay = "originalexp", verbose = FALSE)
+seurat_obj <- RunPCA(seurat_obj, assay = "SCT", verbose = FALSE)
 
 # Find neighbors
-seurat_obj <- FindNeighbors(seurat_obj, dims = 1:ndims)
+seurat_obj <- FindNeighbors(seurat_obj, reduction = "pca", dims = 1:ndims)
 
 
 # Resolution optimization
