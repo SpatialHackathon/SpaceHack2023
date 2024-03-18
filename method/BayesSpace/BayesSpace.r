@@ -38,7 +38,7 @@ option_list <- list(
   make_option(
     c("--dim_red"),
     type = "character", default = NA,
-    help = "Reduced dimensionality representation (e.g. PCA)."
+    help = "Reduced dimensionality representation (e.g. PCA).",
   ),
   make_option(
     c("--image"),
@@ -113,51 +113,63 @@ seed <- opt$seed
 set.seed(seed)
 
 ## Your code goes here
-if (is.na(opt$dim_red)) {
-  stop("Please provide a reduced dimensionality representation.")
-}
 
 suppressPackageStartupMessages(library(BayesSpace))
 
-get_SingleCellExperiment <- function(feature_file, observation_file, matrix_file, dimred_file) {
+get_SingleCellExperiment <- function(
+    feature_file, 
+    observation_file, 
+    matrix_file, 
+    dimred_file,
+    assay_name = "counts",
+    reducedDim_name = "reducedDim") {
   rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
   colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
 
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
+  coordinates <- as.matrix(coordinates[rownames(colData), ])
+  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
+
+    sce <- SingleCellExperiment::SingleCellExperiment(
+    rowData = rowData, colData = colData, metadata = list("spatialCoords" = coordinates))
+
+  if (!is.na(matrix_file)) {
+    assay(sce, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(sce, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
+  }
+
   # Filter features and samples
-  if ("selected" %in% colnames(rowData)) {
-    rowData <- rowData[as.logical(rowData$selected), ]
+  if ("selected" %in% colnames(rowData(sce))) {
+    sce <- sce[as.logical(rowData(sce)$selected), ]
   }
-  if ("selected" %in% colnames(colData)) {
-    colData <- colData[as.logical(colData$selected), ]
+  if ("selected" %in% colnames(colData(sce))) {
+    sce <- sce[, as.logical(colData(sce)$selected)]
   }
 
-  dimRed <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
-  dimRed <- as.matrix(dimRed[rownames(colData), ])
-
-  sce <- SingleCellExperiment(
-    rowData = rowData,
-    colData = colData,
-    reducedDims = list("dimRed" = dimRed)
-  )
   return(sce)
 }
 
 sce <- get_SingleCellExperiment(feature_file, observation_file, matrix_file, dimred_file)
 
+# Source: https://www.ezstatconsulting.com/BayesSpace/articles/maynard_DLPFC.html
+
+set.seed(101)
+dec <- scran::modelGeneVar(sce)
+top <- scran::getTopHVGs(dec, n = 2000)
+
+set.seed(102)
+sce <- scater::runPCA(sce, subset_row=top)
+
 sce <- spatialPreprocess(
   sce,
   platform = technology,
-  skip.PCA = TRUE,
-  log.normalize = FALSE
+  skip.PCA = TRUE
 )
-
-n_components <- ncol(reducedDim(sce, "dimRed"))
 
 sce <- spatialCluster(
   sce,
   q = n_clusters,
-  d = n_components,
-  use.dimred = "dimRed",
+  d = 15,
   platform = technology
 )
 
