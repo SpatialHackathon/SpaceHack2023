@@ -48,7 +48,7 @@ def convert_data(out_dir):
         df_sample_tsv = pd.DataFrame({"sample": "region_main",
                                      "directory": "region_main",
                                      "n_clusters": adata.obs.region_level2.unique().shape[0]}, 
-                                    index = [0])
+                                    index = ["region_main"])
         df_sample_tsv.to_csv(project_root/'samples.tsv',sep="\t",index_label="")
     
         
