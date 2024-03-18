@@ -18,6 +18,7 @@ dependencies:
   - tqdm=4.65
   - r-base=4.3.2
   - r-mclust=6.0.1
+  - scikit-misc=0.1.4
   - pip
   - pip:
     - git+https://github.com/JinmiaoChenLab/SEDR@8c273af3c520b663b2e83a4fbfdf462e0c7b8b7a
