@@ -213,10 +213,24 @@ SEDR.fix_seed(seed)
 adata = get_anndata(args)
 adata.var_names_make_unique()
 
+# Add preprocessing steps of the method
+sc.pp.normalize_total(adata, target_sum=1e6)
+if adata.n_vars > 2000:
+    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=2000)
+    adata = adata[:, adata.var['highly_variable'] == True]
+sc.pp.scale(adata)
+
+from sklearn.decomposition import PCA  # sklearn PCA is used because PCA in scanpy is not stable.
+adata_X = PCA(n_components=200, random_state=seed).fit_transform(adata.X)
+adata.obsm['X_pca'] = adata_X
+
+graph_dict = SEDR.graph_construction(adata, 12)
+
+"""
 # Constructing neighborhood graphs object format
 # Return warning if no neighborhood graph is not provided
-if args.neighbors is None:
-    raise ValueError("No neighbor graphs found, define neighbor graphs")
+#if args.neighbors is None:
+#    raise ValueError("No neighbor graphs found, define neighbor graphs")
 
 # import intermediate functions
 from SEDR.graph_func import preprocess_graph
@@ -246,11 +260,12 @@ graph_dict = {
     "adj_label": adj_label_m1.coalesce(),
     "norm_value": norm_m1
 }
+"""
 
 # Training SEDR
 # device: using cpu or gpu (if avaliable)
 # using_dec: boolean, whether to use the unsupervised deep embedded clustering (DEC) method to improve clustering results 
-sedr_net = SEDR.Sedr(adata.obsm['reduced_dimensions'], 
+sedr_net = SEDR.Sedr(adata.obsm['X_pca'], 
                      graph_dict, 
                      mode='clustering', 
                      device=config["device"])
@@ -286,7 +301,7 @@ match config['cluster_method']:
                               key_added='SEDR', 
                               random_seed=seed
                              )
-        
+
 # Output dataframes
 label_df = adata.obs[["SEDR"]]
 embedding_df = pd.DataFrame(adata.obsm['SEDR'])
