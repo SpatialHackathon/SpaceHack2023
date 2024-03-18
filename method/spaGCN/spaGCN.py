@@ -85,6 +85,7 @@ import random
 
 import numpy as np
 import pandas as pd
+import scanpy as sc
 import SpaGCN as spg
 import torch
 
@@ -126,14 +127,18 @@ def get_anndata(args):
 
     return adata
 
-
-adata = get_anndata(args)
-
-
 # Set seed
 random.seed(seed)
 torch.manual_seed(seed)
 np.random.seed(seed)
+
+adata = get_anndata(args)
+adata.var_names_make_unique()
+spg.prefilter_specialgenes(adata)
+
+#Normalize and take log for UMI
+sc.pp.log1p(adata)
+
 
 if technology in ["Visium", "ST"]:
     if adata.uns["image"] is not None:
