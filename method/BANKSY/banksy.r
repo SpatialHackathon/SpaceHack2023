@@ -10,6 +10,7 @@ suppressPackageStartupMessages({
     library(Matrix)
     library(SpatialExperiment)
     library(Banksy)
+    library(Seurat)
 })
 
 option_list <- list(
@@ -137,7 +138,6 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    #assay(spe, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
   }
 
   # Filter features and samples
@@ -158,6 +158,8 @@ get_SpatialExperiment <- function(
 
 # Seed
 seed <- opt$seed
+nPCs <- 20L
+method <- "leiden"
 
 # You can use the data as SpatialExperiment
 spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
@@ -165,22 +167,41 @@ spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = obs
 
 
 ## Your code goes here
-lambda <- config$lambda
-k_geom <- config$k_geom
-npcs <- config$npcs
-method <- config$method
-use_agf <- config$use_agf
 assay_name <- "normcounts"
 set.seed(seed)
 
+# Adopted from https://github.com/jleechung/banksy-zenodo/blob/main/fig5-dlpfc/src/banksy.R 
+
+K_GEOM = c(18, 18)
+LAM = 0.2
+use_agf = TRUE
+# all_samples = as.character(c(151507:151510, 151669:151676))
+# all_domains = c(rep(7, 4), rep(5, 4), rep(7, 4))
+
+# Using seurat normalization
+gcm = assay(spe, "counts")
+seu = CreateSeuratObject(counts = gcm)
+seu = NormalizeData(seu, normalization.method = 'RC', scale.factor = median(colSums(gcm))
+, verbose = FALSE)
+if (nrow(seu) >= 2000){
+    seu = FindVariableFeatures(seu, nfeatures = 2000, verbose = FALSE)
+    varFea = VariableFeatures(seu)
+} else {
+    varFea = rownames(seu)
+}
+
 # Normalization to mean library size
+
+
+
 spe <- scuttle::computeLibraryFactors(spe)
 assay(spe, assay_name) <- scuttle::normalizeCounts(spe, log = FALSE)
-
+# Subset according to the script
+spe <- spe[varFea, ]
 # Run BANKSY
-print(use_agf)
-spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom, compute_agf = use_agf)
-spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = npcs, use_agf = use_agf)
+
+spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = K_GEOM, compute_agf = use_agf, verbose = FALSE)
+spe <- Banksy::runBanksyPCA(spe, lambda = LAM, npcs = nPCs, use_agf = use_agf)
 
 
 # Resolution optimization
@@ -231,9 +252,9 @@ binary_search <- function(
 result <- binary_search(spe, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
                         do_clustering = Banksy::clusterBanksy, 
                         # Banksy specific
-                        lambda = lambda, 
+                        lambda = LAM, 
                         use_pcs = TRUE, 
-                        npcs = npcs, 
+                        #npcs = npcs, 
                         seed = seed, 
                         method = method, 
                         assay_name = assay_name, 
