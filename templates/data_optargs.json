@@ -1,0 +1,5 @@
+{
+    "min_cells" : 10,
+    "min_genes" : 20,
+    "min_counts": 30
+}
