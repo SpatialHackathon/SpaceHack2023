@@ -78,6 +78,7 @@ def map_technology(input_technology):
     return technology_mapping.get(input_technology, None)
 
 technology = map_technology(str(args.technology))
+
 if technology is None:
     raise Exception(
         f"Invalid technology. GraphST only supports 10X Visium, Stereo-seq, and Slide-seq/Slide-seqV2 not {args.technology}. "
@@ -113,15 +114,35 @@ device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
 def get_anndata(args):
     import anndata as ad
+    import numpy as np
+    import pandas as pd
     import scipy as sp
-
-    X = sp.io.mmread(args.matrix)
-    if sp.sparse.issparse(X):
-        X = X.tocsr()
+    from PIL import Image
 
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
-        
+
+    coordinates = (
+        pd.read_table(args.coordinates, index_col=0)
+        .loc[observations.index, :]
+        .to_numpy()
+    )
+
+    adata = ad.AnnData(obs=observations, var=features, obsm={"spatial": coordinates})
+
+    if args.matrix is not None:
+        X = sp.io.mmread(args.matrix)
+        if sp.sparse.issparse(X):
+            X = X.tocsr()
+        adata.X = X
+
+    # To skip the neighbor computation step in GraphST
+    if args.neighbors is not None:
+        interaction = sp.io.mmread(args.neighbors).T.tocsr()
+        interaction = interaction.toarray()
+        adata.obsm["graph_neigh"] = interaction
+        adata.obsm['adj'] = interaction
+
     # Filter
     if "selected" in observations.columns:
         X = X[observations["selected"].to_numpy().nonzero()[0], :]
@@ -132,22 +153,15 @@ def get_anndata(args):
         # To skip the preprocess step in GraphST
         adata.var['highly_variable'] = adata.var['selected']
 
-    coordinates = (
-        pd.read_table(args.coordinates, index_col=0)
-        .loc[observations.index, :]
-        .to_numpy()
-    )
+    if args.dim_red is not None:
+        adata.obsm["reduced_dimensions"] = (
+            pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
+        )
 
-    adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial": coordinates}
-    )
-    
-    # To skip the neighbor computation step in GraphST
-    if args.neighbors is not None:
-        interaction = sp.io.mmread(args.neighbors).T.tocsr()
-        interaction = interaction.toarray()
-        adata.obsm["graph_neigh"] = interaction
-        adata.obsm['adj'] = interaction
+    if args.image is not None:
+        adata.uns["image"] = np.array(Image.open(args.img))
+    else:
+        adata.uns["image"] = None
 
     return adata
 
