@@ -176,6 +176,9 @@ import warnings
 if not args.dim_red:
     sc.pp.normalize_total(adata)
     sc.pp.log1p(adata)
+    if adata.n_vars > 2000:
+        sc.pp.highly_variable_genes(adata, flavor="seurat", n_top_genes=2000)
+    sc.pp.scale(adata)
     sc.tl.pca(adata)
     sc.pp.neighbors(adata, n_neighbors=config["n_neighbors"], n_pcs=config["n_pcs"], random_state=seed)
 else:
