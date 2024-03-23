@@ -61,6 +61,7 @@ def get_anndata(args):
     import numpy as np
     import pandas as pd
     import scipy as sp
+    from PIL import Image
 
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
@@ -92,6 +93,11 @@ def get_anndata(args):
         adata.obsm["reduced_dimensions"] = (
             pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
         )
+
+    if args.image is not None:
+        adata.uns["image"] = np.array(Image.open(args.img))
+    else:
+        adata.uns["image"] = None
 
     return adata
 
@@ -209,11 +215,14 @@ import random
 random.seed(seed)
 SEDR.fix_seed(seed)
 
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
 # Load data
 adata = get_anndata(args)
 adata.var_names_make_unique()
 
 # Add preprocessing steps of the method
+adata.layers['count'] = adata.X.toarray()
 sc.pp.normalize_total(adata, target_sum=1e6)
 if adata.n_vars > 2000:
     sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=2000)
@@ -265,10 +274,10 @@ graph_dict = {
 # Training SEDR
 # device: using cpu or gpu (if avaliable)
 # using_dec: boolean, whether to use the unsupervised deep embedded clustering (DEC) method to improve clustering results 
-sedr_net = SEDR.Sedr(adata.obsm['X_pca'], 
-                     graph_dict, 
-                     mode='clustering', 
-                     device=config["device"])
+sedr_net = SEDR.Sedr(adata.obsm['X_pca'],
+                     graph_dict,
+                     mode='clustering',
+                     device=device)
 
 if config["using_dec"]:
     sedr_net.train_with_dec(N=1)
