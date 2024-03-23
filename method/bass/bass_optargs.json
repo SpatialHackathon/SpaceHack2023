@@ -1,6 +1,6 @@
 {
-    "matrix": "dimensionality_reduction",
-    "integrated_feature_selection": true,
+    "matrix": "counts",
+    "integrated_feature_selection": false,
     "image": false,
     "neighbors": false,
     "config_file": true
