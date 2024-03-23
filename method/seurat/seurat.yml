@@ -27,7 +27,7 @@ dependencies:
   - bioconductor-summarizedexperiment=1.32.0
   - bioconductor-xvector=0.42.0
   - bioconductor-zlibbioc=1.48.0
-  - bioconda::bioconductor-glmgampoi=1.14.3
+  - bioconductor-glmgampoi=1.14.0
   - bwidget=1.9.14
   - bzip2=1.0.8
   - c-ares=1.25.0
