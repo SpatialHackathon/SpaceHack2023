@@ -164,8 +164,9 @@ seurat_obj <- NormalizeData(seurat_obj, verbose = F)
 # choose 500 highly variable features
 if (nrow(seurat_obj)>500){
     seurat_obj <- FindVariableFeatures(seurat_obj, nfeatures = 500, verbose = F)
+} else{
+    seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
 }
-# seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
 seu_drsc <- DR.SC::DR.SC(seurat_obj, K = n_clusters, platform = technology)
 
 # The data.frames with observations may contain a column "selected" which you need to use to
