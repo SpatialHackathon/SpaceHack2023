@@ -73,7 +73,7 @@ def data_retrieval(out):
         
     # transform into png
 
-    print('transforming tif into png, takes some time')
+    print('transforming tif into png, this will take some time')
     tif_files = [f for f in os.listdir(path) if re.match(r'.*\.tif', f)]
     
     for i in tif_files:
@@ -101,19 +101,22 @@ def data_retrieval(out):
         coord = pd.DataFrame(adata.obsm["spatial"], index=adata.obs_names, columns=["x","y"])
         coord.to_csv(os.path.join(res_path,"coordinates.tsv"), sep="\t", index_label="")
         
-        obs = adata.obs.copy()
-        obs.columns = ["in_tissue", "row", "col"]
-        obs.to_csv(os.path.join(res_path,"observations.tsv"), sep="\t", index_label="")
         
         meta = pd.read_csv(os.path.join(path,'chicken_heart/data/spatialRNAseq_metadata.csv'))
         meta['Unnamed: 0'] = meta['Unnamed: 0'].str.split('_').str[1]
         meta = meta.set_index('Unnamed: 0')
-        meta = meta[meta['orig.ident']== sample][['seurat_clusters']]
-        meta = meta.rename(columns={'seurat_clusters':'labels'})
-        meta.to_csv(os.path.join(res_path,"labels.tsv"), sep="\t", index_label="")
-        
+        meta = meta[meta['orig.ident']== sample]
+        meta_label = meta[['celltype_prediction']]
+        meta_label = meta_label.rename(columns={'celltype_prediction':'label'})
+        meta_label.to_csv(os.path.join(res_path,"labels.tsv"), sep="\t", index_label="")
+
+        obs = adata.obs.copy()
+        obs.columns = ["in_tissue", "row", "col"]
+        obs = obs.join(meta, how="left")
+        obs.to_csv(os.path.join(res_path,"observations.tsv"), sep="\t", index_label="")
+
         shutil.copy2(os.path.join(path, sample, 'spatial','tissue_lowres_image.png'), os.path.join(res_path,'H_E_lowres.png'))
-        shutil.copy2(os.path.join(path,f"{sample}.tif"), os.path.join(res_path,'H_E_hires.tif'))
+        shutil.copy2(os.path.join(path,f"{sample}.tif"), os.path.join(res_path,'H_E.tiff'))
         shutil.copy2(os.path.join(path, sample, 'spatial','scalefactors_json.json'), os.path.join(res_path,'images.json'))
     
     # common files
