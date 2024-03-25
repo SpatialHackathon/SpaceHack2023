@@ -75,7 +75,7 @@ def get_data(out_dir):
                 clusters = []
 
                 f_out_coords.write('\tx\ty\tz\n')
-                f_out_labels.write('\tMain_molecular_cell_type\tSub_molecular_cell_type\tMain_molecular_tissue_region\
+                f_out_labels.write('\tlabel\tSub_molecular_cell_type\tMain_molecular_tissue_region\
                                 \tSub_molecular_tissue_region\tMolecular_spatial_cell_type\n')
 
                 for l in f_in:
