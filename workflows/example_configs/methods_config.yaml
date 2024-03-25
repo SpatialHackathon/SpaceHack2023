@@ -1,30 +1,30 @@
 # Github repo path, modify based on your env
 git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
 # Dataset path, modify based on your env
-data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/data/libd_dlpfc
+data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/libd_dlpfc
 
 seed: 2023
 
 # Methods to run for the pipeline, modify based on your need
 use_methods:
-#  - "bass"
 #  - "BayesSpace"
+#  - "STAGATE"
+#  - "BANKSY"
+  - "spaGCN"
+#  - "CellCharter"
 #  - "DRSC"
 #  - "GraphST"
+#  - "seurat"
 #  - "SEDR"
-#  - "SOTIP"
-#  - "SpiceMix"
 #  - "meringue"
-#  - "maple"
+#  - "scanpy"
+#  - "SpiceMix"      # Remaining implementation
 #  - "precast"
-#  - "SC_MEB"
-#  - "spaGCN"
+#  - "SpaceFlow"
+#  - "SOTIP"
+
+#  - "SC_MEB"  # error: neighbor returned 0...
+#  - "maple"
 #  - "stardust"
 #  - "DeepST"
-#  - "CellCharter"
-#  - "STAGATE"       # res not n_clust
-#  - "scanpy"
-#  - "SpaceFlow"
-#  - "seurat"
-#  - "BANKSY"
 #  - "SCAN-IT"

@@ -96,15 +96,15 @@ methods:
 # All config files for existing methods on the repo 14.02.2024
 # make sure the config_files name is the same as methods name
 config_files:
-  BANKSY:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-    config_5: "config/config_5.json"
-    config_6: "config/config_6.json"
-    config_7: "config/config_7.json"
-    config_8: "config/config_8.json"
+#  BANKSY:
+#    config_1: "config/config_1.json"
+#    config_2: "config/config_2.json"
+#    config_3: "config/config_3.json"
+#    config_4: "config/config_4.json"
+#    config_5: "config/config_5.json"
+#    config_6: "config/config_6.json"
+#    config_7: "config/config_7.json"
+#    config_8: "config/config_8.json"
   DeepST:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
@@ -126,20 +126,20 @@ config_files:
     config_6: "config/config_6.json"
   SOTIP:
     config_1: "config/config.json"
-  STAGATE:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
+#  STAGATE:
+#    config_1: "config/config_1.json"
+#    config_2: "config/config_2.json"
+#    config_3: "config/config_3.json"
+#    config_4: "config/config_4.json"
 #    config_5: "config/config_5.json"
 #    config_6: "config/config_6.json"
 #    config_7: "config/config_7.json"
 #    config_8: "config/config_8.json"
 #    config_9: "config/config_9.json"
-    config_10: "config/config_10.json"
-    config_11: "config/config_11.json"
-    config_12: "config/config_12.json"
-    config_13: "config/config_13.json"
+#    config_10: "config/config_10.json"
+#    config_11: "config/config_11.json"
+#    config_12: "config/config_12.json"
+#    config_13: "config/config_13.json"
 #   config_14: "config/config_14.json"
 #    config_15: "config/config_15.json"
 #    config_16: "config/config_16.json"
