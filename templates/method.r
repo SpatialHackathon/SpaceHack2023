@@ -152,8 +152,22 @@ seed <- opt$seed
 set.seed(seed)
 # TODO if the method requires the seed elsewhere please pass it on
 
-# You can use the data as SpatialExperiment
-spe <- get_SpatialExperiment(feature_file, observation_file, matrix_file, coord_file, dimred_file)
+if (!exists("matrix_file")) {
+    matrix_file <- NA
+}
+
+if (!exists("dimred_file")) {
+    dimred_file <- NA
+}
+
+# Create SpatialExperiment
+spe <- get_SpatialExperiment(
+    feature_file = feature_file,
+    observation_file = observation_file,
+    coord_file = coord_file,
+    reducedDim_file = dimred_file,
+    matrix_file=  matrix_file,
+)
 
 
 ## Your code goes here
