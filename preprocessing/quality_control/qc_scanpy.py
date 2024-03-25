@@ -119,8 +119,9 @@ if not all(x == 0 for x in mito_sum):
     adata, qc_vars=["mt"], inplace=True, percent_top=None, log1p=False
     )
 
-    # mitochondira needs to be less than 30%
-    adata = adata[adata.obs["pct_counts_mt"] <= 30, ]
+    # mitochondira needs to be less than 30%, or the most extreme 3%. whichever is higher
+    mt_threshold = max(adata.obs["pct_counts_mt"].quantile(0.97), 30)
+    adata = adata[adata.obs["pct_counts_mt"] <= mt_threshold, ]
 
 # Filter if tissue is on spot
 if "in_tissue" in adata.obs.columns:
@@ -132,6 +133,12 @@ if "cell_count" in adata.obs.columns:
     adata.obs["cell_count"] = adata.obs["cell_count"].astype("int64")
     adata = adata[adata.obs["cell_count"] > 10, ]
 
+if "cell_area" in adata.obs.columns:
+    adata = adata[adata.obs["cell_area"] > 5, ]
+    adata = adata[adata.obs["cell_area"] < 1400, ]
+
+if "control_probe_counts" in adata.obs.columns:
+    adata = adata[adata.obs["control_probe_counts"] < 5, ]
 
 filter_counts = adata.X
 observation_df = adata.obs

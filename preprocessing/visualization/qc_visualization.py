@@ -34,7 +34,10 @@ parser.add_argument(
     "--observation_qc", help="Path to observation (as tsv) after quality control",
     required=True,
 )
-
+parser.add_argument(
+    "--technology", help="which technology is used for this dataset",
+    required=True,
+)
 
 args = parser.parse_args()
 
@@ -50,6 +53,12 @@ coord_file = args.coordinates
 matrix_file = args.matrix
 feature_file = args.features
 observation_file = args.observations
+technology = args.technology
+spotsize_dic = {
+    "Visium": 135,
+    "MERFISH": 50,
+    "Xenium": 25,
+}
 
 # ... or AnnData if you want
 def get_anndata(args):
@@ -125,7 +134,7 @@ min_genes_log1p  = adata.obs[adata.obs["QC"]]["log1p_n_genes_by_counts"].min()
 # TODO: adding line for current QC
 fig, axs = plt.subplots(2, 4, figsize=(25, 13))
 # plt.rcParams["figure.figsize"] = (8, 8)
-spot_size = 135
+spot_size = spotsize_dic.pop(technology, 80)
 axf = axs.flatten()
 
 # Total expression counts per cell
@@ -175,10 +184,30 @@ if "mt" in adata.var.keys() and sum(adata.var["mt"]>0)>0:
 
 elif "cell_count" in adata.obs.keys():
     sc.pl.violin(adata, "cell_count",show = False, title = "gene count distribution", ax= axf[7])
-elif "cell_count" in adata.obs.keys():
+
+elif "in_tissue" in adata.obs.keys():
     adata.obs["in_tissue"] = adata.obs["in_tissue"].astype('category')
     sc.pl.spatial(adata, color="in_tissue", spot_size = spot_size, show = False,
                title = "in_tissue results", ax= axf[7])
+
+elif "cell_area" in adata.obs.keys():
+    sns.scatterplot(x=adata.obs["log1p_total_counts"],
+                    y =adata.obs["cell_area"],
+                    ax= axf[7], color  = "black", alpha = 0.7, linewidth=0)
+    sns.kdeplot(x=adata.obs["log1p_total_counts"],
+                    y =adata.obs["cell_area"],
+                    ax= axf[7])
+    max_ca = adata.obs[adata.obs["QC"]]["cell_area"].max()
+    min_ca = adata.obs[adata.obs["QC"]]["cell_area"].min()
+    axf[7].axhline(y=max_ca, color='r', linestyle='--')
+    axf[7].axhline(y=min_ca, color='r', linestyle='--')
+    axf[7].set_title("cell area")
+
+elif "control_probe_counts" in adata.obs.keys():
+    sns.histplot(adata.obs["control_probe_counts"], kde=False, bins=60, ax=axf[7])
+    axf[7].axvline(x=adata.obs[adata.obs["QC"]]["control_probe_counts"].max(), color='r', linestyle='--')
+    axf[7].set_title("Control probe numbers")
+
 else:
     # no. of positively expressed cells of this gene, for all genes
     sns.histplot(adata.var["n_cells_by_counts"], kde=False, bins=60, ax=axf[7])
