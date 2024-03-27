@@ -156,6 +156,14 @@ get_SpatialExperiment <- function(
 }
 
 
+# Load configuration
+lambda <- config$lambda
+k_geom <- config$k_geom
+npcs <- config$npcs
+method <- config$method
+use_agf <- config$use_agf
+assay_name <- "normcounts"
+
 # Seed
 seed <- opt$seed
 
@@ -164,22 +172,33 @@ spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = obs
                                     coord_file = coord_file, matrix_file = matrix_file)
 
 
+# Extract proper coordinates
+if (technology %in% c("ST", "Visium")){
+    coord_names <- c("row", "col")
+} else {
+    coord_names <- NULL
+}
+
 ## Your code goes here
-lambda <- config$lambda
-k_geom <- config$k_geom
-npcs <- config$npcs
-method <- config$method
-use_agf <- config$use_agf
-assay_name <- "normcounts"
 set.seed(seed)
+
+if (!("selected" %in% colnames(rowData(spe)))) {
+    library(Seurat)
+    counts <- assay(spe, "counts")
+
+    scale.factor <- median(colSums(counts))
+    seu <- CreateSeuratObject(counts = counts)
+    seu <- NormalizeData(seu, normalization.method = 'RC', scale.factor = scale.factor, verbose = FALSE)
+    seu <- FindVariableFeatures(seu, nfeatures = 2000, verbose = FALSE)
+    spe <- spe[VariableFeatures(seu), ]
+}
 
 # Normalization to mean library size
 spe <- scuttle::computeLibraryFactors(spe)
 assay(spe, assay_name) <- scuttle::normalizeCounts(spe, log = FALSE)
 
 # Run BANKSY
-print(use_agf)
-spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom, compute_agf = use_agf)
+spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom, compute_agf = use_agf, coord_names = coord_names)
 spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = npcs, use_agf = use_agf)
 
 
@@ -228,7 +247,7 @@ binary_search <- function(
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
 #cnames <- colnames(colData(spe))
-result <- binary_search(spe, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
+bank <- binary_search(spe, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
                         do_clustering = Banksy::clusterBanksy, 
                         # Banksy specific
                         lambda = lambda, 
@@ -239,8 +258,8 @@ result <- binary_search(spe, n_clust_target = n_clusters, resolution_boundaries 
                         assay_name = assay_name, 
                         use_agf = use_agf)
 
-label_df <- data.frame("label" = colData(result)[, clusterNames(result)], row.names=rownames(colData(result)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
-if (use_agf) embedding_df <- as.data.frame(t(assay(result, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
+label_df <- data.frame("label" = colData(bank)[, clusterNames(bank)], row.names=rownames(colData(bank)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
+if (use_agf) embedding_df <- as.data.frame(t(assay(bank, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 
 ## Write output
