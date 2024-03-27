@@ -1,0 +1,8 @@
+# Github repo path, modify based on your env
+git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
+# General data folder. All datasets folder will be stored here
+results_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow
+
+# datasets to be downloaded. add/delete based on your need
+use_datasets:
+  - "libd_dlpfc"
