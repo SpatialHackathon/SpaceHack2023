@@ -84,6 +84,7 @@ def process_adata(input_path,output_folder,sample_df):
     # Write labels.tsv
     labels = domain_annotation["annot_type"]
     labels.index = adata.obs.index
+    labels = labels.rename(columns={'annot_type':'label'})
     labels.to_csv(f"{complete_path}/labels.tsv",sep="\t",index_label="")
         
     # Move image files
