@@ -144,19 +144,17 @@ from search_res import binary_search
 use_cuda = torch.cuda.is_available()
 device = 1 if use_cuda else 0
 
+# adata.write_h5ad("adata.h5ad")
+
 # Create a SpaceFlow object 
+sc.pp.filter_genes(adata, min_cells=1)
 sf = SpaceFlow.SpaceFlow(adata=adata)
-
-# Construct a geometry-aware spatial proximity graph
-spatial_locs = adata.obsm['spatial']
-spatial_graph = sf.graph_alpha(spatial_locs, n_neighbors=10)
-
-# Save all to the object
-sf.adata_preprocessed = adata
-sf.spatial_graph = spatial_graph
+sf.preprocessing_data(n_top_genes = min(adata.n_vars, 3000))
 
 # Train the network
-sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, edge_subset_sz=1000000, embedding_save_filepath=embedding_file)
+sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, 
+         max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, 
+         edge_subset_sz=1000000, embedding_save_filepath=embedding_file)
 
 if config is not None:
     res = int(config['res'])
