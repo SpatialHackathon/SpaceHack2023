@@ -159,7 +159,7 @@ config_files:
     config_1: "configs/config_1.json"
   precast:
     config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
+#    config_2: "config/config_2.json"
   seurat:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"

@@ -1,8 +1,7 @@
 # Github repo path, modify based on your env
-git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack_CherryPick
+git_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack_CherryPick
 # Dataset path, modify based on your env
-data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/data/xenium-mouse-brain-SergioSalas
-
+data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/libd_dlpfc
 seed: 2023
 
 # Methods to run for the pipeline, modify based on your need
@@ -12,19 +11,20 @@ use_methods:
   - "BANKSY"
   - "CellCharter"
   - "DRSC"
+  - "precast"
+  - "SpaceFlow"
   - "SEDR"
   - "scanpy"
-  - "seurat"
-#  - "spaGCN"        # need image to work
-#  - "GraphST"        # Only for Visium
+  - "spaGCN"
+#  - "seurat"
+#  - "DeepST"         # Import error
+  - "GraphST"        # Only for Visium
 #  - "BayesSpace"
-#  - "meringue"
+
 #  - "SpiceMix"      # Remaining implementation
-#  - "DeepST"
-#  - "precast"
-#  - "SpaceFlow"
 #  - "SOTIP"
 
+#  - "meringue"      # Extremely long runtime?
 #  - "SC_MEB"  # error: neighbor returned 0...
 #  - "maple"
 #  - "stardust"

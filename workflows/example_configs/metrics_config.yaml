@@ -1,7 +1,7 @@
 # Github repo path, modify based on your env
-git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
+git_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack_CherryPick
 # Dataset path, modify based on your env
-data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/data/libd_dlpfc
+data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/xenium-mouse-brain-SergioSalas
 
 use_metrics:
   - "ARI"

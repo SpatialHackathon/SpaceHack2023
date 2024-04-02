@@ -69,6 +69,8 @@ def get_sample_image(wildcards):
             image = config["data_dir"] + "/" + wildcards.sample + "/" + file
             if os.path.isfile(image):
                 return "--image " + image
+            elif file == "H_E.png":
+                return ""
     else:
         return ""
 
@@ -205,6 +207,7 @@ rule method_with_config:
         lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
     wildcard_constraints:
         config_file_name="config_[a-zA-Z0-9_-]+",
+    threads: 7
     shell:
         """
         {params.script} \
@@ -251,6 +254,7 @@ rule method_without_config:
         lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
     wildcard_constraints:
         method="[a-zA-Z0-9_-]+",
+    threads: 7
     shell:
         """
         {params.script} \
