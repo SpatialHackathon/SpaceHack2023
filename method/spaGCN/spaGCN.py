@@ -119,6 +119,7 @@ def get_anndata(args):
     )
 
     if args.image is not None:
+        Image.MAX_IMAGE_PIXELS = None
         adata.uns["image"] = np.array(Image.open(args.image))
     else:
         adata.uns["image"] = None
@@ -134,6 +135,7 @@ np.random.seed(seed)
 
 adata = get_anndata(args)
 adata.var_names_make_unique()
+# adata.write_h5ad("adata.h5ad")
 spg.prefilter_specialgenes(adata)
 
 #Normalize and take log for UMI
