@@ -106,6 +106,7 @@ def get_anndata(args):
     coordinates = (
         pd.read_table(args.coordinates, index_col=0)
         .loc[observations.index, :]
+        .iloc[:, 0:2]
         .to_numpy()
     )
 
