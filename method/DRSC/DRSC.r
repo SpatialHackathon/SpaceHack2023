@@ -148,7 +148,7 @@ get_SingleCellExperiment <- function(
 }
 
 
-
+ 
 # Seed
 seed <- opt$seed
 set.seed(seed)
@@ -156,7 +156,6 @@ set.seed(seed)
 # You can use the data as SingleCellExperiment
 sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = observation_file,
                                     coord_file = coord_file, matrix_file = matrix_file)
-
 
 ## Your code goes here
 seurat_obj <- as.Seurat(sce)
@@ -166,6 +165,12 @@ if (nrow(seurat_obj)>500){
     seurat_obj <- FindVariableFeatures(seurat_obj, nfeatures = 500, verbose = F)
 } else{
     seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
+}
+# Fit the DRSC requirement
+technology = ifelse(technology %in% c("ST", "Visium"), technology, "Other_SRT")
+if (!("row" %in% colnames(seurat_obj@meta.data) & "col" %in% colnames(seurat_obj@meta.data))){
+    seurat_obj@meta.data$col <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 1]
+    seurat_obj@meta.data$row <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 2]
 }
 seu_drsc <- DR.SC::DR.SC(seurat_obj, K = n_clusters, platform = technology)
 
