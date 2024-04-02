@@ -159,28 +159,26 @@ set.seed(seed)
 sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = observation_file,
                                     coord_file = coord_file, matrix_file = matrix_file)
 
-
 ## Your code goes here
 seurat_obj <- as.Seurat(sce)
+if (!("row" %in% colnames(seurat_obj@meta.data) & "col" %in% colnames(seurat_obj@meta.data))){
+    seurat_obj@meta.data$col <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 1]
+    seurat_obj@meta.data$row <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 2]
+}
 PRECASTObj <- CreatePRECASTObject(seuList = list(seurat_obj), customGenelist = rownames(rowData(sce)))
 
-PRECASTObj <- AddAdjList(PRECASTObj, platform = technology)
-if(config$use_neighbors){
-    # Ensure dimensions of neighborhood matrix match precastobject and overwrite AdjList
-    keep <- match(colnames(sce), colnames(PRECASTObj@seulist[[1]]))
-    neighbors <- neighbors[keep, keep]
-    PRECASTObj@AdjList <- list(neighbors)
-}
-PRECASTObj <- AddParSetting(PRECASTObj, Sigma_equal = FALSE, coreNum = 4, maxIter = 10, verbose = TRUE)
+platform <- ifelse(technology %in% c("Visium", "ST"), technology, "Other_SRT")
+PRECASTObj <- AddAdjList(PRECASTObj, platform = platform)
+PRECASTObj <- AddParSetting(PRECASTObj, Sigma_equal = FALSE, coreNum = 4, maxIter = 30, verbose = TRUE)
 
 PRECASTObj <- PRECAST(PRECASTObj, K = n_clusters)
 PRECASTObj <- SelectModel(PRECASTObj)
 
 # The data.frames with observations may contain a column "selected" which you need to use to
 # subset and also use to subset coordinates, neighbors, (transformed) count matrix
-label_df <- data.frame("label" = unlist(PRECASTObj@resList$cluster[1]), row.names=colnames(seurat_obj))
+label_df <- data.frame("label" = unlist(PRECASTObj@resList$cluster[1]), row.names=colnames(PRECASTObj@seulist[[1]]))
 # data.frame with row.names (cell-id/barcode) and 1 column (label)
-embedding_df <- as.data.frame(PRECASTObj@resList$hZ[[1]], row.names=colnames(seurat_obj))  # optional, data.frame with row.names (cell-id/barcode) and n columns
+embedding_df <- as.data.frame(PRECASTObj@resList$hZ[[1]], row.names=colnames(PRECASTObj@seulist[[1]]))  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 
 ## Write output
