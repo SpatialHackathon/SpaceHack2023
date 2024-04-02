@@ -4,11 +4,12 @@ channels:
   - default
 dependencies:
   - python=3.9.18
+  - pytorch=1.13.0+cpu
   - pip
   - pip: 
     - --extra-index-url https://download.pytorch.org/whl/cpu
     - --find-links https://data.pyg.org/whl/torch-1.13.0+cpu.html
-    - torch==1.13.0
+    # - torch==1.13.0
     - torchvision==0.14.0+cpu
     - torchaudio==0.13.0+cpu
     - pyg_lib==0.3.1+pt113cpu

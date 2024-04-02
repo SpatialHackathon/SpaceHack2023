@@ -166,8 +166,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
     # Set working directory as deepST directory
     sys.path.append(f"{gitdir}/deepst")
-    import adj
-    
+
     # From DeepST import run
     import importlib.util
     # Import the main wrapper DeepST module
