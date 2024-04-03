@@ -33,7 +33,7 @@ def convert_data(out_dir):
     
         in_file = temp_dir / 'adata_multisection_nuclei_r1_with_annotations.h5ad'
         adata = anndata.read_h5ad(in_file)
-        adata.obs_names = [f"cell_{i}" for i in adata.obs_names]
+        adata.obs_names = "cell_" + adata.obs_names.astype(str)
 
         out_dir = Path(out_dir)
         project_root = out_dir 
