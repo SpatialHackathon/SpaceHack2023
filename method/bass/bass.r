@@ -204,7 +204,7 @@ BASS <- BASS.preprocess(
     geneSelect = geneSelect,
     nHVG = nSE, nSE = nSE, doPCA = TRUE,
     scaleFeature = as.logical(scaleFeature), nPC = nPC)
-
+# saveRDS(BASS, "bass.rds")
 # BASS@X_run <- t(SingleCellExperiment::reducedDim(spe))
 # Run BASS algorithm
 BASS <- BASS.run(BASS)

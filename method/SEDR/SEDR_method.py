@@ -8,7 +8,7 @@ import argparse
 
 # TODO adjust description
 parser = argparse.ArgumentParser(
-    description="SEDR – Unsupervised spatially embedded deep representation of spatial transcriptomics. See https://doi.org/10.1101/2021.06.15.448542 for details"
+    description="SEDR : Unsupervised spatially embedded deep representation of spatial transcriptomics. See https://doi.org/10.1101/2021.06.15.448542 for details"
 )
 parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
@@ -189,10 +189,18 @@ import pandas as pd
 import scipy as sp
 import torch
 import SEDR
+import sys
+from pathlib import Path
 
 import os
 import warnings
 warnings.filterwarnings('ignore')
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
 
 # Def config
 import json
@@ -222,7 +230,10 @@ adata = get_anndata(args)
 adata.var_names_make_unique()
 
 # Add preprocessing steps of the method
-adata.layers['count'] = adata.X.toarray()
+if not isinstance(adata.X, np.ndarray):
+    adata.layers['count'] = adata.X.toarray()
+else:
+    adata.layers['count'] = adata.X
 sc.pp.normalize_total(adata, target_sum=1e6)
 if adata.n_vars > 2000:
     sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=2000)
@@ -288,31 +299,21 @@ sedr_feat, _, _, _ = sedr_net.process()
 adata.obsm['SEDR'] = sedr_feat
 
 # Clustering 
-match config['cluster_method']:
-    case "mclust":
-        adata = mclust_R(adata, 
-                              n_clusters = n_clusters, 
-                              use_rep='SEDR', 
-                              key_added='SEDR', 
-                              random_seed=seed
-                             )
-    case "louvain":
-         adata = louvain(adata, 
-                              n_clusters = n_clusters, 
-                              use_rep='SEDR', 
-                              key_added='SEDR', 
-                              random_seed=seed
-                             )
-    case "leiden":
-         adata = leiden(adata, 
-                              n_clusters = n_clusters, 
-                              use_rep='SEDR', 
-                              key_added='SEDR', 
-                              random_seed=seed
-                             )
+if config['cluster_method'] == "mclust":
+    adata = mclust_R(adata, 
+                            n_clusters = n_clusters, 
+                            use_rep='SEDR', 
+                            key_added='SEDR', 
+                            random_seed=seed
+                            )
+    label_df = adata.obs[["SEDR"]]
+    
+else:
+    sc.pp.neighbors(adata, use_rep="SEDR")
+    label_df = binary_search(adata, n_clust_target=n_clusters, method=config['cluster_method'], seed = seed)
 
 # Output dataframes
-label_df = adata.obs[["SEDR"]]
+
 embedding_df = pd.DataFrame(adata.obsm['SEDR'])
 embedding_df.index = adata.obs_names
 

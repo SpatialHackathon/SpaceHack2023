@@ -2,7 +2,10 @@
 
 # Author_and_contribution: Niklas Mueller-Boetticher; created script
 
-suppressPackageStartupMessages(library(optparse))
+suppressPackageStartupMessages({
+  library(optparse)
+  library(jsonlite)
+})
 
 option_list <- list(
   make_option(
@@ -103,6 +106,7 @@ if (!is.na(opt$image)) {
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
@@ -166,10 +170,12 @@ sce <- spatialPreprocess(
   skip.PCA = TRUE
 )
 
+nPcs = config$nPCs
+
 sce <- spatialCluster(
   sce,
   q = n_clusters,
-  d = 15,
+  d = nPcs,
   platform = technology
 )
 

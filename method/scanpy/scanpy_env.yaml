@@ -7,4 +7,5 @@ dependencies:
   - pillow=10.1.0
   - anndata=0.10.3
   - leidenalg=0.10.1
-  - scanpy=1.9.6 
+  - louvain=0.8.2
+  - scanpy=1.10.0

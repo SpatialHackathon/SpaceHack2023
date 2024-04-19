@@ -150,13 +150,21 @@ np.random.seed(seed)
 import STAGATE as sg
 from scipy.spatial.distance import euclidean
 
+with open(args.config, "r") as f:
+    config = json.load(f)
+
+method = config["method"]
+model = config["model"]
+rad_cutoff = config["rad_cutoff"] if model == "Radius" else None
+k_cutoff = config["k_cutoff"] if model == "KNN" else None
+
 #Normalization
 if adata.n_vars > 3000:
     sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=3000)
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 
-sg.Cal_Spatial_Net(adata, rad_cutoff=150)
+sg.Cal_Spatial_Net(adata, rad_cutoff=rad_cutoff, k_cutoff = k_cutoff, model = model)
 
 sg.Stats_Spatial_Net(adata)
 
@@ -164,12 +172,14 @@ sg.Stats_Spatial_Net(adata)
 
 adata = sg.train_STAGATE(adata, alpha=0, random_seed=seed)
 sc.pp.neighbors(adata, use_rep='STAGATE')
-
-adata = sg.mclust_R(adata, used_obsm='STAGATE', num_cluster=n_clusters, random_seed=seed)
+if method == "mclust":
+    adata = sg.mclust_R(adata, used_obsm='STAGATE', num_cluster=n_clusters, random_seed=seed)
+    label_df = adata.obs[["mclust"]]
+else:
+    label_df = binary_search(adata=adata, n_clust_target=n_clusters, method=method, seed=seed)
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)
-label_df = adata.obs[["mclust"]]
 label_df.columns = ["label"]
 label_df.to_csv(label_file, sep="\t", index_label="")
 

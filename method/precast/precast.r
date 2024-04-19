@@ -165,7 +165,18 @@ if (!("row" %in% colnames(seurat_obj@meta.data) & "col" %in% colnames(seurat_obj
     seurat_obj@meta.data$col <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 1]
     seurat_obj@meta.data$row <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 2]
 }
-PRECASTObj <- CreatePRECASTObject(seuList = list(seurat_obj), customGenelist = rownames(rowData(sce)))
+
+n_var = config$gene_number
+method = config$method
+
+if (nrow(seurat_obj)>n_var){
+  PRECASTObj <- CreatePRECASTObject(seuList = list(seurat_obj), 
+                                  gene.number=n_var,
+                                  selectGenesMethod=method)
+} else {
+  PRECASTObj <- CreatePRECASTObject(seuList = list(seurat_obj), 
+                                    customGenelist = rownames(rowData(sce)))
+}
 
 platform <- ifelse(technology %in% c("Visium", "ST"), technology, "Other_SRT")
 PRECASTObj <- AddAdjList(PRECASTObj, platform = platform)

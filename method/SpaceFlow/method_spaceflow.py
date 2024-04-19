@@ -145,23 +145,18 @@ use_cuda = torch.cuda.is_available()
 device = 1 if use_cuda else 0
 
 # adata.write_h5ad("adata.h5ad")
+n_vars = config["n_vars"]
+nn = config["n_neighbours"]
 
 # Create a SpaceFlow object 
 sc.pp.filter_genes(adata, min_cells=1)
 sf = SpaceFlow.SpaceFlow(adata=adata)
-sf.preprocessing_data(n_top_genes = min(adata.n_vars, 3000))
+sf.preprocessing_data(n_top_genes = min(adata.n_vars, n_vars))
 
 # Train the network
 sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, 
          max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, 
          edge_subset_sz=1000000, embedding_save_filepath=embedding_file)
-
-if config is not None:
-    res = int(config['res'])
-    nn = int(config['n_neighbours'])
-else:
-    res = 0.5
-    nn = 15
 
 # Raise a warning that clustering is based on resolution and not n_clusters
 # warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
@@ -179,6 +174,7 @@ embedding_df = pd.DataFrame(sf.embedding, index=adata.obs_names) # DataFrame wit
 out_dir.mkdir(parents=True, exist_ok=True)
 
 label_df.columns = ["label"]
+label_df.index = adata.obs.index
 label_df.to_csv(label_file, sep="\t", index_label="")
 
 if embedding_df is not None:

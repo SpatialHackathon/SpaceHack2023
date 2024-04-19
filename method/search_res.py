@@ -7,6 +7,7 @@ def binary_search(
     num_rs=1e2,
     tolerance = 1e-3,
     seed = 2023,
+    **kwargs,
 ):
     """
     Uses binary search to find the resolution parameter that results in the target number of clusters.
@@ -54,7 +55,7 @@ def binary_search(
     y = None
 
     def do_clustering(res):
-        getattr(sc.tl, method)(adata, resolution=res, random_state=seed)
+        getattr(sc.tl, method)(adata, resolution=res, random_state=seed, **kwargs)
         y = adata.obs[[method]].astype(int)
         n_clust = len(np.unique(y))
         return y, n_clust

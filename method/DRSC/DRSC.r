@@ -6,6 +6,7 @@
 suppressPackageStartupMessages({
     library(optparse)
     library(SingleCellExperiment)
+    library(jsonlite)
     library(Seurat)
     library(DR.SC)
 })
@@ -107,6 +108,7 @@ if (!is.na(opt$image)) {
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
@@ -153,6 +155,8 @@ get_SingleCellExperiment <- function(
 seed <- opt$seed
 set.seed(seed)
 
+n_var <- config$n_var
+
 # You can use the data as SingleCellExperiment
 sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = observation_file,
                                     coord_file = coord_file, matrix_file = matrix_file)
@@ -161,8 +165,8 @@ sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = 
 seurat_obj <- as.Seurat(sce)
 seurat_obj <- NormalizeData(seurat_obj, verbose = F)
 # choose 500 highly variable features
-if (nrow(seurat_obj)>500){
-    seurat_obj <- FindVariableFeatures(seurat_obj, nfeatures = 500, verbose = F)
+if (nrow(seurat_obj)>n_var){
+    seurat_obj <- FindVariableFeatures(seurat_obj, nfeatures = n_var, verbose = F)
 } else{
     seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
 }

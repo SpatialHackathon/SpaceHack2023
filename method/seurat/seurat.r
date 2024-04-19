@@ -10,6 +10,8 @@ suppressPackageStartupMessages({
     library(Seurat)
 })
 
+assignInNamespace("is_conda_python", function(x){ return(FALSE) }, ns="reticulate")
+
 option_list <- list(
   make_option(
     c("-c", "--coordinates"),
@@ -200,7 +202,9 @@ binary_search <- function(
     seurat_obj,
     do_clustering,
     n_clust_target,
-    resolution_boundaries,
+    resolution_update = 2,
+    resolution_init = 1,
+    resolution_boundaries=NULL,
     num_rs = 100,
     tolerance = 1e-3,
     ...) {
@@ -209,11 +213,36 @@ binary_search <- function(
   lb <- rb <- NULL
   n_clust <- -1
 
-  lb <- resolution_boundaries[1]
-  rb <- resolution_boundaries[2]
+  if (!is.null(resolution_boundaries)){
+    lb <- resolution_boundaries[1]
+    rb <- resolution_boundaries[2]
+  } else {
+    res <-  resolution_init
+    results <- do_clustering(seurat_obj, resolution = res, ...)
+    # Adjust cluster_ids extraction per method
+    n_clust <- length(unique(Idents(results)))
+    if (n_clust > n_clust_target) {
+      while (n_clust > n_clust_target && res > 1e-5) {
+        rb <- res
+        res <- res/resolution_update
+        results <- do_clustering(seurat_obj, resolution = res, ...)
+        n_clust <- length(unique(Idents(results)))
+      }
+      lb <- res
+    } else if (n_clust < n_clust_target) {
+      while (n_clust < n_clust_target) {
+        lb <- res 
+        res <- res*resolution_update
+        results <- do_clustering(seurat_obj, resolution = res, ...)
+        n_clust <- length(unique(Idents(results)))
+      }
+      rb <- res
+    }
+    if (n_clust == n_clust_target) {lb = rb = res}
+  }
 
   i <- 0
-  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
+  while ((rb - lb > tolerance) && i < num_rs) {
     mid <- sqrt(lb * rb)
     message("Resolution: ", mid)
     results <- do_clustering(seurat_obj, resolution = mid, ...)
@@ -240,7 +269,7 @@ binary_search <- function(
 
 # Clustering
 seurat_obj <- binary_search(
-    seurat_obj, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
+    seurat_obj, n_clust_target = n_clusters,
     do_clustering = FindClusters, 
     # Seurat specific
     algorithm = algorithm,

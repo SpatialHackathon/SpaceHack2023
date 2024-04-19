@@ -81,6 +81,7 @@ def get_anndata(args):
 
     coordinates = (
         pd.read_table(args.coordinates, index_col=0)
+        .iloc[:,0:2]
         .loc[observations.index, :]
         .to_numpy()
     )
@@ -156,7 +157,6 @@ scvi.model.SCVI.setup_anndata(
 model = scvi.model.SCVI(adata)
 model.train(early_stopping=True, enable_progress_bar=False, progress_bar_refresh_rate=0)
 adata.obsm['reduced_dimensions'] = model.get_latent_representation(adata).astype(np.float32)
-
 # Find neighbors
 coord = "grid" if technology in ["Visium", "ST"] else "generic"
 delTri = technology not in ["Visium", "ST"] 
