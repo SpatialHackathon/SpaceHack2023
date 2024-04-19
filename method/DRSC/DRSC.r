@@ -109,6 +109,7 @@ if (!is.na(opt$image)) {
 if (!is.na(opt$config)) {
   config_file <- opt$config
   config <- fromJSON(config_file)
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
@@ -130,23 +131,23 @@ get_SingleCellExperiment <- function(
   coordinates <- as.matrix(coordinates[rownames(colData), ])
   coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
 
-    spe <- SingleCellExperiment::SingleCellExperiment(
+    sce <- SingleCellExperiment::SingleCellExperiment(
     rowData = rowData, colData = colData, metadata = list("spatialCoords" = coordinates))
 
   if (!is.na(matrix_file)) {
-    assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    assay(spe, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(sce, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(sce, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
   }
 
   # Filter features and samples
-  if ("selected" %in% colnames(rowData(spe))) {
-    spe <- spe[as.logical(rowData(spe)$selected), ]
+  if ("selected" %in% colnames(rowData(sce)) && FALSE) { # Don't subset here
+    sce <- sce[as.logical(rowData(sce)$selected), ]
   }
-  if ("selected" %in% colnames(colData(spe))) {
-    spe <- spe[, as.logical(colData(spe)$selected)]
+  if ("selected" %in% colnames(colData(sce))) {
+    sce <- sce[, as.logical(colData(sce)$selected)]
   }
 
-  return(spe)
+  return(sce)
 }
 
 
