@@ -58,6 +58,16 @@ option_list <- list(
     help = "Number of clusters to return."
   ),
   make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
+  ),
+  make_option(
     c("--technology"),
     type = "character", default = NULL,
     help = "The technology of the dataset (Visium, ST, imaging-based)."
@@ -109,14 +119,9 @@ if (!is.na(opt$image)) {
 if (!is.na(opt$config)) {
   config_file <- opt$config
   config <- fromJSON(config_file)
-  config <- fromJSON(config_file)
 }
 
-technology <- opt$technology
-if(!(technology %in% c("Visium", "ST"))) technology <- "Other_SRT"
-n_clusters <- opt$n_clusters
-
-# You can get SpatialExperiment directly
+# Creating SingleCellExperiment
 get_SingleCellExperiment <- function(
     feature_file,
     observation_file,
@@ -150,29 +155,49 @@ get_SingleCellExperiment <- function(
   return(sce)
 }
 
-
- 
-# Seed
+# Opt params
+technology <- opt$technology
+if(!(technology %in% c("Visium", "ST"))) technology <- "Other_SRT"
+n_clusters <- opt$n_clusters
 seed <- opt$seed
 set.seed(seed)
 
-n_var <- config$n_var
+# Load configuration
+feature_method <- config$feature_method
+n_genes <- congig$n_genes
+
 
 # You can use the data as SingleCellExperiment
-sce <- get_SingleCellExperiment(feature_file = feature_file, observation_file = observation_file,
-                                    coord_file = coord_file, matrix_file = matrix_file)
+sce <- get_SingleCellExperiment(
+    feature_file = feature_file, 
+    observation_file = observation_file,
+    coord_file = coord_file, 
+    matrix_file = matrix_file)
 
-## Your code goes here
+## Create Seurat and normalize
 seurat_obj <- as.Seurat(sce)
 seurat_obj <- NormalizeData(seurat_obj, verbose = F)
-# choose 500 highly variable features
-if (nrow(seurat_obj)>n_var){
-    seurat_obj <- FindVariableFeatures(seurat_obj, nfeatures = n_var, verbose = F)
+
+# Variable features (if given - opt takes priority)
+n_genes <- ifelse(is.null(opt$n_genes), n_genes, opt$n_genes)
+
+if (nrow(seurat_obj) > n_genes){
+    if (feature_method == "FindVariableFeatures") {
+        seurat_obj <- FindVariableFeatures(seurat_obj, nfeatures = n_genes, verbose = FALSE)
+    } else if (feature_method == "FindSVGs") {
+        seurat_obj <- FindSVGs(seurat_obj, nfeatures = n_genes)
+    } else if (feature_method == "All genes") {
+        seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
+    } else {
+        stop("Invalid feature selection method in 'desc' configuration.")
+    }
 } else{
     seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
 }
+
+
+
 # Fit the DRSC requirement
-technology = ifelse(technology %in% c("ST", "Visium"), technology, "Other_SRT")
 if (!("row" %in% colnames(seurat_obj@meta.data) & "col" %in% colnames(seurat_obj@meta.data))){
     seurat_obj@meta.data$col <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 1]
     seurat_obj@meta.data$row <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 2]
