@@ -33,7 +33,8 @@ def convert_data(out_dir):
     
         in_file = temp_dir / 'adata_multisection_nuclei_r1_with_annotations.h5ad'
         adata = anndata.read_h5ad(in_file)
-        
+        adata.obs_names = "cell_" + adata.obs_names.astype(str)
+
         out_dir = Path(out_dir)
         project_root = out_dir 
 
@@ -47,7 +48,7 @@ def convert_data(out_dir):
         # create samples.tsv
         df_sample_tsv = pd.DataFrame({"sample": "region_main",
                                      "directory": "region_main",
-                                     "n_clusters": adata.obs.region_level2.unique().shape[0]}, 
+                                     "n_clusters": adata.obs.region_level2.unique().shape[0]},
                                     index = ["region_main"])
         df_sample_tsv.to_csv(project_root/'samples.tsv',sep="\t",index_label="")
     
