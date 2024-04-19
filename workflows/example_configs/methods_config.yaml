@@ -1,29 +1,43 @@
 # Github repo path, modify based on your env
-git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
+git_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack_CherryPick
 # Dataset path, modify based on your env
-data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/libd_dlpfc
+dataset_dir: "/work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data"
+datasets:
+  - xenium-mouse-brain-SergioSalas       # Mouse Brain
+  - STARmap_plus
+  - abc_atlas_wmb_thalamus
+  - libd_dlpfc                            # Visium Comparison
+  - visium_breast_cancer_SEDR
+#  - stereoseq_developing_Drosophila_embryos_larvae
+  - visium_chicken_heart
 
 seed: 2023
 
 # Methods to run for the pipeline, modify based on your need
 use_methods:
-#  - "bass"
-  - "BayesSpace"
-#  - "DRSC"
-#  - "GraphST"
-#  - "SEDR"
+  - "BANKSY"
+  - "CellCharter"
+  - "DRSC"
+  - "precast"
+  - "SpaceFlow"
+  - "scanpy"
+  - "seurat"
+#  - "SEDR"            # memory or time consuming methods
+  - "bass"
+  - "stardust"
+  - "STAGATE"
+  - "spaGCN"
+  - "GraphST"         # Only for Visium, stereoseq and slide-seq V2
+#  - "BayesSpace"      # Only for Visium
+
+
+
+#  - "DeepST"         # Import error
+
+#  - "SpiceMix"      # Remaining implementation
 #  - "SOTIP"
-#  - "SpiceMix"     # GPU access
+
+#  - "meringue"      # Extremely long runtime?
+#  - "SC_MEB"  # error: neighbor returned 0...
 #  - "maple"
-#  - "precast"
-#  - "SC_MEB"
-#  - "spaGCN"
-#  - "stardust"
-#  - "DeepST"
-#  - "STAGATE"       # res not n_clust
-#  - "scanpy"
-#  - "SpaceFlow"
-#  - "seurat"        # config 5 TODO
-#  - "BANKSY"
-#  - "SCAN-IT"       # buggy:data shape TODO
-#  - "meringue"      # buggy:no library found??? TODO
+#  - "SCAN-IT"

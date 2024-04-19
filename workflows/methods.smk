@@ -26,13 +26,14 @@ def get_technology(path):
     return info["technology"]
 
 
-TECHNOLOGY = get_technology(config["data_dir"])
-
+DATASET_DIR = config["dataset_dir"]
+# TECHNOLOGY = get_technology(config["data_dir"])
 
 # Generates desired output based on no. of sample and config (output:domains.tsv)
-def create_input(method):
+def create_input(method, data_dir):
+    from pathlib import Path
     input_files = []
-    sample_dirs = get_sample_dirs(config["data_dir"])
+    sample_dirs = get_sample_dirs(data_dir)
     for sample_dir in sample_dirs:
         if method in config["config_files"].keys():
             for config_file_name in config["config_files"][method].keys():
@@ -48,8 +49,13 @@ def create_input(method):
 # defined on "use_methods" only, the script will only run the methods in that session in config file
 def create_input_all(wildcards):
     files = []
-    for method in config["use_methods"]:
-        files += create_input(method)
+    for dataset in config["datasets"]:
+        data_dir = DATASET_DIR +  "/" + dataset
+        tech = get_technology(data_dir)
+        for method in config["use_methods"]:
+            if method in ["GraphST", "BayesSpace"] and tech != "Visium":
+                continue
+            files += create_input(method, data_dir)
     return files
 
 
@@ -66,9 +72,11 @@ def get_sample_image(wildcards):
     if opt["image"]:
         files = ["H_E.tiff", "H_E.png"]
         for file in files:
-            image = config["data_dir"] + "/" + wildcards.sample + "/" + file
+            image = DATASET_DIR + "/" + wildcards.dataset + "/" + wildcards.sample + "/" + file
             if os.path.isfile(image):
                 return "--image " + image
+            elif file == "H_E.png":
+                return ""
     else:
         return ""
 
@@ -102,7 +110,7 @@ rule installation_requirements:
         install_script=lambda wildcards: GIT_DIR
         + methods[wildcards.method]["env_additional"],
     output:
-        temp("{method}_requirements.info"),
+        "{method}_requirements.info",
     conda:
         lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
     shell:
@@ -130,13 +138,13 @@ def get_matrix_input(wildcards):
     # Find preprocessing steps
     match opt["matrix"]:
         case "counts":
-            matrix_input = config["data_dir"] + f"/{wildcards.sample}/counts.mtx"
+            matrix_input = DATASET_DIR + f"/{wildcards.dataset}/{wildcards.sample}/qc/counts.mtx"
         case "transform":
-            matrix_input = config["data_dir"] + f"/{wildcards.sample}/log1p/counts.mtx"
+            matrix_input = DATASET_DIR + f"/{wildcards.dataset}/{wildcards.sample}/log1p/counts.mtx"
         case "dimensionality_reduction":
             matrix_input = (
-                config["data_dir"]
-                + f"/{wildcards.sample}/log1p/hvg/pca_20/dimensionality_reduction.tsv"
+                DATASET_DIR
+                + f"/{wildcards.dataset}/{wildcards.sample}/log1p/hvg/pca_35/dimensionality_reduction.tsv"
             )
 
     if matrix_input == []:
@@ -152,10 +160,10 @@ def get_feature_input(wildcards):
     # feature input option
     if opt["integrated_feature_selection"]:
         feature_input = (
-            config["data_dir"] + f"/{wildcards.sample}/log1p/hvg/features.tsv"
+            DATASET_DIR + f"/{wildcards.dataset}/{wildcards.sample}/log1p/hvg/features.tsv"
         )
     else:
-        feature_input = config["data_dir"] + f"/{wildcards.sample}/features.tsv"
+        feature_input = DATASET_DIR + f"/{wildcards.dataset}/{wildcards.sample}/qc/features.tsv"
 
     return feature_input
 
@@ -168,8 +176,8 @@ def get_neighbor_input(wildcards):
     # feature input option
     if opt["neighbors"]:
         neighbor_input = (
-            config["data_dir"]
-            + f"/{wildcards.sample}/delaunay_triangulation/spatial_connectivities.mtx"
+            DATASET_DIR + 
+            f"/{wildcards.dataset}/{wildcards.sample}/delaunay_triangulation/spatial_connectivities.mtx"
         )
 
     return neighbor_input
@@ -177,15 +185,16 @@ def get_neighbor_input(wildcards):
 
 rule method_with_config:
     input:
-        coordinates=config["data_dir"] + "/{sample}/coordinates.tsv",
-        observations=config["data_dir"] + "/{sample}/observations.tsv",
+        coordinates=DATASET_DIR + "/{dataset}/{sample}/qc/coordinates.tsv",
+        observations=DATASET_DIR + "/{dataset}/{sample}/qc/observations.tsv",
         requirements=get_requirements,
         matrix=get_matrix_input,
         features=get_feature_input,
         neighbors=get_neighbor_input,
+        script=lambda wildcards: GIT_DIR + methods[wildcards.method]["script"],
     output:
-        dir=directory(config["data_dir"] + "/{sample}/{method}/{config_file_name}"),
-        file=config["data_dir"] + "/{sample}/{method}/{config_file_name}/domains.tsv",
+        dir=directory(DATASET_DIR + "/{dataset}/{sample}/{method}/{config_file_name}"),
+        file=DATASET_DIR + "/{dataset}/{sample}/{method}/{config_file_name}/domains.tsv",
     params:
         matrix=lambda wildcards: (
             "-m "
@@ -194,20 +203,22 @@ rule method_with_config:
         ),
         neighbors=lambda wildcards: "-n " if get_optargs(wildcards)["neighbors"] else "",
         n_clusters=lambda wildcards: get_ncluster(
-            config["data_dir"] + "/samples.tsv", wildcards.sample
+            DATASET_DIR + f"/{wildcards.dataset}/samples.tsv", wildcards.sample
         ),
-        technology=TECHNOLOGY,
+        technology=lambda wildcards: get_technology(DATASET_DIR + f"/{wildcards.dataset}"),
         seed=SEED,
         configfile=get_config_file,
         image=get_sample_image,
-        script=lambda wildcards: GIT_DIR + methods[wildcards.method]["script"],
     conda:
         lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
+    benchmark:
+        DATASET_DIR + "/{dataset}/{sample}/{method}/{config_file_name}/benchmark_method.txt"
     wildcard_constraints:
         config_file_name="config_[a-zA-Z0-9_-]+",
     shell:
         """
-        {params.script} \
+        ulimit -s 32768
+        {input.script} \
             -c {input.coordinates} \
             {params.matrix}{input.matrix} \
             -f {input.features} \
@@ -224,15 +235,15 @@ rule method_with_config:
 
 rule method_without_config:
     input:
-        coordinates=config["data_dir"] + "/{sample}/coordinates.tsv",
-        observations=config["data_dir"] + "/{sample}/observations.tsv",
+        coordinates=DATASET_DIR + "/{dataset}/{sample}/qc/coordinates.tsv",
+        observations=DATASET_DIR + "/{dataset}/{sample}/qc/observations.tsv",
         requirements=get_requirements,
         matrix=get_matrix_input,
         features=get_feature_input,
         neighbors=get_neighbor_input,
     output:
-        dir=directory(config["data_dir"] + "/{sample}/{method}"),
-        file=config["data_dir"] + "/{sample}/{method}/domains.tsv",
+        dir=directory(DATASET_DIR + "/{dataset}/{sample}/{method}"),
+        file=DATASET_DIR + "/{dataset}/{sample}/{method}/domains.tsv",
     params:
         matrix=lambda wildcards: (
             "-m "
@@ -241,18 +252,21 @@ rule method_without_config:
         ),
         neighbors=lambda wildcards: "-n " if get_optargs(wildcards)["neighbors"] else "",
         n_clusters=lambda wildcards: get_ncluster(
-            config["data_dir"] + "/samples.tsv", wildcards.sample
+            DATASET_DIR + f"/{wildcards.dataset}/samples.tsv", wildcards.sample
         ),
-        technology=TECHNOLOGY,
+        technology=lambda wildcards: get_technology(DATASET_DIR + f"/{wildcards.dataset}"),
         seed=SEED,
         image=get_sample_image,
         script=lambda wildcards: GIT_DIR + methods[wildcards.method]["script"],
     conda:
         lambda wildcards: GIT_DIR + methods[wildcards.method]["env"]
+    benchmark:
+        DATASET_DIR + "/{dataset}/{sample}/{method}/benchmark_method.txt"
     wildcard_constraints:
         method="[a-zA-Z0-9_-]+",
     shell:
         """
+        ulimit -s 32768
         {params.script} \
             -c {input.coordinates} \
             {params.matrix}{input.matrix} \

@@ -99,7 +99,7 @@ if (!is.na(opt$neighbors)) {
 
 if (!is.na(opt$matrix)) {
   matrix_file <- opt$matrix
-  matrix <- as(Matrix::readMM(neighbors_file), "CsparseMatrix")
+  matrix <- as(Matrix::readMM(matrix_file), "CsparseMatrix")
 }
 
 if (!is.na(opt$dim_red)) {
@@ -119,7 +119,7 @@ get_SpatialExperiment <- function(
     coord_file,
     matrix_file = NA,
     reducedDim_file = NA,
-    assay_name = "logcounts",
+    assay_name = "counts",
     reducedDim_name = "reducedDim") {
   rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
   colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
@@ -127,7 +127,7 @@ get_SpatialExperiment <- function(
   coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
   coordinates <- as.matrix(coordinates[rownames(colData), ])
   coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
-    
+
   spe <- SpatialExperiment::SpatialExperiment(
     rowData = rowData, colData = colData, spatialCoords = coordinates
   )
@@ -174,6 +174,10 @@ if (!exists("matrix_file")) {
     matrix_file <- NA
 }
 
+if (!exists("dimred_file")) {
+    dimred_file <- NA
+}
+
 # SpatialExperiment
 spe <- get_SpatialExperiment(
     feature_file = feature_file,
@@ -183,24 +187,25 @@ spe <- get_SpatialExperiment(
     reducedDim_file = dimred_file
 )
 
-
+# saveRDS(spe, "spe.rds")
 # Set up BASS object
 #list("experiment" = SummarizedExperiment::assay(spe, "logcounts")),
 BASS <- createBASSObject(
-    list("experiment" = t(SingleCellExperiment::reducedDim(spe))), 
+    list("experiment" = SummarizedExperiment::assay(spe, "counts")), 
     list("experiment" = SpatialExperiment::spatialCoords(spe)),
     C = C, R = R,
     beta_method = beta_method, init_method = init_method, 
     burnin = 2000, nsample = 10000)
 
 # Data pre-processing:
-
-#BASS <- BASS.preprocess(
-#    BASS, doLogNormalize = FALSE,
-#    doBatchCorrect = FALSE,
-#    geneSelect = geneSelect, nHVG = nSE, nSE = nSE, doPCA = TRUE, 
-#    scaleFeature = as.logical(scaleFeature), nPC = nPC)
-BASS@X_run <- t(SingleCellExperiment::reducedDim(spe))
+BASS <- BASS.preprocess(
+    BASS, doLogNormalize = TRUE,
+    doBatchCorrect = FALSE,
+    geneSelect = geneSelect,
+    nHVG = nSE, nSE = nSE, doPCA = TRUE,
+    scaleFeature = as.logical(scaleFeature), nPC = nPC)
+# saveRDS(BASS, "bass.rds")
+# BASS@X_run <- t(SingleCellExperiment::reducedDim(spe))
 # Run BASS algorithm
 BASS <- BASS.run(BASS)
 

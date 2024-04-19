@@ -78,6 +78,7 @@ def map_technology(input_technology):
     return technology_mapping.get(input_technology, None)
 
 technology = map_technology(str(args.technology))
+
 if technology is None:
     raise Exception(
         f"Invalid technology. GraphST only supports 10X Visium, Stereo-seq, and Slide-seq/Slide-seqV2 not {args.technology}. "
@@ -107,28 +108,27 @@ import scanpy as sc
 from sklearn import metrics
 import torch
 from GraphST import GraphST
+import sys
+from pathlib import Path
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
 
 # Run device, by default, the package is implemented on 'cpu'. The author recommend using GPU.
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
 def get_anndata(args):
     import anndata as ad
+    import numpy as np
+    import pandas as pd
     import scipy as sp
-
-    X = sp.io.mmread(args.matrix)
-    if sp.sparse.issparse(X):
-        X = X.tocsr()
+    from PIL import Image
 
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
-        
-    # Filter
-    if "selected" in observations.columns:
-        X = X[observations["selected"].to_numpy().nonzero()[0], :]
-        observations = observations.loc[lambda df: df["selected"]]
-    if "selected" in features.columns:
-        X = X[:, features["selected"].to_numpy().nonzero()[0]]
-        features = features.loc[lambda df: df["selected"]]
 
     coordinates = (
         pd.read_table(args.coordinates, index_col=0)
@@ -136,28 +136,46 @@ def get_anndata(args):
         .to_numpy()
     )
 
-    adata = ad.AnnData(
-        X=X, obs=observations, var=features, obsm={"spatial": coordinates}
-    )
-    
-    # To skip the preprocess step in GraphST
-    adata.var['highly_variable'] = adata.var['selected']
-    
+    adata = ad.AnnData(obs=observations, var=features, obsm={"spatial": coordinates})
+
+    if args.matrix is not None:
+        X = sp.io.mmread(args.matrix)
+        if sp.sparse.issparse(X):
+            X = X.tocsr()
+        adata.X = X
+
     # To skip the neighbor computation step in GraphST
     if args.neighbors is not None:
-        interaction = sp.io.mmread(neighbors_file).T.tocsr()
+        interaction = sp.io.mmread(args.neighbors).T.tocsr()
         interaction = interaction.toarray()
         adata.obsm["graph_neigh"] = interaction
         adata.obsm['adj'] = interaction
-        
+
+    # Filter
+    if "selected" in observations.columns:
+        X = X[observations["selected"].to_numpy().nonzero()[0], :]
+        observations = observations.loc[lambda df: df["selected"]]
+    if "selected" in features.columns:
+        X = X[:, features["selected"].to_numpy().nonzero()[0]]
+        features = features.loc[lambda df: df["selected"]]
+        # To skip the preprocess step in GraphST
+        adata.var['highly_variable'] = adata.var['selected']
+
+    if args.dim_red is not None:
+        adata.obsm["reduced_dimensions"] = (
+            pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
+        )
+
+    if args.image is not None:
+        adata.uns["image"] = np.array(Image.open(args.img))
+    else:
+        adata.uns["image"] = None
+
     return adata
 
 
 adata = get_anndata(args)
 adata.var_names_make_unique()
-
-# Assuming transform=log1p, here's the scaling step: https://github.com/JinmiaoChenLab/GraphST/blob/main/GraphST/preprocess.py
-sc.pp.scale(adata, zero_center=False, max_value=10)
 
 # Set seed
 random.seed(seed)
@@ -175,21 +193,26 @@ adata = model.train()
 # This step is not recommended for ST data with fine-grained domains, Stereo-seq, and Slide-seqV2
 # Radius: speficy the number of neighbors considered during refinement
 # If not refinement is intended, set it as the default setting in GraphST, but it is not going to be used. 
-if config["refine"]:
-    radius = config["radius"]
-else:
-    radius = 50
     
-
 # Run
-from GraphST.utils import clustering
+from GraphST.utils import mclust_R, refine_label
+from sklearn.decomposition import PCA
 
-clustering(adata, 
-           n_clusters=n_clusters, 
-           radius=radius, 
-           method=config["method"], 
-           refinement=config["refine"]
-           )
+pca = PCA(n_components=20, random_state=seed) 
+embedding = pca.fit_transform(adata.obsm['emb'].copy())
+adata.obsm['emb_pca'] = embedding
+
+if config["method"] == "mclust":
+    adata = mclust_R(adata, used_obsm='emb_pca', num_cluster=n_clusters)
+    adata.obs['domain'] = adata.obs['mclust']
+else:
+    sc.pp.neighbors(adata, n_neighbors=50, use_rep='emb_pca')
+    label_df = binary_search(adata, n_clust_target=n_clusters, method=config["method"])
+    adata.obs['domain'] = label_df
+
+if config['refine']:
+    new_type = refine_label(adata, config['radius'], key='domain')
+    adata.obs['domain'] = new_type 
 
 label_df = adata.obs[["domain"]]
 

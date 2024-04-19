@@ -2,6 +2,6 @@
     "matrix": "counts",
     "integrated_feature_selection": false,
     "image": false,
-    "neighbors": true,
+    "neighbors": false,
     "config_file": true
 }

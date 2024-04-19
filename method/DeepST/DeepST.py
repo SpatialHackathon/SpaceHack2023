@@ -166,8 +166,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
     # Set working directory as deepST directory
     sys.path.append(f"{gitdir}/deepst")
-    import adj
-    
+
     # From DeepST import run
     import importlib.util
     # Import the main wrapper DeepST module
@@ -175,24 +174,40 @@ with tempfile.TemporaryDirectory() as tmpdir:
     deepST = importlib.util.module_from_spec(spec)
     sys.modules["deepST"] = deepST
     spec.loader.exec_module(deepST)
-    
+
+    use_gpu = True if torch.cuda.is_available() else False
     # Set up deepST object
     deepen = deepST.run(save_path = None,
                  task = "Identify_Domain", 
-                 pre_epochs = config["pre_epochs"],  # change based on hardware
-                 epochs = config["epochs"],  # change based on hardware
-                 use_gpu = config["use_gpu"],
+                 pre_epochs = 800,  # change based on hardware
+                 epochs = 1000,  # change based on hardware
+                 use_gpu = use_gpu,
                  )
-    
+
+    # Adopted from github tutorial
+    use_morphological = args.image is not None
+    if use_morphological:
+        adata = deepen._get_image_crop(adata, data_name=technology) 
+
+    # Data augmentation. spatial_type includes three kinds of "KDTree", "BallTree" and "LinearRegress", among which "LinearRegress" is only applicable to 10x visium and the remaining omics selects the other two. "use_morphological" defines whether to use morphological images.
+    spatial_type = "BallTree" if technology != "Visium" and config["spatial_type"]=="LinearRegress" else config["spatial_type"]
+
+    adata = deepen._get_augment(adata, spatial_type=spatial_type, use_morphological=use_morphological)
+
+    graph_dict = deepen._get_graph(adata.obsm["spatial"], distType = "BallTree")
+
+    data = deepen._data_process(adata, pca_n_comps = min(config["npcs"], adata.n_vars))
+
+    """ Original SpaceHack implementation
     # adopted code from deepst/adj.py
-    """ Store original adjacency matrix (without diagonal entries) for later """
+    " Store original adjacency matrix (without diagonal entries) for later "
     adj_pre = adata.obsp["spatial_connectivities"]
     adj_pre = sp.coo_matrix(adj_pre)
 
     adj_pre = adj_pre - sp.dia_matrix((adj_pre.diagonal()[np.newaxis, :], [0]), shape=adj_pre.shape)
     adj_pre.eliminate_zeros()
 
-    """ Some preprocessing."""
+    " Some preprocessing."
     # intiate a "graph" item, k is a placeholder doesn't matter
     graph = adj.graph(data = adata, k = 1)
     adj_norm = graph.pre_graph(adj_pre)
@@ -205,19 +220,15 @@ with tempfile.TemporaryDirectory() as tmpdir:
                  "adj_label": adj_label,
                  "norm_value": norm }
 
-    # NOTE: There're so many hyperparameters but I would not change any...the last few commits the author made is to change some default parameters so I assume the author has figure out the "best" config for this model
-    
-    # Conv_type: ["GCNConv", "SAGEConv", "GraphConv", "GatedGraphConv", "ResGatedGraphConv", "TransformerConv", "TAGConv", "ARMAConv", "SGConv", "MFConv", "RGCNConv", "FeaStConv", "LEConv", "ClusterGCNConv"]
     data = adata.obsm["reduced_dimensions"].astype(np.float64)
-    
-    deepst_embed = deepen._fit(data, 
-                        graph_dict=graph_dict, 
-                        Conv_type=config["Conv_type"])
+    """
+
+    deepst_embed = deepen._fit(data, graph_dict=graph_dict)
 
     adata.obsm["DeepST_embed"] = deepst_embed
     # Get clustering results, set prior=True so we got n_clusters no of clusters
     adata = deepen._get_cluster_data(adata, n_domains=n_clusters, priori=True)
-    
+
     # Output dataframes
     label_df = adata.obs[["DeepST_refine_domain"]]
     embedding_df = pd.DataFrame(adata.obsm['DeepST_embed'])

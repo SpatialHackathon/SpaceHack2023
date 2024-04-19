@@ -32,6 +32,11 @@ parser.add_argument(
     help="Optional config file (json) used to pass additional parameters.",
     required=False,
 )
+parser.add_argument(
+    "--seed",
+    help="Seed for random state control on PCA.",
+    required=True,
+)
 
 args = parser.parse_args()
 
@@ -80,12 +85,13 @@ if "selected" in features.columns:
 else:
     features = features.index
 
-matrix = pd.DataFrame(matrix.toarray(), columns=features, index=observations)
+matrix = matrix.toarray() if sp.sparse.issparse(matrix) else matrix
+matrix = pd.DataFrame(matrix, columns=features, index=observations)
 
 scaler = StandardScaler().set_output(transform="pandas")
 matrix = scaler.fit_transform(matrix)
 
-pca = PCA(n_components=n_components).set_output(transform="pandas")
+pca = PCA(n_components=n_components, svd_solver="arpack", random_state = int(args.seed)).set_output(transform="pandas")
 dim_red_df = pca.fit_transform(matrix)
 
 

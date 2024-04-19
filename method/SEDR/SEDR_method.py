@@ -8,7 +8,7 @@ import argparse
 
 # TODO adjust description
 parser = argparse.ArgumentParser(
-    description="SEDR – Unsupervised spatially embedded deep representation of spatial transcriptomics. See https://doi.org/10.1101/2021.06.15.448542 for details"
+    description="SEDR : Unsupervised spatially embedded deep representation of spatial transcriptomics. See https://doi.org/10.1101/2021.06.15.448542 for details"
 )
 parser.add_argument(
     "-c", "--coordinates", help="Path to coordinates (as tsv).", required=True
@@ -61,6 +61,7 @@ def get_anndata(args):
     import numpy as np
     import pandas as pd
     import scipy as sp
+    from PIL import Image
 
     observations = pd.read_table(args.observations, index_col=0)
     features = pd.read_table(args.features, index_col=0)
@@ -92,6 +93,11 @@ def get_anndata(args):
         adata.obsm["reduced_dimensions"] = (
             pd.read_table(args.dim_red, index_col=0).loc[adata.obs_names].to_numpy()
         )
+
+    if args.image is not None:
+        adata.uns["image"] = np.array(Image.open(args.img))
+    else:
+        adata.uns["image"] = None
 
     return adata
 
@@ -183,10 +189,18 @@ import pandas as pd
 import scipy as sp
 import torch
 import SEDR
+import sys
+from pathlib import Path
 
 import os
 import warnings
 warnings.filterwarnings('ignore')
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
 
 # Def config
 import json
@@ -209,14 +223,34 @@ import random
 random.seed(seed)
 SEDR.fix_seed(seed)
 
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
 # Load data
 adata = get_anndata(args)
 adata.var_names_make_unique()
 
+# Add preprocessing steps of the method
+if not isinstance(adata.X, np.ndarray):
+    adata.layers['count'] = adata.X.toarray()
+else:
+    adata.layers['count'] = adata.X
+sc.pp.normalize_total(adata, target_sum=1e6)
+if adata.n_vars > 2000:
+    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=2000)
+    adata = adata[:, adata.var['highly_variable'] == True]
+sc.pp.scale(adata)
+
+from sklearn.decomposition import PCA  # sklearn PCA is used because PCA in scanpy is not stable.
+adata_X = PCA(n_components=200, random_state=seed).fit_transform(adata.X)
+adata.obsm['X_pca'] = adata_X
+
+graph_dict = SEDR.graph_construction(adata, 12)
+
+"""
 # Constructing neighborhood graphs object format
 # Return warning if no neighborhood graph is not provided
-if args.neighbors is None:
-    raise ValueError("No neighbor graphs found, define neighbor graphs")
+#if args.neighbors is None:
+#    raise ValueError("No neighbor graphs found, define neighbor graphs")
 
 # import intermediate functions
 from SEDR.graph_func import preprocess_graph
@@ -246,14 +280,15 @@ graph_dict = {
     "adj_label": adj_label_m1.coalesce(),
     "norm_value": norm_m1
 }
+"""
 
 # Training SEDR
 # device: using cpu or gpu (if avaliable)
 # using_dec: boolean, whether to use the unsupervised deep embedded clustering (DEC) method to improve clustering results 
-sedr_net = SEDR.Sedr(adata.obsm['reduced_dimensions'], 
-                     graph_dict, 
-                     mode='clustering', 
-                     device=config["device"])
+sedr_net = SEDR.Sedr(adata.obsm['X_pca'],
+                     graph_dict,
+                     mode='clustering',
+                     device=device)
 
 if config["using_dec"]:
     sedr_net.train_with_dec(N=1)
@@ -264,31 +299,21 @@ sedr_feat, _, _, _ = sedr_net.process()
 adata.obsm['SEDR'] = sedr_feat
 
 # Clustering 
-match config['cluster_method']:
-    case "mclust":
-        adata = mclust_R(adata, 
-                              n_clusters = n_clusters, 
-                              use_rep='SEDR', 
-                              key_added='SEDR', 
-                              random_seed=seed
-                             )
-    case "louvain":
-         adata = louvain(adata, 
-                              n_clusters = n_clusters, 
-                              use_rep='SEDR', 
-                              key_added='SEDR', 
-                              random_seed=seed
-                             )
-    case "leiden":
-         adata = leiden(adata, 
-                              n_clusters = n_clusters, 
-                              use_rep='SEDR', 
-                              key_added='SEDR', 
-                              random_seed=seed
-                             )
-        
+if config['cluster_method'] == "mclust":
+    adata = mclust_R(adata, 
+                            n_clusters = n_clusters, 
+                            use_rep='SEDR', 
+                            key_added='SEDR', 
+                            random_seed=seed
+                            )
+    label_df = adata.obs[["SEDR"]]
+    
+else:
+    sc.pp.neighbors(adata, use_rep="SEDR")
+    label_df = binary_search(adata, n_clust_target=n_clusters, method=config['cluster_method'], seed = seed)
+
 # Output dataframes
-label_df = adata.obs[["SEDR"]]
+
 embedding_df = pd.DataFrame(adata.obsm['SEDR'])
 embedding_df.index = adata.obs_names
 

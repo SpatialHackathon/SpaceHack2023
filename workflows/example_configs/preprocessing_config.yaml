@@ -1,6 +1,34 @@
 # Github repo path, modify based on your env
-git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
+git_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack2023
 # Dataset path, modify based on your env
-data_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/libd_dlpfc
+dataset_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/
 
-n_pcs: "20"
+n_pcs: "35"
+visualization: true
+seed: 2023
+
+neighbors_infos:
+  delaunay_triangulation:
+    script: preprocessing/neighbors/delaunay_triangulation/delaunay_triangulation.py
+    env: preprocessing/neighbors/delaunay_triangulation/delaunay_triangulation.yml
+
+use_datasets:
+#  - "libd_dlpfc"
+#  - "visium_breast_cancer_SEDR"
+#  - "xenium-mouse-brain-SergioSalas"
+#  - "visium_chicken_heart"
+#  - "mouse_brain_sagittal_anterior"
+#  - "mouse_brain_sagittal_posterior"
+  - "STARmap_plus"
+#  - "abc_atlas_wmb_thalamus"           # neighbor network wrong
+
+#  - "mouse_kidney_coronal"
+#  - "osmfish_Ssp"           # only 13 features, 20 pca too much
+#  - "sotip_simulation"
+#  - "spatialDLPFC"
+
+
+# Data unavail
+#  - "xenium-breast-cancer"
+#  - "SEA_AD_data"
+#  - "STARmap-2018-mouse-cortex"

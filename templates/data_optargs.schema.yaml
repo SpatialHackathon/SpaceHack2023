@@ -1,0 +1,17 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+
+description: Which (optional) quality control parameters can the dataset use
+type: object
+properties:
+
+    min_cells:
+        description: what is the minimal number of cells expressed required for a gene to pass filtering?
+        type: int
+
+    min_genes:
+        description: What is the minimal number of genes expressed required for a cell to pass filtering.
+        type: int
+
+    min_counts:
+        description: What is the minimum number of counts required for a cell to pass filtering?
+        type: int

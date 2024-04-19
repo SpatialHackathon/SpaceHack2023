@@ -1,6 +1,4 @@
 {
-"pre_epochs": 400, 
-"epochs": 500, 
-"use_gpu": false,
-"Conv_type": "GCNConv"
+"spatial_type": "LinearRegress",
+"npcs": 200
 }

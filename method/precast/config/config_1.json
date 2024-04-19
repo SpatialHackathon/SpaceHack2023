@@ -1,1 +1,4 @@
-{"use_neighbors": false}
+{
+    "gene_number": 2000,
+    "method": "SPARK-X"
+}

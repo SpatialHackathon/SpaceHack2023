@@ -10,6 +10,8 @@ suppressPackageStartupMessages({
     library(Seurat)
 })
 
+assignInNamespace("is_conda_python", function(x){ return(FALSE) }, ns="reticulate")
+
 option_list <- list(
   make_option(
     c("-c", "--coordinates"),
@@ -128,19 +130,13 @@ get_SpatialExperiment <- function(
 
   coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
   coordinates <- as.matrix(coordinates[rownames(colData), ])
-  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
 
-    
-    if (!is.na(reducedDim_file)) {
-    dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
-  }
   spe <- SpatialExperiment::SpatialExperiment(
-    rowData = rowData, colData = colData, spatialCoords = coordinates,
-      reducedDims = list(pca = as.matrix(dimRed[rownames(colData), ]))
+    rowData = rowData, colData = colData, spatialCoords = coordinates
   )
 
   if (!is.na(matrix_file)) {
-    assay(spe, "counts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
   }
 
   # Filter features and samples
@@ -151,6 +147,10 @@ get_SpatialExperiment <- function(
     spe <- spe[, as.logical(colData(spe)$selected)]
   }
 
+  if (!is.na(reducedDim_file)) {
+    dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
+    reducedDim(spe, reducedDim_name) <- as.matrix(dimRed[colnames(spe), ])
+  }
   return(spe)
 }
 
@@ -162,12 +162,21 @@ set.seed(seed)
 ndims <- config$ndims
 algorithm <- config$algorithm
 
+if (!exists("matrix_file")) {
+    matrix_file <- NA
+}
+
+if (!exists("dimred_file")) {
+    dimred_file <- NA
+}
+
 # Create SpatialExperiment
 spe <- get_SpatialExperiment(
     feature_file = feature_file,
     observation_file = observation_file,
     coord_file = coord_file,
-    reducedDim_file = dimred_file
+    reducedDim_file = dimred_file,
+    matrix_file=  matrix_file,
 )
 
 # Create a dummy matrix for seurat object requirement
@@ -178,9 +187,14 @@ if (is.null(assayNames(spe))){
 
 # Convert to Seurat object
 seurat_obj <- as.Seurat(spe, data=NULL)
+# saveRDS(seurat_obj, "seurat.rds")
+
+# Preprocessing: SC-Transform + PCA
+seurat_obj <- SCTransform(seurat_obj, assay = "originalexp", verbose = FALSE)
+seurat_obj <- RunPCA(seurat_obj, assay = "SCT", verbose = FALSE)
 
 # Find neighbors
-seurat_obj <- FindNeighbors(seurat_obj, dims = 1:ndims)
+seurat_obj <- FindNeighbors(seurat_obj, reduction = "pca", dims = 1:ndims)
 
 
 # Resolution optimization
@@ -188,7 +202,9 @@ binary_search <- function(
     seurat_obj,
     do_clustering,
     n_clust_target,
-    resolution_boundaries,
+    resolution_update = 2,
+    resolution_init = 1,
+    resolution_boundaries=NULL,
     num_rs = 100,
     tolerance = 1e-3,
     ...) {
@@ -197,11 +213,36 @@ binary_search <- function(
   lb <- rb <- NULL
   n_clust <- -1
 
-  lb <- resolution_boundaries[1]
-  rb <- resolution_boundaries[2]
+  if (!is.null(resolution_boundaries)){
+    lb <- resolution_boundaries[1]
+    rb <- resolution_boundaries[2]
+  } else {
+    res <-  resolution_init
+    results <- do_clustering(seurat_obj, resolution = res, ...)
+    # Adjust cluster_ids extraction per method
+    n_clust <- length(unique(Idents(results)))
+    if (n_clust > n_clust_target) {
+      while (n_clust > n_clust_target && res > 1e-5) {
+        rb <- res
+        res <- res/resolution_update
+        results <- do_clustering(seurat_obj, resolution = res, ...)
+        n_clust <- length(unique(Idents(results)))
+      }
+      lb <- res
+    } else if (n_clust < n_clust_target) {
+      while (n_clust < n_clust_target) {
+        lb <- res 
+        res <- res*resolution_update
+        results <- do_clustering(seurat_obj, resolution = res, ...)
+        n_clust <- length(unique(Idents(results)))
+      }
+      rb <- res
+    }
+    if (n_clust == n_clust_target) {lb = rb = res}
+  }
 
   i <- 0
-  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
+  while ((rb - lb > tolerance) && i < num_rs) {
     mid <- sqrt(lb * rb)
     message("Resolution: ", mid)
     results <- do_clustering(seurat_obj, resolution = mid, ...)
@@ -228,7 +269,7 @@ binary_search <- function(
 
 # Clustering
 seurat_obj <- binary_search(
-    seurat_obj, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
+    seurat_obj, n_clust_target = n_clusters,
     do_clustering = FindClusters, 
     # Seurat specific
     algorithm = algorithm,

@@ -178,7 +178,7 @@ countMatrix <- as.data.frame(SummarizedExperiment::assay(spe, "counts"))
 if (technology %in% c("ST", "Visium")){
     spotPositions <- as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")])
 } else {
-    spotPositions <- as.data.frame(SpatialExperiment::spatialCoords(spe))
+    spotPositions <- as.data.frame(SpatialExperiment::spatialCoords(spe)[,c(1,2)])
 }
 
 # Resolution optimization
@@ -186,7 +186,9 @@ binary_search <- function(
     countMatrix,
     do_clustering,
     n_clust_target,
-    resolution_boundaries,
+    resolution_update = 2,
+    resolution_init = 1,
+    resolution_boundaries=NULL,
     num_rs = 100,
     tolerance = 1e-3,
     ...) {
@@ -195,8 +197,33 @@ binary_search <- function(
   lb <- rb <- NULL
   n_clust <- -1
 
-  lb <- resolution_boundaries[1]
-  rb <- resolution_boundaries[2]
+  if (!is.null(resolution_boundaries)){
+    lb <- resolution_boundaries[1]
+    rb <- resolution_boundaries[2]
+  } else {
+    res <-  resolution_init
+    results <- do_clustering(countMatrix, res = res, ...)
+    # Adjust cluster_ids extraction per method
+    n_clust <- length(unique(results@active.ident))
+    if (n_clust > n_clust_target) {
+      while (n_clust > n_clust_target && res > 1e-5) {
+        rb <- res
+        res <- res/resolution_update
+        results <- do_clustering(countMatrix, res = res, ...)
+        n_clust <- length(unique(results@active.ident))
+      }
+      lb <- res
+    } else if (n_clust < n_clust_target) {
+      while (n_clust < n_clust_target) {
+        lb <- res 
+        res <- res*resolution_update
+        results <- do_clustering(countMatrix, res = res, ...)
+        n_clust <- length(unique(results@active.ident))
+      }
+      rb <- res
+    }
+    if (n_clust == n_clust_target) {lb = rb = res }
+  }
 
   i <- 0
   while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
@@ -233,8 +260,10 @@ if (method == "weight"){
     do_clustering <- autoStardust
 }
 
+options(future.globals.maxSize = 100 * 1000 * 1024^2)
+
 output <- binary_search(
-    countMatrix, n_clust_target = n_clusters, resolution_boundaries = c(0.1, 2), 
+    countMatrix, n_clust_target = n_clusters, 
     do_clustering = do_clustering, 
     # stardust specific
     spotPositions = spotPositions,

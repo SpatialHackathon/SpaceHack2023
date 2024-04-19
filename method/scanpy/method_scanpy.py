@@ -176,21 +176,21 @@ import warnings
 if not args.dim_red:
     sc.pp.normalize_total(adata)
     sc.pp.log1p(adata)
+    if adata.n_vars > 2000:
+        sc.pp.highly_variable_genes(adata, flavor="seurat", n_top_genes=2000)
+    sc.pp.scale(adata)
     sc.tl.pca(adata)
     sc.pp.neighbors(adata, n_neighbors=config["n_neighbors"], n_pcs=config["n_pcs"], random_state=seed)
 else:
     sc.pp.neighbors(adata, n_neighbors=config["n_neighbors"], use_rep="reduced_dimensions")
 
 #two options - leiden or loivain
-if config['clustering'] == "louvain":
-    label_df = binary_search(adata, n_clust_target=n_clusters, method="louvain", seed = seed)
-    # sc.tl.louvain(adata, resolution=config["resolution"], random_state=seed, key_added='louvain')
-elif config['clustering'] == "leiden":
-    label_df = binary_search(adata, n_clust_target=n_clusters, method="leiden", seed = seed)
-    # sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
-else: 
+if config['clustering'] not in ["louvain", "leiden"]:
     print("No clustering method defined or your method is not available, performing leiden")
     label_df = binary_search(adata, n_clust_target=n_clusters, method="leiden", seed = seed)
+else:
+    label_df = binary_search(adata, n_clust_target=n_clusters, method=config['clustering'], 
+                             seed = seed, flavor = config["flavor"])
 
 # sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
 

@@ -1,6 +1,4 @@
 {
-"pre_epochs": 800, 
-"epochs": 1000, 
-"use_gpu": false,
-"Conv_type": "GCNConv"
+"spatial_type": "BallTree",
+"npcs": 200 
 }

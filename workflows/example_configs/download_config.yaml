@@ -1,8 +1,24 @@
 # Github repo path, modify based on your env
-git_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023
+git_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack2023
 # General data folder. All datasets folder will be stored here
-results_dir: /home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow
+results_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data
 
 # datasets to be downloaded. add/delete based on your need
 use_datasets:
+  - "xenium-mouse-brain-SergioSalas"
+  - "abc_atlas_wmb_thalamus"
   - "libd_dlpfc"
+  - "visium_breast_cancer_SEDR"
+  - "visium_chicken_heart"
+  - "mouse_brain_sagittal_anterior"
+#  - "mouse_brain_sagittal_posterior"
+  - "STARmap_plus"
+
+### Not used in this project
+#  - "mouse_kidney_coronal"
+#  - "osmfish_Ssp"
+#  - "sotip_simulation"
+#  - "spatialDLPFC"
+#  - "SEA_AD_data"                       #fetch data error get_SEA_AD_h5ad()
+#  - "STARmap-2018-mouse-cortex"         # group error
+#  - "xenium-breast-cancer"               # Some error

@@ -72,10 +72,8 @@ import json
 with open(args.config, "r") as f:
     config = json.load(f)
 
-if config["refine"] and technology not in ["Visium", "ST"]:
-    raise Exception(
-        f"Invalid parameter combination. Refinement only works with Visium and ST not {technology}"
-    )
+if technology not in ["Visium", "ST"]:
+    config["refine"] = False
 
 # TODO how to determine beta
 beta = 49
@@ -85,6 +83,7 @@ import random
 
 import numpy as np
 import pandas as pd
+import scanpy as sc
 import SpaGCN as spg
 import torch
 
@@ -120,20 +119,28 @@ def get_anndata(args):
     )
 
     if args.image is not None:
+        Image.MAX_IMAGE_PIXELS = None
         adata.uns["image"] = np.array(Image.open(args.image))
     else:
         adata.uns["image"] = None
 
     return adata
 
-
-adata = get_anndata(args)
-
-
 # Set seed
 random.seed(seed)
 torch.manual_seed(seed)
 np.random.seed(seed)
+
+# reference: https://github.com/jianhuupenn/SpaGCN/blob/master/tutorial/tutorial.md#5-spatial-domain-detection-using-spagcn
+
+adata = get_anndata(args)
+adata.var_names_make_unique()
+# adata.write_h5ad("adata.h5ad")
+spg.prefilter_specialgenes(adata)
+
+#Normalize and take log for UMI
+sc.pp.normalize_total(adata)
+sc.pp.log1p(adata)
 
 if technology in ["Visium", "ST"]:
     if adata.uns["image"] is not None:

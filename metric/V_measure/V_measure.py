@@ -45,6 +45,7 @@ if args.config is None:
 import json
 
 import pandas as pd
+import os
 from sklearn.metrics import v_measure_score
 
 with open(config_file, "r") as f:
@@ -61,5 +62,9 @@ metric = v_measure_score(
 )
 
 ## Write output
-with open(args.out_file, "w") as file:
+out_file_path = args.out_file
+out_dir = os.path.dirname(out_file_path)
+os.makedirs(out_dir, exist_ok=True)
+
+with open(out_file_path, "w") as file:
     file.write(f"{metric:.5e}\n")
