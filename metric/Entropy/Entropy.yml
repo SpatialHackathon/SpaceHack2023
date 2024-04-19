@@ -3,3 +3,4 @@ channels:
 dependencies:
   - python=3.12.0
   - pandas=2.1.1
+  - scikit-learn=1.4.2
