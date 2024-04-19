@@ -156,6 +156,14 @@ get_SpatialExperiment <- function(
 }
 
 
+# Load configuration
+lambda <- config$lambda
+k_geom <- config$k_geom
+npcs <- config$npcs
+method <- config$method
+use_agf <- config$use_agf
+assay_name <- "normcounts"
+
 # Seed
 seed <- opt$seed
 
@@ -163,6 +171,13 @@ seed <- opt$seed
 spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
                                     coord_file = coord_file, matrix_file = matrix_file)
 
+
+# Extract proper coordinates
+if (technology %in% c("ST", "Visium")){
+    coord_names <- c("row", "col")
+} else {
+    coord_names <- NULL
+}
 
 ## Your code goes here
 assay_name <- "normcounts"
@@ -287,8 +302,8 @@ result <- binary_search(spe, n_clust_target = n_clusters,
                         assay_name = assay_name, 
                         use_agf = use_agf)
 
-label_df <- data.frame("label" = colData(result)[, clusterNames(result)], row.names=rownames(colData(result)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
-if (use_agf) embedding_df <- as.data.frame(t(assay(result, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
+label_df <- data.frame("label" = colData(bank)[, clusterNames(bank)], row.names=rownames(colData(bank)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
+if (use_agf) embedding_df <- as.data.frame(t(assay(bank, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 
 ## Write output
