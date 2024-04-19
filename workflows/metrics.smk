@@ -177,6 +177,7 @@ def get_sample_coordinate(wildcards):
 rule metric:
     input:
         domains=config["data_dir"] + "/{sample}/{method_config}/domains.tsv",
+        script=lambda wildcards: GIT_DIR + metrics[get_metric(wildcards)]["script"],
     output:
         file=config["data_dir"]
         + "/{sample}/{method_config}/{metric_config}/results.txt",
@@ -190,11 +191,10 @@ rule metric:
         sample_labels=get_sample_labels,
         embeddings=get_method_embedding,
         config=get_metric_config,
-        script=lambda wildcards: GIT_DIR + metrics[get_metric(wildcards)]["script"],
         physical_coordinate=get_sample_coordinate,
     shell:
         """
-        {params.script} \
+        {input.script} \
             -l {input.domains} \
             {params.sample_labels} \
             {params.embeddings} \

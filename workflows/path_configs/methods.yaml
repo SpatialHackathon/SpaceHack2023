@@ -89,6 +89,7 @@ methods:
     env: method/DeepST/DeepST.yml
     script: method/DeepST/DeepST.py
     optargs: method/DeepST/DeepST_optargs.json
+    env_additional: method/DeepST/DeepST_env.sh
   CellCharter:
     env: method/CellCharter/CellCharter.yml
     script: method/CellCharter/CellCharter.py
@@ -121,6 +122,11 @@ config_files:
     config_9: "config/config_9.json"
   SCAN-IT:
     config_1: "config.json"
+  DRSC:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+    config_4: "config/config_4.json"
   SEDR:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
@@ -150,16 +156,24 @@ config_files:
 #    config_17: "config/config_17.json"
 #    config_18: "config/config_18.json"
   SpaceFlow:
-    config_1: "config/config.json"
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+    config_4: "config/config_4.json"
   SpiceMix:
     config_1: "config/config_1.json"
   meringue:
     config_1: "config/config_1.json"
   scanpy:
-    config_1: "configs/config_1.json"
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+#    config_4: "config/config_4.json"
   precast:
     config_1: "config/config_1.json"
-#    config_2: "config/config_2.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+    config_4: "config/config_4.json"
   seurat:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
@@ -191,7 +205,12 @@ config_files:
   stardust:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+    config_4: "config/config_4.json"
   CellCharter:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
     config_3: "config/config_3.json"
+  BayesSpace:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"

@@ -1,17 +1,26 @@
 # Github repo path, modify based on your env
 git_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack_CherryPick
 # Dataset path, modify based on your env
-data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/xenium-mouse-brain-SergioSalas
+# Mouse Brain
+#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/xenium-mouse-brain-SergioSalas
+#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/STARmap_plus
+# data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/abc_atlas_wmb_thalamus
+data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/stereoseq_developing_Drosophila_embryos_larvae
+
+# Visium Comparison
+#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/libd_dlpfc
+#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/visium_breast_cancer_SEDR
+#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/visium_chicken_heart
 
 use_metrics:
   - "ARI"
-#  - "Completeness"
-#  - "Entropy"
-#  - "FMI"
+  - "Completeness"
+  - "Entropy"
+  - "FMI"
 #  - "Homogeneity"
 #  - "MCC"
-#  - "NMI"
-#  - "domain-specific-f1"
+  - "NMI"
+  - "domain-specific-f1"
 #  - "jaccard"
 #  - "V_measure"                        #Config, GT
 #  - "LISI"                             #Config, embed, GT
