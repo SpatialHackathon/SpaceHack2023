@@ -1,1 +1,1 @@
-{"method": "mclust", "refine": false}
+{"method": "leiden", "refine": true, "radius": 50, "n_pcs": 20, "n_genes": 3000}
