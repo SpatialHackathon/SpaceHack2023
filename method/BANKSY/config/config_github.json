@@ -1,0 +1,1 @@
+{"method": "leiden", "lambda": 0.8, "k_geom": 15, "n_pcs": 20, "n_genes":1e500, "use_agf": true, "source": "https://github.com/prabhakarlab/Banksy"}
