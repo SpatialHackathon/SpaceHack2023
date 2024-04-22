@@ -60,6 +60,16 @@ option_list <- list(
     help = "Number of clusters to return."
   ),
   make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
+  ),
+  make_option(
     c("--technology"),
     type = "character", default = NULL,
     help = "The technology of the dataset (Visium, ST, imaging-based)."
@@ -155,21 +165,29 @@ get_SpatialExperiment <- function(
   return(spe)
 }
 
+# Opt params
+technology <- opt$technology
+n_clusters <- opt$n_clusters
+seed <- opt$seed
 
 # Load configuration
 lambda <- config$lambda
 k_geom <- config$k_geom
-npcs <- config$npcs
 method <- config$method
 use_agf <- config$use_agf
+n_pcs <- config$n_pcs
+n_pcs <- ifelse(is.null(opt$n_pcs), n_pcs, opt$n_pcs)
+n_genes <- config$n_genes
+n_genes <- ifelse(is.null(opt$n_genes), n_genes, opt$n_genes)
 assay_name <- "normcounts"
 
-# Seed
-seed <- opt$seed
 
 # You can use the data as SpatialExperiment
-spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
-                                    coord_file = coord_file, matrix_file = matrix_file)
+spe <- get_SpatialExperiment(
+    feature_file = feature_file,
+    observation_file = observation_file,
+    coord_file = coord_file,
+    matrix_file = matrix_file)
 
 
 # Extract proper coordinates
@@ -179,44 +197,25 @@ if (technology %in% c("ST", "Visium")){
     coord_names <- NULL
 }
 
-## Your code goes here
-assay_name <- "normcounts"
 set.seed(seed)
 
-# Adopted from https://github.com/jleechung/banksy-zenodo/blob/main/fig5-dlpfc/src/banksy.R 
-
-K_GEOM = config$k_geom
-LAM = config$lambda
-use_agf = config$use_agf
-nPCs <- config$npcs
-method <- config$method
-# all_samples = as.character(c(151507:151510, 151669:151676))
-# all_domains = c(rep(7, 4), rep(5, 4), rep(7, 4))
-
-# Using seurat normalization
-gcm = assay(spe, "counts")
-seu = CreateSeuratObject(counts = gcm)
-seu = NormalizeData(seu, normalization.method = 'RC', scale.factor = median(colSums(gcm))
-, verbose = FALSE)
-if (nrow(seu) >= 2000){
-    seu = FindVariableFeatures(seu, nfeatures = 2000, verbose = FALSE)
-    varFea = VariableFeatures(seu)
-} else {
-    varFea = rownames(seu)
+# Variable features (if given - opt takes priority)
+if (nrow(spe) >= n_genes){
+    counts <- assay(spe, "counts")
+    seu <- CreateSeuratObject(counts = counts)
+    seu <- NormalizeData(seu, normalization.method = 'RC', scale.factor = median(colSums(counts)), verbose = FALSE)
+    seu <- FindVariableFeatures(seu, nfeatures = n_genes, verbose = FALSE)
+    spe <- spe[VariableFeatures(seu), ]
 }
 
+
 # Normalization to mean library size
-
-
-
 spe <- scuttle::computeLibraryFactors(spe)
 assay(spe, assay_name) <- scuttle::normalizeCounts(spe, log = FALSE)
-# Subset according to the script
-spe <- spe[varFea, ]
-# Run BANKSY
 
-spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = K_GEOM, compute_agf = use_agf, verbose = FALSE)
-spe <- Banksy::runBanksyPCA(spe, lambda = LAM, npcs = nPCs, use_agf = use_agf)
+# Run BANKSY
+spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom, compute_agf = use_agf, verbose = FALSE, coord_names = coord_names)
+spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = n_pcs, use_agf = use_agf)
 
 
 # Resolution optimization
@@ -294,9 +293,8 @@ binary_search <- function(
 result <- binary_search(spe, n_clust_target = n_clusters, 
                         do_clustering = Banksy::clusterBanksy, 
                         # Banksy specific
-                        lambda = LAM, 
+                        lambda = lambda, 
                         use_pcs = TRUE, 
-                        #npcs = npcs, 
                         seed = seed, 
                         method = method,
                         assay_name = assay_name, 
