@@ -1,1 +1,1 @@
-{"method": "leiden", "refine": false}
+{"method": "leiden", "refine": false, "radius": 50, "n_pcs": 20, "n_genes": 3000}

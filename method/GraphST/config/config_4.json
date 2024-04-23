@@ -1,1 +1,1 @@
-{"method": "louvain", "refine": true, "radius": 100}
+{"method": "mclust", "refine": true, "radius": 100, "n_pcs": 20, "n_genes": 3000}
