@@ -1,0 +1,1 @@
+{"method": "mclust", "model": "Radius", "rad_cutoff": 400, "n_genes": 3000, "min_cells": 0, "source": "https://stagate.readthedocs.io/en/latest/T9_STARmap.html"}

@@ -1,1 +1,1 @@
-{"method": "louvain", "model": "Radius", "rad_cutoff": 150, "res": 1}
+{"method": "mclust", "model": "KNN", "k_cutoff": 15, "n_genes": 3000, "min_cells": 0}

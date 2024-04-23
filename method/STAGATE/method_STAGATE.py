@@ -41,6 +41,9 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_genes", help="Number of genes to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, ...).",
     required=False,
@@ -153,14 +156,21 @@ from scipy.spatial.distance import euclidean
 with open(args.config, "r") as f:
     config = json.load(f)
 
+if args.n_genes is not None:
+    n_genes = args.n_genes
+else:
+    n_genes = config["n_genes"] # default setting: 3000
+
 method = config["method"]
 model = config["model"]
 rad_cutoff = config["rad_cutoff"] if model == "Radius" else None
 k_cutoff = config["k_cutoff"] if model == "KNN" else None
+min_cells = config["min_cells"]
 
+sc.pp.filter_genes(adata, min_cells=min_cells)
 #Normalization
-if adata.n_vars > 3000:
-    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=3000)
+if adata.n_vars > n_genes:
+    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=n_genes)
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 
@@ -170,7 +180,7 @@ sg.Stats_Spatial_Net(adata)
 
 # Run
 
-adata = sg.train_STAGATE(adata, alpha=0, random_seed=seed)
+adata = sg.train_STAGATE(adata, random_seed=seed)
 sc.pp.neighbors(adata, use_rep='STAGATE')
 if method == "mclust":
     adata = sg.mclust_R(adata, used_obsm='STAGATE', num_cluster=n_clusters, random_seed=seed)
