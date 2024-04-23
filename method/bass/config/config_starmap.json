@@ -1,0 +1,10 @@
+{
+  "C": 15,
+  "init_method": "kmeans",
+  "beta_method": "SW",
+  "geneSelect": "sparkx",
+  "scaleFeature": 1,
+  "n_genes": 3000,
+  "n_pc": 20,
+  "source": "https://zhengli09.github.io/BASS-Analysis/STARmap.html"
+}

@@ -1,9 +1,0 @@
-{
-  "C": 20,
-  "init_method": "mclust",
-  "beta_method": "SW",
-  "geneSelect": "sparkx",
-  "scaleFeature": 1,
-  "nSE": 3000,
-  "nPC": 20
-}

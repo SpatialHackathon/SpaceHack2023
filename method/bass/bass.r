@@ -57,6 +57,16 @@ option_list <- list(
     help = "Number of clusters to return."
   ),
   make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
+  ),
+  make_option(
     c("--technology"),
     type = "character", default = NULL,
     help = "The technology of the dataset (Visium, ST, imaging-based)."
@@ -167,8 +177,10 @@ init_method <- config$init_method
 beta_method <- config$beta_method
 geneSelect <- config$geneSelect
 scaleFeature <- config$scaleFeature
-nPC <- config$nPC
-nSE <- config$nSE
+n_pcs <- config$n_pcs
+n_pcs <- ifelse(is.null(opt$n_pcs), n_pcs, opt$n_pcs)
+n_genes <- config$n_genes
+n_genes <- ifelse(is.null(opt$n_genes), n_genes, opt$n_genes)
 
 if (!exists("matrix_file")) {
     matrix_file <- NA
@@ -202,8 +214,8 @@ BASS <- BASS.preprocess(
     BASS, doLogNormalize = TRUE,
     doBatchCorrect = FALSE,
     geneSelect = geneSelect,
-    nHVG = nSE, nSE = nSE, doPCA = TRUE,
-    scaleFeature = as.logical(scaleFeature), nPC = nPC)
+    nHVG = n_genes, nSE = n_genes, doPCA = TRUE,
+    scaleFeature = as.logical(scaleFeature), nPC = n_pcs)
 # saveRDS(BASS, "bass.rds")
 # BASS@X_run <- t(SingleCellExperiment::reducedDim(spe))
 # Run BASS algorithm
