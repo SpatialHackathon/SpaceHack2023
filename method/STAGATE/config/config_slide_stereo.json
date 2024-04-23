@@ -1,0 +1,1 @@
+{"method": "louvain", "model": "Radius", "rad_cutoff": 50, "n_genes": 3000, "min_cells": 50, "source": "https://stagate.readthedocs.io/en/latest/T3_Slide-seqV2.html", "source2": "https://stagate.readthedocs.io/en/latest/T4_Stereo.html"}
