@@ -12,6 +12,12 @@ suppressPackageStartupMessages({
     library(Banksy)
     library(Seurat)
 })
+# Get script path
+initial_options <- commandArgs(trailingOnly = FALSE)
+file_arg_name <- "--file="
+script_path <- dirname(sub(file_arg_name, "", initial_options[grep(file_arg_name, initial_options)]))
+# Source binary search function
+source(file.path(script_path, "../search_res.r"))
 
 option_list <- list(
   make_option(
@@ -219,79 +225,15 @@ spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = n_pcs, use_agf = use_ag
 
 
 # Resolution optimization
-binary_search <- function(
-    spe,
-    do_clustering,
-    n_clust_target,
-    resolution_update = 2,
-    resolution_init = 1,
-    resolution_boundaries=NULL,
-    num_rs = 100,
-    tolerance = 1e-3,
-    ...) {
-
-  # Initialize boundaries
-  lb <- rb <- NULL
-  n_clust <- -1
-
-  if (!is.null(resolution_boundaries)){
-    lb <- resolution_boundaries[1]
-    rb <- resolution_boundaries[2]
-  } else {
-    res <-  resolution_init
-    result <- do_clustering(spe, resolution = res, ...)
-    # Adjust cluster_ids extraction per method
-    n_clust <- length(unique(colData(result)[, clusterNames(result)]))
-    if (n_clust > n_clust_target) {
-      while (n_clust > n_clust_target && res > 1e-5) {
-        rb <- res
-        res <- res/resolution_update
-        result <- do_clustering(spe, resolution = res, ...)
-        n_clust <- length(unique(colData(result)[, clusterNames(result)]))
-      }
-      lb <- res
-    } else if (n_clust < n_clust_target) {
-      while (n_clust < n_clust_target) {
-        lb <- res 
-        res <- res*resolution_update
-        result <- do_clustering(spe, resolution = res, ...)
-        n_clust <- length(unique(colData(result)[, clusterNames(result)]))
-      }
-      rb <- res
-    }
-    if (n_clust == n_clust_target) {lb = rb = res }
-  }
-
-  i <- 0
-  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
-    mid <- sqrt(lb * rb)
-    message("Resolution: ", mid)
-    result <- do_clustering(spe, resolution = mid, ...)
-    # Adjust cluster_ids extraction per method
-    cluster_ids <- colData(result)[, clusterNames(result)]
-    n_clust <- length(unique(cluster_ids))
-    if (n_clust == n_clust_target || lb == rb) break
-    if (n_clust > n_clust_target) {
-      rb <- mid
-    } else {
-      lb <- mid
-    }
-    i <- i + 1
-  }
-
-  # Warning if target not met
-  if (n_clust != n_clust_target) {
-    warning(sprintf("Warning: n_clust = %d not found in binary search, return best approximation with res = %f and n_clust = %d. (rb = %f, lb = %f, i = %d)", n_clust_target, mid, n_clust, rb, lb, i))
-  }
-  return(result)
+extract_nclust <- function(result){
+    length(unique(colData(result)[, clusterNames(result)]))
 }
 
-
-# The data.frames with observations may contain a column "selected" which you need to use to
-# subset and also use to subset coordinates, neighbors, (transformed) count matrix
-#cnames <- colnames(colData(spe))
-result <- binary_search(spe, n_clust_target = n_clusters, 
-                        do_clustering = Banksy::clusterBanksy, 
+result <- binary_search(
+    spe, 
+    n_clust_target = n_clusters, 
+    extract_nclust = extract_nclust,
+    do_clustering = Banksy::clusterBanksy, 
                         # Banksy specific
                         lambda = lambda, 
                         use_pcs = TRUE, 
@@ -300,8 +242,8 @@ result <- binary_search(spe, n_clust_target = n_clusters,
                         assay_name = assay_name, 
                         use_agf = use_agf)
 
-label_df <- data.frame("label" = colData(bank)[, clusterNames(bank)], row.names=rownames(colData(bank)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
-if (use_agf) embedding_df <- as.data.frame(t(assay(bank, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
+label_df <- data.frame("label" = colData(result)[, clusterNames(result)], row.names=rownames(colData(result)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
+if (use_agf) embedding_df <- as.data.frame(t(assay(result, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 
 ## Write output
