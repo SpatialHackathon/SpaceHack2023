@@ -8,6 +8,12 @@ suppressPackageStartupMessages({
     library(jsonlite)
     library(MERINGUE)
 })
+# Get script path
+initial_options <- commandArgs(trailingOnly = FALSE)
+file_arg_name <- "--file="
+script_path <- dirname(sub(file_arg_name, "", initial_options[grep(file_arg_name, initial_options)]))
+# Source binary search function
+source(file.path(script_path, "../search_res.r"))
 
 option_list <- list(
   make_option(
@@ -163,7 +169,6 @@ pcs <- pcs.info$x[,1:n_pcs]
 W <- getSpatialNeighbors(positions, filterDist = filterDist)
 
 # Clustering
-source("/home/jovyan/native/method/search_res.r")
 extract_nclust <- function(result){
     length(unique(result))
 }
