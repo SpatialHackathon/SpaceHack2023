@@ -1,9 +1,0 @@
-{
-  "C": 20,
-  "init_method": "kmeans",
-  "beta_method": "fix",
-  "geneSelect": "sparkx",
-  "scaleFeature": 0,
-  "n_genes": 3000,
-  "n_pc": 20
-}

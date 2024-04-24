@@ -109,7 +109,6 @@ if (!is.na(opt$neighbors)) {
 
 if (!is.na(opt$matrix)) {
   matrix_file <- opt$matrix
-  matrix <- as(Matrix::readMM(matrix_file), "CsparseMatrix")
 }
 
 if (!is.na(opt$dim_red)) {
@@ -144,7 +143,6 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    #assay(spe, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
   }
 
   # Filter features and samples
@@ -177,37 +175,35 @@ init_method <- config$init_method
 beta_method <- config$beta_method
 geneSelect <- config$geneSelect
 scaleFeature <- config$scaleFeature
+burnin <- config$burnin
+nsample <-- config$nsample
 n_pcs <- config$n_pcs
 n_pcs <- ifelse(is.null(opt$n_pcs), n_pcs, opt$n_pcs)
 n_genes <- config$n_genes
 n_genes <- ifelse(is.null(opt$n_genes), n_genes, opt$n_genes)
-
-if (!exists("matrix_file")) {
-    matrix_file <- NA
-}
-
-if (!exists("dimred_file")) {
-    dimred_file <- NA
-}
 
 # SpatialExperiment
 spe <- get_SpatialExperiment(
     feature_file = feature_file,
     observation_file = observation_file,
     coord_file = coord_file,
-    matrix_file = matrix_file,
-    reducedDim_file = dimred_file
+    matrix_file = matrix_file
 )
 
-# saveRDS(spe, "spe.rds")
+if (technology %in% c("Visium", "ST")){
+    positions <- colData(spe)[,c(1:2)]
+} else {
+    positions <- SpatialExperiment::spatialCoords(spe)
+}
+
 # Set up BASS object
 #list("experiment" = SummarizedExperiment::assay(spe, "logcounts")),
 BASS <- createBASSObject(
     list("experiment" = SummarizedExperiment::assay(spe, "counts")), 
-    list("experiment" = SpatialExperiment::spatialCoords(spe)),
+    list("experiment" = positions),
     C = C, R = R,
     beta_method = beta_method, init_method = init_method, 
-    burnin = 2000, nsample = 10000)
+    burnin = burnin, nsample = nsample)
 
 # Data pre-processing:
 BASS <- BASS.preprocess(
@@ -216,7 +212,7 @@ BASS <- BASS.preprocess(
     geneSelect = geneSelect,
     nHVG = n_genes, nSE = n_genes, doPCA = TRUE,
     scaleFeature = as.logical(scaleFeature), nPC = n_pcs)
-# saveRDS(BASS, "bass.rds")
+
 # BASS@X_run <- t(SingleCellExperiment::reducedDim(spe))
 # Run BASS algorithm
 BASS <- BASS.run(BASS)
