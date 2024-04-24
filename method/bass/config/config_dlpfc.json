@@ -3,7 +3,7 @@
   "init_method": "mclust",
   "beta_method": "SW",
   "geneSelect": "sparkx",
-  "scaleFeature": 0,
+  "scaleFeature": false,
   "n_genes": 3000,
   "n_pcs": 20,
   "burnin": 2000,

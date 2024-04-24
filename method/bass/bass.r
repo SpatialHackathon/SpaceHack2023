@@ -176,7 +176,7 @@ beta_method <- config$beta_method
 geneSelect <- config$geneSelect
 scaleFeature <- config$scaleFeature
 burnin <- config$burnin
-nsample <-- config$nsample
+nsample <- config$nsample
 n_pcs <- config$n_pcs
 n_pcs <- ifelse(is.null(opt$n_pcs), n_pcs, opt$n_pcs)
 n_genes <- config$n_genes
@@ -196,6 +196,7 @@ if (technology %in% c("Visium", "ST")){
     positions <- SpatialExperiment::spatialCoords(spe)
 }
 
+
 # Set up BASS object
 #list("experiment" = SummarizedExperiment::assay(spe, "logcounts")),
 BASS <- createBASSObject(
@@ -211,7 +212,7 @@ BASS <- BASS.preprocess(
     doBatchCorrect = FALSE,
     geneSelect = geneSelect,
     nHVG = n_genes, nSE = n_genes, doPCA = TRUE,
-    scaleFeature = as.logical(scaleFeature), nPC = n_pcs)
+    scaleFeature = scaleFeature, nPC = n_pcs)
 
 # BASS@X_run <- t(SingleCellExperiment::reducedDim(spe))
 # Run BASS algorithm
