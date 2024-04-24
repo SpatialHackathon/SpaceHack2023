@@ -3,7 +3,7 @@
   "init_method": "kmeans",
   "beta_method": "fix",
   "geneSelect": "sparkx",
-  "scaleFeature": 0,
+  "scaleFeature": false,
   "n_genes": 3000,
   "n_pc": 20
 }
