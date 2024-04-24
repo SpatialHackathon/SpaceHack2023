@@ -3,7 +3,7 @@
   "init_method": "mclust",
   "beta_method": "SW",
   "geneSelect": "hvg",
-  "scaleFeature": 0,
+  "scaleFeature": false,
   "n_genes": 2000,
   "n_pc": 20
 }
