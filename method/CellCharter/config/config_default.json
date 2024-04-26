@@ -1,7 +1,7 @@
 {
 "min_counts": 3,
 "n_latent": 10,
-"n_layers": 4, 
+"n_layers": 3, 
 "aggregations": "mean", 
 "convergence_tolerance": 0.001,
 "covariance_regularization": 1e-06,
