@@ -15,25 +15,25 @@ import pandas as pd
 import scipy
 
 LINKS = [
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005373/GSM5173925_OB1_Slide1_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005374/GSM5173926_OB1_Slide2_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005375/GSM5173927_OB1_Slide3_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005376/GSM5173928_OB1_Slide4_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005377/GSM5173929_OB1_Slide5_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005379/GSM5173931_OB1_Slide7_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005382/GSM5173934_OB1_Slide10_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005378/GSM5173930_OB1_Slide6_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005381/GSM5173933_OB1_Slide9_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005380/GSM5173932_OB1_Slide8_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005383/GSM5173935_OB1_Slide11_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005384/GSM5173936_OB1_Slide12_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005385/GSM5173937_OB1_Slide13_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005386/GSM5173938_OB1_Slide14_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005387/GSM5173939_OB1_Slide15_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005388/GSM5173940_OB1_Slide16_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005389/GSM5173941_OB1_Slide17_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005390/GSM5173942_OB1_Slide18_processed.h5ad"
-    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005391/GSM5173943_OB1_Slide19_processed.h5ad"
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005373/GSM5173925_OB1_Slide1_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005374/GSM5173926_OB1_Slide2_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005375/GSM5173927_OB1_Slide3_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005376/GSM5173928_OB1_Slide4_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005377/GSM5173929_OB1_Slide5_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005379/GSM5173931_OB1_Slide7_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005382/GSM5173934_OB1_Slide10_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005378/GSM5173930_OB1_Slide6_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005381/GSM5173933_OB1_Slide9_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005380/GSM5173932_OB1_Slide8_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005383/GSM5173935_OB1_Slide11_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005384/GSM5173936_OB1_Slide12_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005385/GSM5173937_OB1_Slide13_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005386/GSM5173938_OB1_Slide14_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005387/GSM5173939_OB1_Slide15_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005388/GSM5173940_OB1_Slide16_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005389/GSM5173941_OB1_Slide17_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005390/GSM5173942_OB1_Slide18_processed.h5ad",
+    "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005391/GSM5173943_OB1_Slide19_processed.h5ad",
     "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000172/stomics/STSP0005392/GSM5173944_OB1_Slide20_processed.h5ad"
 ]
 
@@ -90,7 +90,7 @@ def process_adata(adata_path, output_folder, iteration, samples_list):
     coords.to_csv(f"{complete_path}/coordinates.tsv", sep="\t", index_label="")
 
     # Matrix
-    scipy.io.mmwrite(f"{complete_path}/counts.mtx", adata.X)
+    scipy.io.mmwrite(f"{complete_path}/counts.mtx", adata.layers["raw_count"])
 
     # Write labels.tsv
     labels = adata.obs["layer"]
