@@ -62,7 +62,6 @@ def download_links(links, temp_dir):
 def process_adata(input_path, output_folder, sample_df):
     complete_path = os.path.join(output_folder, "visium_hd_cancer_colon")
     os.makedirs(complete_path, exist_ok=True)
-    print(os.listdir(input_path))
     adata = visium_hd(
         input_path,
         bin_size=8,
