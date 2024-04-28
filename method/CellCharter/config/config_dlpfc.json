@@ -1,0 +1,10 @@
+{
+"min_counts": 3,
+"n_genes": 5000,
+"n_latent": 5,
+"n_layers": 4, 
+"aggregations": "mean", 
+"convergence_tolerance": 0.001,
+"covariance_regularization": 1e-06,
+"source": "https://github.com/CSOgroup/cellcharter_analyses/blob/main/src/benchmarking/CellCharter/individual.py#R30"
+}
