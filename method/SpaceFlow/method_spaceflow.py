@@ -37,6 +37,12 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_genes", help="Number of genes to use.", required=False, type=int
+)
+parser.add_argument(
+    "--n_pcs", help="Number of PCs to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, imaging-based).",
     required=True,
@@ -69,6 +75,16 @@ import json
 
 with open(args.config, "r") as f:
     config = json.load(f)
+
+if args.n_genes is not None:
+    n_genes = args.n_genes
+else:
+    n_genes = config["n_genes"] 
+
+if args.n_pcs is not None:
+    n_pcs = args.n_pcs
+else:
+    n_pcs = config["n_pcs"] 
     
 def get_anndata(args):
     import anndata as ad
@@ -151,7 +167,23 @@ nn = config["n_neighbours"]
 # Create a SpaceFlow object 
 sc.pp.filter_genes(adata, min_cells=1)
 sf = SpaceFlow.SpaceFlow(adata=adata)
-sf.preprocessing_data(n_top_genes = min(adata.n_vars, n_vars))
+
+# modified from sf.preprocessing_data (https://github.com/hongleir/SpaceFlow/blob/master/SpaceFlow/SpaceFlow.py#L110)
+def preprocessing_data(self, n_top_genes=None, n_comps = 50, n_neighbors=10):
+    adata = self.adata
+    if not adata:
+        print("No annData object found, please run SpaceFlow.SpaceFlow(expr_data, spatial_locs) first!")
+        return
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    sc.pp.highly_variable_genes(adata, n_top_genes=n_top_genes, flavor='cell_ranger', subset=True)
+    sc.pp.pca(adata, n_comps)
+    spatial_locs = adata.obsm['spatial']
+    spatial_graph = self.graph_alpha(spatial_locs, n_neighbors=n_neighbors)
+    self.adata_preprocessed = adata
+    self.spatial_graph = spatial_graph
+
+preprocessing_data(n_top_genes = min(adata.n_vars, n_genes), n_comps = n_pcs)
 
 # Train the network
 sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, 
