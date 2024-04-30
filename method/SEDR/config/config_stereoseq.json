@@ -1,6 +1,6 @@
 {
     "n":6,
     "cluster_method": "mclust", 
-    "using_dec": false, 
-    "HVG": true
+    "using_dec": true, 
+    "HVG": false
 }

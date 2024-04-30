@@ -234,53 +234,20 @@ if not isinstance(adata.X, np.ndarray):
     adata.layers['count'] = adata.X.toarray()
 else:
     adata.layers['count'] = adata.X
+
 sc.pp.normalize_total(adata, target_sum=1e6)
-if adata.n_vars > 2000:
-    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=2000)
+
+if adata.n_vars > 2000 and config["HVG"] is True:
+    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", layer='count', n_top_genes=2000)
     adata = adata[:, adata.var['highly_variable'] == True]
+
 sc.pp.scale(adata)
 
 from sklearn.decomposition import PCA  # sklearn PCA is used because PCA in scanpy is not stable.
 adata_X = PCA(n_components=200, random_state=seed).fit_transform(adata.X)
 adata.obsm['X_pca'] = adata_X
 
-graph_dict = SEDR.graph_construction(adata, 12)
-
-"""
-# Constructing neighborhood graphs object format
-# Return warning if no neighborhood graph is not provided
-#if args.neighbors is None:
-#    raise ValueError("No neighbor graphs found, define neighbor graphs")
-
-# import intermediate functions
-from SEDR.graph_func import preprocess_graph
-
-# Copy from source code in order for customization
-adj_m1 = adata.obsp["spatial_connectivities"]
-adj_m1 = sp.sparse.coo_matrix(adj_m1)
-
-# Store original adjacency matrix (without diagonal entries) for later
-adj_m1 = adj_m1 - sp.sparse.dia_matrix((adj_m1.diagonal()[np.newaxis, :], [0]), shape=adj_m1.shape)
-adj_m1.eliminate_zeros()
-
-# Some preprocessing
-adj_norm_m1 = preprocess_graph(adj_m1)
-adj_m1 = adj_m1 + sp.sparse.eye(adj_m1.shape[0])
-
-adj_m1 = adj_m1.tocoo()
-shape = adj_m1.shape
-values = adj_m1.data
-indices = np.stack([adj_m1.row, adj_m1.col])
-adj_label_m1 = torch.sparse_coo_tensor(indices, values, shape)
-
-norm_m1 = adj_m1.shape[0] * adj_m1.shape[0] / float((adj_m1.shape[0] * adj_m1.shape[0] - adj_m1.sum()) * 2)
-
-graph_dict = {
-    "adj_norm": adj_norm_m1,
-    "adj_label": adj_label_m1.coalesce(),
-    "norm_value": norm_m1
-}
-"""
+graph_dict = SEDR.graph_construction(adata, config["n"])
 
 # Training SEDR
 # device: using cpu or gpu (if avaliable)

@@ -1,0 +1,6 @@
+{
+"n":12,
+"cluster_method": "mclust", 
+"using_dec": true, 
+"HVG": true
+}
