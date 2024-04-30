@@ -41,6 +41,12 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_genes", help="Number of genes to use.", required=False, type=int
+)
+parser.add_argument(
+    "--n_pcs", help="Number of PCs to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, ...).",
     required=True,
@@ -100,6 +106,16 @@ import json
 with open(args.config, "r") as f:
     config = json.load(f)
 
+if args.n_genes is not None:
+    n_genes = args.n_genes
+else:
+    n_genes = config["n_genes"] # default setting: 3000
+
+if args.n_pcs is not None:
+    n_pcs = args.n_pcs
+else:
+    n_pcs = config["n_pcs"] # default setting: 20
+    
 import random
 
 import numpy as np
@@ -122,8 +138,6 @@ device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
 def get_anndata(args):
     import anndata as ad
-    import numpy as np
-    import pandas as pd
     import scipy as sp
     from PIL import Image
 
@@ -177,6 +191,12 @@ def get_anndata(args):
 adata = get_anndata(args)
 adata.var_names_make_unique()
 
+# https://github.com/JinmiaoChenLab/GraphST/blob/main/GraphST/preprocess.py
+sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=n_genes)
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+sc.pp.scale(adata, zero_center=False, max_value=10)
+
 # Set seed
 random.seed(seed)
 torch.manual_seed(seed)
@@ -198,7 +218,7 @@ adata = model.train()
 from GraphST.utils import mclust_R, refine_label
 from sklearn.decomposition import PCA
 
-pca = PCA(n_components=20, random_state=seed) 
+pca = PCA(n_components=n_pcs, random_state=seed) 
 embedding = pca.fit_transform(adata.obsm['emb'].copy())
 adata.obsm['emb_pca'] = embedding
 

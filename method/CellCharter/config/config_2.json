@@ -1,6 +1,9 @@
 {
-"n_layers": 4, 
+"min_counts": 3,
+"n_latent": 10,
+"n_layers": 5, 
 "aggregations": "mean", 
 "convergence_tolerance": 0.001,
-"covariance_regularization": 1e-06
+"covariance_regularization": 1e-06,
+"source": "https://cellcharter.readthedocs.io/en/latest/notebooks/codex_mouse_spleen.html"
 }

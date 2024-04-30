@@ -37,6 +37,9 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_genes", help="Number of genes to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, imaging-based).",
     required=True,
@@ -129,6 +132,11 @@ import torch
 
 random.seed(seed)
 
+if args.n_genes is not None:
+    n_genes = args.n_genes
+else:
+    n_genes = config.get("n_genes", None)  # No filtering if no top genes are specified
+    
 # Load data
 adata = get_anndata(args)
 adata.var_names_make_unique()
@@ -143,9 +151,23 @@ import scvi
 #GPU possibility
 use_cuda = torch.cuda.is_available()
 
+# Follow https://github.com/CSOgroup/cellcharter_analyses/blob/main/src/benchmarking/CellCharter/individual.py
+sc.pp.filter_genes(adata, min_counts=config["min_counts"])
 
 # preprocessing for scvi
 adata.layers["counts"] = adata.X.copy()
+
+sc.pp.normalize_total(adata, target_sum=1e6)
+sc.pp.log1p(adata)
+
+sc.pp.highly_variable_genes(
+    adata,
+    n_top_genes=n_genes,
+    subset=True,
+    layer="counts",
+    flavor="seurat_v3",
+
+)
 
 # Set up scvi model for reduced_dimension embedding
 scvi.settings.seed = seed
@@ -153,8 +175,7 @@ scvi.model.SCVI.setup_anndata(
     adata,
     layer="counts"
 )
-
-model = scvi.model.SCVI(adata)
+model = scvi.model.SCVI(adata, n_latent=config["n_latent"])
 model.train(early_stopping=True, enable_progress_bar=False, progress_bar_refresh_rate=0)
 adata.obsm['reduced_dimensions'] = model.get_latent_representation(adata).astype(np.float32)
 # Find neighbors

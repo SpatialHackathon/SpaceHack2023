@@ -1,9 +1,9 @@
 {
   "C": 20,
-  "init_method": "mclust",
+  "init_method": "kmeans",
   "beta_method": "fix",
   "geneSelect": "sparkx",
-  "scaleFeature": 0,
-  "nSE": 3000,
-  "nPC": 20
+  "scaleFeature": false,
+  "n_genes": 3000,
+  "n_pc": 20
 }

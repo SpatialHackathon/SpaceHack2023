@@ -1,0 +1,1 @@
+{"method": "leiden", "lambda": 0.8, "k_geom": 15, "n_pcs": 20, "n_genes":1e500, "use_agf": false, "source":"https://github.com/prabhakarlab/Banksy/blob/bioc/R/cluster.R#L82"}

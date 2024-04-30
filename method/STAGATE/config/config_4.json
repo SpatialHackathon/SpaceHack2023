@@ -1,1 +1,1 @@
-{"method": "mclust", "model": "Radius", "rad_cutoff": 300, "res": 0.5}
+{"method": "mclust", "model": "KNN", "k_cutoff": 10, "n_genes": 3000, "min_cells": 0}

@@ -12,6 +12,12 @@ suppressPackageStartupMessages({
     library(Banksy)
     library(Seurat)
 })
+# Get script path
+initial_options <- commandArgs(trailingOnly = FALSE)
+file_arg_name <- "--file="
+script_path <- dirname(sub(file_arg_name, "", initial_options[grep(file_arg_name, initial_options)]))
+# Source binary search function
+source(file.path(script_path, "../search_res.r"))
 
 option_list <- list(
   make_option(
@@ -58,6 +64,16 @@ option_list <- list(
     c("--n_clusters"),
     type = "integer", default = NULL,
     help = "Number of clusters to return."
+  ),
+  make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
   ),
   make_option(
     c("--technology"),
@@ -155,21 +171,29 @@ get_SpatialExperiment <- function(
   return(spe)
 }
 
+# Opt params
+technology <- opt$technology
+n_clusters <- opt$n_clusters
+seed <- opt$seed
 
 # Load configuration
 lambda <- config$lambda
 k_geom <- config$k_geom
-npcs <- config$npcs
 method <- config$method
 use_agf <- config$use_agf
+n_pcs <- config$n_pcs
+n_pcs <- ifelse(is.null(opt$n_pcs), n_pcs, opt$n_pcs)
+n_genes <- config$n_genes
+n_genes <- ifelse(is.null(opt$n_genes), n_genes, opt$n_genes)
 assay_name <- "normcounts"
 
-# Seed
-seed <- opt$seed
 
 # You can use the data as SpatialExperiment
-spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
-                                    coord_file = coord_file, matrix_file = matrix_file)
+spe <- get_SpatialExperiment(
+    feature_file = feature_file,
+    observation_file = observation_file,
+    coord_file = coord_file,
+    matrix_file = matrix_file)
 
 
 # Extract proper coordinates
@@ -179,131 +203,47 @@ if (technology %in% c("ST", "Visium")){
     coord_names <- NULL
 }
 
-## Your code goes here
-assay_name <- "normcounts"
 set.seed(seed)
 
-# Adopted from https://github.com/jleechung/banksy-zenodo/blob/main/fig5-dlpfc/src/banksy.R 
-
-K_GEOM = config$k_geom
-LAM = config$lambda
-use_agf = config$use_agf
-nPCs <- config$npcs
-method <- config$method
-# all_samples = as.character(c(151507:151510, 151669:151676))
-# all_domains = c(rep(7, 4), rep(5, 4), rep(7, 4))
-
-# Using seurat normalization
-gcm = assay(spe, "counts")
-seu = CreateSeuratObject(counts = gcm)
-seu = NormalizeData(seu, normalization.method = 'RC', scale.factor = median(colSums(gcm))
-, verbose = FALSE)
-if (nrow(seu) >= 2000){
-    seu = FindVariableFeatures(seu, nfeatures = 2000, verbose = FALSE)
-    varFea = VariableFeatures(seu)
-} else {
-    varFea = rownames(seu)
+# Variable features (if given - opt takes priority)
+if (nrow(spe) >= n_genes){
+    counts <- assay(spe, "counts")
+    seu <- CreateSeuratObject(counts = counts)
+    seu <- NormalizeData(seu, normalization.method = 'RC', scale.factor = median(colSums(counts)), verbose = FALSE)
+    seu <- FindVariableFeatures(seu, nfeatures = n_genes, verbose = FALSE)
+    spe <- spe[VariableFeatures(seu), ]
 }
 
+
 # Normalization to mean library size
-
-
-
 spe <- scuttle::computeLibraryFactors(spe)
 assay(spe, assay_name) <- scuttle::normalizeCounts(spe, log = FALSE)
-# Subset according to the script
-spe <- spe[varFea, ]
-# Run BANKSY
 
-spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = K_GEOM, compute_agf = use_agf, verbose = FALSE)
-spe <- Banksy::runBanksyPCA(spe, lambda = LAM, npcs = nPCs, use_agf = use_agf)
+# Run BANKSY
+spe <- Banksy::computeBanksy(spe, assay_name = assay_name, k_geom = k_geom, compute_agf = use_agf, verbose = FALSE, coord_names = coord_names)
+spe <- Banksy::runBanksyPCA(spe, lambda = lambda, npcs = n_pcs, use_agf = use_agf)
 
 
 # Resolution optimization
-binary_search <- function(
-    spe,
-    do_clustering,
-    n_clust_target,
-    resolution_update = 2,
-    resolution_init = 1,
-    resolution_boundaries=NULL,
-    num_rs = 100,
-    tolerance = 1e-3,
-    ...) {
-
-  # Initialize boundaries
-  lb <- rb <- NULL
-  n_clust <- -1
-
-  if (!is.null(resolution_boundaries)){
-    lb <- resolution_boundaries[1]
-    rb <- resolution_boundaries[2]
-  } else {
-    res <-  resolution_init
-    result <- do_clustering(spe, resolution = res, ...)
-    # Adjust cluster_ids extraction per method
-    n_clust <- length(unique(colData(result)[, clusterNames(result)]))
-    if (n_clust > n_clust_target) {
-      while (n_clust > n_clust_target && res > 1e-5) {
-        rb <- res
-        res <- res/resolution_update
-        result <- do_clustering(spe, resolution = res, ...)
-        n_clust <- length(unique(colData(result)[, clusterNames(result)]))
-      }
-      lb <- res
-    } else if (n_clust < n_clust_target) {
-      while (n_clust < n_clust_target) {
-        lb <- res 
-        res <- res*resolution_update
-        result <- do_clustering(spe, resolution = res, ...)
-        n_clust <- length(unique(colData(result)[, clusterNames(result)]))
-      }
-      rb <- res
-    }
-    if (n_clust == n_clust_target) {lb = rb = res }
-  }
-
-  i <- 0
-  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
-    mid <- sqrt(lb * rb)
-    message("Resolution: ", mid)
-    result <- do_clustering(spe, resolution = mid, ...)
-    # Adjust cluster_ids extraction per method
-    cluster_ids <- colData(result)[, clusterNames(result)]
-    n_clust <- length(unique(cluster_ids))
-    if (n_clust == n_clust_target || lb == rb) break
-    if (n_clust > n_clust_target) {
-      rb <- mid
-    } else {
-      lb <- mid
-    }
-    i <- i + 1
-  }
-
-  # Warning if target not met
-  if (n_clust != n_clust_target) {
-    warning(sprintf("Warning: n_clust = %d not found in binary search, return best approximation with res = %f and n_clust = %d. (rb = %f, lb = %f, i = %d)", n_clust_target, mid, n_clust, rb, lb, i))
-  }
-  return(result)
+extract_nclust <- function(result){
+    length(unique(colData(result)[, clusterNames(result)]))
 }
 
-
-# The data.frames with observations may contain a column "selected" which you need to use to
-# subset and also use to subset coordinates, neighbors, (transformed) count matrix
-#cnames <- colnames(colData(spe))
-result <- binary_search(spe, n_clust_target = n_clusters, 
-                        do_clustering = Banksy::clusterBanksy, 
+result <- binary_search(
+    spe, 
+    n_clust_target = n_clusters, 
+    extract_nclust = extract_nclust,
+    do_clustering = Banksy::clusterBanksy, 
                         # Banksy specific
-                        lambda = LAM, 
+                        lambda = lambda, 
                         use_pcs = TRUE, 
-                        #npcs = npcs, 
                         seed = seed, 
                         method = method,
                         assay_name = assay_name, 
                         use_agf = use_agf)
 
-label_df <- data.frame("label" = colData(bank)[, clusterNames(bank)], row.names=rownames(colData(bank)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
-if (use_agf) embedding_df <- as.data.frame(t(assay(bank, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
+label_df <- data.frame("label" = colData(result)[, clusterNames(result)], row.names=rownames(colData(result)))  # data.frame with row.names (cell-id/barcode) and 1 column (label)
+if (use_agf) embedding_df <- as.data.frame(t(assay(result, "H1")))  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 
 ## Write output

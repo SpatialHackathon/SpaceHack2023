@@ -157,11 +157,9 @@ sce <- get_SingleCellExperiment(feature_file, observation_file, matrix_file, dim
 
 # Source: https://www.ezstatconsulting.com/BayesSpace/articles/maynard_DLPFC.html
 
-set.seed(101)
 dec <- scran::modelGeneVar(sce)
 top <- scran::getTopHVGs(dec, n = 2000)
 
-set.seed(102)
 sce <- scater::runPCA(sce, subset_row=top)
 
 sce <- spatialPreprocess(

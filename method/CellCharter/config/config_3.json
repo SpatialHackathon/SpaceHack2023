@@ -1,6 +1,0 @@
-{
-"n_layers": 5, 
-"aggregations": "mean", 
-"convergence_tolerance": 0.001,
-"covariance_regularization": 1e-06
-}

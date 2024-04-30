@@ -1,0 +1,12 @@
+{
+  "C": 20,
+  "init_method": "kmeans",
+  "beta_method": "SW",
+  "geneSelect": "sparkx",
+  "scaleFeature": true,
+  "n_genes": 3000,
+  "n_pcs": 20,
+  "burnin": 2000,
+  "nsample": 5000,
+  "source": "https://zhengli09.github.io/BASS-Analysis/MERFISH.html"
+}

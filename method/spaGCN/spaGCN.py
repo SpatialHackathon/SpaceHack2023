@@ -136,9 +136,11 @@ np.random.seed(seed)
 adata = get_anndata(args)
 adata.var_names_make_unique()
 # adata.write_h5ad("adata.h5ad")
+
+spg.prefilter_genes(adata, min_cells=3)
 spg.prefilter_specialgenes(adata)
 
-#Normalize and take log for UMI
+# Normalize and take log for UMI
 sc.pp.normalize_total(adata)
 sc.pp.log1p(adata)
 

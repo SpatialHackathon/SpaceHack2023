@@ -1,0 +1,12 @@
+{
+  "C": 20,
+  "init_method": "mclust",
+  "beta_method": "SW",
+  "geneSelect": "sparkx",
+  "scaleFeature": false,
+  "n_genes": 3000,
+  "n_pcs": 20,
+  "burnin": 2000,
+  "nsample": 10000,
+  "source": "https://zhengli09.github.io/BASS-Analysis/DLPFC.html"
+}

@@ -1,0 +1,1 @@
+{"method": "leiden", "lambda": 0.8, "k_geom": 18, "n_pcs": 20, "n_genes": 2000, "use_agf": true, "source": "https://prabhakarlab.github.io/Banksy/articles/domain-segment.html#running-banksy"}
