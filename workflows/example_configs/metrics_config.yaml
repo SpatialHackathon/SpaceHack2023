@@ -1,16 +1,19 @@
 # Github repo path, modify based on your env
 git_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack_CherryPick
 # Dataset path, modify based on your env
-# Mouse Brain
-#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/xenium-mouse-brain-SergioSalas
-#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/STARmap_plus
-# data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/abc_atlas_wmb_thalamus
-data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/stereoseq_developing_Drosophila_embryos_larvae
+git_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack_CherryPick
+# Dataset path, modify based on your env
+dataset_dir: "/work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data"
+datasets:
+  - xenium-mouse-brain-SergioSalas       # Mouse Brain
+  - STARmap_plus
+  - abc_atlas_wmb_thalamus
+  - libd_dlpfc                            # Visium Comparison
+  - visium_breast_cancer_SEDR
+#  - stereoseq_developing_Drosophila_embryos_larvae
+#  - "stereoseq_mouse_embryo"
+  - visium_chicken_heart
 
-# Visium Comparison
-#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/libd_dlpfc
-#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/visium_breast_cancer_SEDR
-#data_dir: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data/visium_chicken_heart
 
 use_metrics:
   - "ARI"

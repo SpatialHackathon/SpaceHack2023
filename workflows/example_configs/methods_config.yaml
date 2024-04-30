@@ -9,6 +9,7 @@ datasets:
   - libd_dlpfc                            # Visium Comparison
   - visium_breast_cancer_SEDR
 #  - stereoseq_developing_Drosophila_embryos_larvae
+#  - "stereoseq_mouse_embryo"
   - visium_chicken_heart
 
 seed: 2023
@@ -22,7 +23,7 @@ use_methods:
   - "SpaceFlow"
   - "scanpy"
   - "seurat"
-#  - "SEDR"            # memory or time consuming methods
+  - "SEDR"            # memory or time consuming methods
   - "bass"
   - "stardust"
   - "STAGATE"
