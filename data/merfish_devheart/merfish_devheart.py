@@ -5,7 +5,7 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Load data for Visium Breast Cancer")
+parser = argparse.ArgumentParser(description="Load data for Merfish Developing Heart")
 
 parser.add_argument(
     "-o", "--out_dir", help="Output directory to write files to.", required=True
