@@ -142,6 +142,8 @@ beta <- config$beta
 n_pcs <- config$n_pcs
 n_pcs <- ifelse(is.null(opt$n_pcs), n_pcs, opt$n_pcs)
 filterDist <- config$filterDist
+min.reads <- config$min.reads
+min.lib.size <- config$min.lib.size
 
 # Seed
 seed <- opt$seed
@@ -151,8 +153,8 @@ set.seed(seed)
 counts <- Matrix::t(Matrix::readMM(matrix_file))
 colnames(counts) <- rownames(positions)
 counts <- cleanCounts(counts = counts, 
-                      min.reads = 100, 
-                      min.lib.size = 100, 
+                      min.reads = min.reads, 
+                      min.lib.size = min.lib.size, 
                       plot=FALSE,
                       verbose=TRUE)
 
