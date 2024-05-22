@@ -80,7 +80,7 @@ if args.n_genes is not None:
     n_genes = args.n_genes
 else:
     n_genes = config.get("n_genes", None)  # No filtering if no top genes are specified
-
+    
 if args.n_pcs is not None:
     n_pcs = args.n_pcs
 else:
@@ -137,7 +137,9 @@ def get_anndata(args):
 
 adata = get_anndata(args)
 
-
+if n_genes is not None:
+    n_genes = min(adata.n_vars, n_genes)
+    
 # Set the seed
 import random
 random.seed(seed)
@@ -170,7 +172,7 @@ sf = SpaceFlow.SpaceFlow(adata=adata)
 # replace sf.preprocessing_data(n_top_genes = min(adata.n_vars, n_genes))
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
-sc.pp.highly_variable_genes(adata, n_top_genes=min(adata.n_vars, n_genes), flavor='cell_ranger', subset=True)
+sc.pp.highly_variable_genes(adata, n_top_genes=n_genes, flavor='cell_ranger', subset=True)
 sc.pp.pca(adata, n_pcs)
 spatial_locs = adata.obsm['spatial']
 spatial_graph = sf.graph_alpha(spatial_locs, n_neighbors=10)
