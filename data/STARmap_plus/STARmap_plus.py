@@ -41,7 +41,8 @@ def get_data(out_dir):
         print('[START] COMPOSING DATA')
 
         # Names and urls of the samples are so inconsistent that I have to list them manually
-        samples = ['well7_5','well10','well09','well04','well06','well07','well03','well01OB',
+        samples = ['well10','well09','well06','well07','well03','well05','well01brain','well11','well08',
+            'well7_5','well10','well09','well04','well06','well07','well03','well01OB',
                 'well05','sagittal3','well01brain','well1_5','well2_5','sagittal1','spinalcord',
                 'well11','sagittal2','well3_5','well08']
         
@@ -55,7 +56,7 @@ def get_data(out_dir):
                 os.makedirs(f'{out_dir}/{sample}')
 
             download_data(f'https://zenodo.org/records/8327576/files/{sample}_spatial.csv?download=1', 
-                        f'{tmpdir}', f'{sample}_spatial.csv')
+                        f'{tmpdir}', f'{sample}_spatial.csv') 
         
             sample_dir = f'{out_dir}/{sample}'
             directories.append(sample_dir)
@@ -75,15 +76,14 @@ def get_data(out_dir):
                 clusters = []
 
                 f_out_coords.write('\tx\ty\tz\n')
-                f_out_labels.write('\tlabel\tSub_molecular_cell_type\tMain_molecular_tissue_region\
-                                \tSub_molecular_tissue_region\tMolecular_spatial_cell_type\n')
+                f_out_labels.write('\tMain_molecular_cell_type\tSub_molecular_cell_type\tlabel\tSub_molecular_tissue_region\tMolecular_spatial_cell_type\n')
 
                 for l in f_in:
                     data = l.strip('\n').split(",")
                     f_out_labels.write(f'{data[0]}\t{data[4]}\t{data[5]}\t{data[6]}\t{data[7]}\t{data[8]}\n')
                     f_out_coords.write(f'{data[0]}\t{data[1]}\t{data[2]}\t{data[3]}\n')
                     f_out_obs.write(l.replace(',','\t'))
-                    clusters.append(data[4])
+                    clusters.append(data[6])
 
             n_cluster.append(len(set(clusters)))
 
