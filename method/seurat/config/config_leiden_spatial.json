@@ -1,0 +1,6 @@
+{
+  "algorithm": 4,
+  "npcs":30,
+  "ndims": 30,
+  "reference": "https://satijalab.org/seurat/articles/seurat5_spatial_vignette_2"
+}

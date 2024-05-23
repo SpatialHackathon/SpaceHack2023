@@ -1,0 +1,6 @@
+{
+  "algorithm": 2,
+  "npcs":50,
+  "ndims": 10,
+  "reference": "https://satijalab.org/seurat/reference/runpca, https://satijalab.org/seurat/reference/findneighbors"
+}

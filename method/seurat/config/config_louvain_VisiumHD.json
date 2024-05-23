@@ -1,0 +1,6 @@
+{
+  "algorithm": 2,
+  "npcs":50,
+  "ndims": 50,
+  "reference":"https://satijalab.org/seurat/articles/visiumhd_analysis_vignette#unsupervised-clustering"
+}
