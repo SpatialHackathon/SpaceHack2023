@@ -1,5 +1,7 @@
 {
-"device": "cpu", 
-"cluster_method": "mclust", 
-"using_dec": true
+    "n":6,
+    "cluster_method": "mclust", 
+    "using_dec": false, 
+    "HVG": true,
+    "Config_rationale": "Same as default, but turning off the dec"
 }

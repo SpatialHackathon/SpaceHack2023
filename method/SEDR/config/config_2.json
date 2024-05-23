@@ -1,5 +1,7 @@
 {
-"device": "cpu",
-"cluster_method": "louvain", 
-"using_dec": true
+    "n":12,
+    "cluster_method": "mclust", 
+    "using_dec": false, 
+    "HVG": true,
+    "Config_rationale": "Same as dlpfc, but turning off the dec"
 }
