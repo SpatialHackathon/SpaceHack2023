@@ -1,1 +1,9 @@
-{"method": "louvain", "refine": false, "alpha": 2, "p": 0.5, "n_pcs": 50, "n_neighbors": 10}
+{
+    "method": "kmeans", 
+    "refine": false, 
+    "alpha": 1, 
+    "p": 0.5, 
+    "n_pcs": 50, 
+    "n_neighbors": 10,
+    "Config_rationale": "Un-refined + Different clustering methods"
+}
