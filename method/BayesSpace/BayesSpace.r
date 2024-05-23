@@ -67,6 +67,16 @@ option_list <- list(
     c("--config"),
     type = "character", default = NA,
     help = "Optional config file used to pass additional parameters."
+  ),
+    make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
   )
 )
 
@@ -157,10 +167,15 @@ sce <- get_SingleCellExperiment(feature_file, observation_file, matrix_file, dim
 
 # Source: https://www.ezstatconsulting.com/BayesSpace/articles/maynard_DLPFC.html
 
-dec <- scran::modelGeneVar(sce)
-top <- scran::getTopHVGs(dec, n = config$nhvgs)
+n_pcs <- config$n_pcs
+n_pcs <- ifelse(is.null(opt$n_pcs), n_pcs, opt$n_pcs)
+n_genes <- config$n_genes
+n_genes <- ifelse(is.null(opt$n_genes), n_genes, opt$n_genes)
 
-sce <- scater::runPCA(sce, subset_row=top)
+dec <- scran::modelGeneVar(sce)
+top <- scran::getTopHVGs(dec, n = n_genes)
+
+sce <- scater::runPCA(sce, ncomponents=n_pcs, subset_row=top)
 
 sce <- spatialPreprocess(
   sce,
@@ -168,14 +183,13 @@ sce <- spatialPreprocess(
   skip.PCA = TRUE
 )
 
-nPcs = config$nPC
 nrep = config$nrep
 gamma = config$gamma
 
 sce <- spatialCluster(
   sce,
   q = n_clusters,
-  d = nPcs,
+  d = n_pcs,
   platform = technology,
   nrep = nrep,
   gamma = gamma

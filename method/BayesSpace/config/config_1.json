@@ -1,6 +1,6 @@
 {
-  "nhvgs":2000,
-  "nPC": 7,
+  "n_genes":2000,
+  "n_pcs": 7,
   "gamma": 3,
   "nrep": 10000,
   "Config_rationale": "Combination of nrep and nPC based on other 3 configs"
