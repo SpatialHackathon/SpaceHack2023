@@ -1,6 +1,0 @@
-{
-  "method": "weight",
-  "npcs": 20,
-  "weight": 0.75,
-  "Config_rationale": "Change the npcs from 10 to 20"
-}
