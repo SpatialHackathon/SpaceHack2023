@@ -1,6 +1,6 @@
 {
   "algorithm": 4,
-  "npcs":50,
-  "ndims": 50,
+  "n_genes":2000,
+  "n_pcs":50,
   "reference":"https://satijalab.org/seurat/articles/visiumhd_analysis_vignette#unsupervised-clustering"
 }
