@@ -1,5 +1,7 @@
 {
+  "nhvgs":2000,
   "nPC": 15,
   "gamma": 3,
-  "nrep": 50000
+  "nrep": 50000,
+  "reference": "Default is the same as flpfc"
 }
