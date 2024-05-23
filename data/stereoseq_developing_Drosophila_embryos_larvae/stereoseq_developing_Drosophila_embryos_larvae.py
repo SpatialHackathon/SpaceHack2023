@@ -13,7 +13,7 @@ import tempfile
 
 # 6 available but only 2 contain region label and coordinates
 
-sample_name = ['E14-16h_a','L3_b','L1_a','l2_a','E16-18h_a']
+sample_name = ['E14-16h_a','L3_b','L1_a','L2_a','E16-18h_a']
 
 LINKS = [f"https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000060/stomics/{sample}_count_normal_stereoseq.h5ad" for sample in sample_name]
 
@@ -42,12 +42,12 @@ def process_adata(adata_path,output_folder,iteration,sample_df,sample_name):
 
     # Observations
     obs = adata.obs.copy()
-    obs["selected"] = "true"
+    # obs["selected"] = "true"
     obs.to_csv(f"{complete_path}/observations.tsv",sep="\t",index_label="")
 
     # Features
     vars = adata.var.copy()
-    vars["selected"] = "true"
+    # vars["selected"] = "true"
     vars.to_csv(f"{complete_path}/features.tsv",sep="\t",index_label="")
 
     # 3d Coordinates
@@ -67,7 +67,7 @@ def process_adata(adata_path,output_folder,iteration,sample_df,sample_name):
         file_path = f"{complete_path}/counts.mtx"
         scipy.io.mmwrite(file_path, matrix_to_write)
     elif "raw_counts" in adata.layers:
-        matrix_to_write = adata.layers["counts"]
+        matrix_to_write = adata.layers["raw_counts"]
         file_path = f"{complete_path}/counts.mtx"
         scipy.io.mmwrite(file_path, matrix_to_write)
         print(f"Matrix written to {file_path}")
@@ -87,7 +87,8 @@ def process_adata(adata_path,output_folder,iteration,sample_df,sample_name):
 
     # Write labels.tsv
     if "annotation" in adata.obs.columns:
-        labels = adata.obs["annotation"]
+        labels = adata.obs[["annotation"]]
+        labels.columns=[['label']]
         labels.to_csv(f"{complete_path}/labels.tsv",sep="\t",index_label="")
         
     
