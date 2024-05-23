@@ -168,13 +168,17 @@ sce <- spatialPreprocess(
   skip.PCA = TRUE
 )
 
-nPcs = config$nPCs
+nPcs = config$nPC
+nrep = config$nrep
+gamma = config$gamma
 
 sce <- spatialCluster(
   sce,
   q = n_clusters,
   d = nPcs,
-  platform = technology
+  platform = technology,
+  nrep = nrep,
+  gamma = gamma
 )
 
 label_df <- as.data.frame(colData(sce))[c("spatial.cluster")]

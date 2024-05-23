@@ -1,0 +1,6 @@
+{
+  "nPC": 7,
+  "gamma": 3,
+  "nrep": 50000,
+  "reference":"https://www.ezstatconsulting.com/BayesSpace/articles/thrane_melanoma.html"
+}
