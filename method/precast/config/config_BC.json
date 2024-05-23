@@ -1,5 +1,5 @@
 {
-    "gene_number": 2000,
+    "n_genes": 2000,
     "method": "SPARK-X",
     "maxIter": 30,
     "postminspots":1,
