@@ -10,6 +10,12 @@ suppressPackageStartupMessages({
     library(Seurat)
     library(stardust)
 })
+# Get script path
+initial_options <- commandArgs(trailingOnly = FALSE)
+file_arg_name <- "--file="
+script_path <- dirname(sub(file_arg_name, "", initial_options[grep(file_arg_name, initial_options)]))
+# Source binary search function
+source(file.path(script_path, "../search_res.r"))
 
 option_list <- list(
   make_option(
@@ -71,6 +77,16 @@ option_list <- list(
     c("--config"),
     type = "character", default = NA,
     help = "Optional config file (json) used to pass additional parameters."
+  ),
+  make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
   )
 )
 
@@ -157,80 +173,12 @@ technology <- opt$technology
 n_clusters <- opt$n_clusters
 method <- config$method
 pcaDimensions <- config$npcs
+pcaDimensions <- ifelse(is.null(opt$n_pcs), pcaDimensions, opt$n_pcs)
 
 # Seed
 seed <- opt$seed
 set.seed(seed)
 
-# Resolution optimization
-binary_search <- function(
-    seurat_obj,
-    do_clustering,
-    n_clust_target,
-    resolution_update = 2,
-    resolution_init = 1,
-    resolution_boundaries=NULL,
-    num_rs = 100,
-    tolerance = 1e-3,
-    ...) {
-
-  # Initialize boundaries
-  lb <- rb <- NULL
-  n_clust <- -1
-
-  if (!is.null(resolution_boundaries)){
-    lb <- resolution_boundaries[1]
-    rb <- resolution_boundaries[2]
-  } else {
-    res <-  resolution_init
-    results <- do_clustering(seurat_obj, res = res, ...)
-    # Adjust cluster_ids extraction per method
-    n_clust <- length(unique(results@active.ident))
-    if (n_clust > n_clust_target) {
-      while (n_clust > n_clust_target && res > 1e-5) {
-        rb <- res
-        res <- res/resolution_update
-        results <- do_clustering(seurat_obj, res = res, ...)
-        n_clust <- length(unique(results@active.ident))
-      }
-      lb <- res
-    } else if (n_clust < n_clust_target) {
-      while (n_clust < n_clust_target) {
-        lb <- res 
-        res <- res*resolution_update
-        results <- do_clustering(seurat_obj, res = res, ...)
-        n_clust <- length(unique(results@active.ident))
-      }
-      rb <- res
-    }
-    if (n_clust == n_clust_target) {lb = rb = res }
-  }
-
-  i <- 0
-  while ((rb - lb > tolerance || lb == rb) && i < num_rs) {
-    mid <- sqrt(lb * rb)
-    message("Resolution: ", mid)
-    set.seed(seed)
-    results <- do_clustering(seurat_obj, res = mid, ...)
-    cluster_ids <- results@active.ident
-    # Adjust cluster_ids extraction per method
-    n_clust <- length(unique(cluster_ids))
-    message("Cluster: ", n_clust)
-    if (n_clust == n_clust_target || lb == rb) break
-    if (n_clust > n_clust_target) {
-      rb <- mid
-    } else {
-      lb <- mid
-    }
-    i <- i + 1
-  }
-
-  # Warning if target not met
-  if (n_clust != n_clust_target) {
-    warning(sprintf("Warning: n_clust = %d not found in binary search, return best approximation with res = %f and n_clust = %d. (rb = %f, lb = %f, i = %d)", n_clust_target, mid, n_clust, rb, lb, i))
-  }
-  return(results)
-}
 ## Your code goes here
 
 # SpatialExperiment
