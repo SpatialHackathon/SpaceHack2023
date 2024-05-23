@@ -1,0 +1,7 @@
+{
+    "gene_number": 2000,
+    "method": "SPARK-X",
+    "maxIter": 20,
+    "postminspots":15,
+    "postminfeatures":15
+}

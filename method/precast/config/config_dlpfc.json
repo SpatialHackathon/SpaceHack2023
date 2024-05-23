@@ -1,5 +1,5 @@
 {
-    "gene_number": 700,
+    "gene_number": 2000,
     "method": "HVGs",
     "maxIter": 30,
     "postminspots":15,

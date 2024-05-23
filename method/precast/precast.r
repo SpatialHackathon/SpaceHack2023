@@ -168,19 +168,26 @@ if (!("row" %in% colnames(seurat_obj@meta.data) & "col" %in% colnames(seurat_obj
 
 n_var = config$gene_number
 method = config$method
+maxIter = config$maxIter
+postminspots = config$postminspots
+postminfeatures = config$postminfeatures
 
 if (nrow(seurat_obj)>n_var){
   PRECASTObj <- CreatePRECASTObject(seuList = list(seurat_obj), 
                                   gene.number=n_var,
-                                  selectGenesMethod=method)
+                                  selectGenesMethod=method, 
+                                  postmin.features = postminfeatures, 
+                                  postmin.spots = postminspots)
 } else {
   PRECASTObj <- CreatePRECASTObject(seuList = list(seurat_obj), 
-                                    customGenelist = rownames(rowData(sce)))
+                                    customGenelist = rownames(rowData(sce)),
+                                  postmin.features = postminfeatures, 
+                                  postmin.spots = postminspots)
 }
 
 platform <- ifelse(technology %in% c("Visium", "ST"), technology, "Other_SRT")
 PRECASTObj <- AddAdjList(PRECASTObj, platform = platform)
-PRECASTObj <- AddParSetting(PRECASTObj, Sigma_equal = FALSE, coreNum = 4, maxIter = 30, verbose = TRUE)
+PRECASTObj <- AddParSetting(PRECASTObj, Sigma_equal = FALSE, coreNum = 10, maxIter = maxIter, verbose = TRUE)
 
 PRECASTObj <- PRECAST(PRECASTObj, K = n_clusters)
 PRECASTObj <- SelectModel(PRECASTObj)
