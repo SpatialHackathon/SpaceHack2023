@@ -7,6 +7,7 @@ dependencies:
   - torchvision=0.13.1
   - torchaudio=0.12.1
   - cudatoolkit=11.6
+  - mkl=2024.0.0
   - scikit-misc=0.1.4
 #  - torchaudio=0.12
 #  - cudatoolkit
