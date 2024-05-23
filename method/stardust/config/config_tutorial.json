@@ -1,0 +1,6 @@
+{
+  "method": "weight",
+  "npcs": 10,
+  "weight": 0.75,
+  "reference":"https://github.com/InfOmics/stardust/blob/master/README.md"
+}

@@ -156,34 +156,15 @@ get_SpatialExperiment <- function(
 technology <- opt$technology
 n_clusters <- opt$n_clusters
 method <- config$method
-npcs <- config$npcs
+pcaDimensions <- config$npcs
 
 # Seed
 seed <- opt$seed
 set.seed(seed)
 
-## Your code goes here
-
-# SpatialExperiment
-spe <- get_SpatialExperiment(
-    feature_file = feature_file,
-    observation_file = observation_file,
-    coord_file = coord_file,
-    matrix_file = matrix_file#,
-    #reducedDim_file = dimred_file
-)
-
-## Your code goes here
-countMatrix <- as.data.frame(SummarizedExperiment::assay(spe, "counts"))
-if (technology %in% c("ST", "Visium")){
-    spotPositions <- as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")])
-} else {
-    spotPositions <- as.data.frame(SpatialExperiment::spatialCoords(spe)[,c(1,2)])
-}
-
 # Resolution optimization
 binary_search <- function(
-    countMatrix,
+    seurat_obj,
     do_clustering,
     n_clust_target,
     resolution_update = 2,
@@ -202,14 +183,14 @@ binary_search <- function(
     rb <- resolution_boundaries[2]
   } else {
     res <-  resolution_init
-    results <- do_clustering(countMatrix, res = res, ...)
+    results <- do_clustering(seurat_obj, res = res, ...)
     # Adjust cluster_ids extraction per method
     n_clust <- length(unique(results@active.ident))
     if (n_clust > n_clust_target) {
       while (n_clust > n_clust_target && res > 1e-5) {
         rb <- res
         res <- res/resolution_update
-        results <- do_clustering(countMatrix, res = res, ...)
+        results <- do_clustering(seurat_obj, res = res, ...)
         n_clust <- length(unique(results@active.ident))
       }
       lb <- res
@@ -217,7 +198,7 @@ binary_search <- function(
       while (n_clust < n_clust_target) {
         lb <- res 
         res <- res*resolution_update
-        results <- do_clustering(countMatrix, res = res, ...)
+        results <- do_clustering(seurat_obj, res = res, ...)
         n_clust <- length(unique(results@active.ident))
       }
       rb <- res
@@ -230,7 +211,7 @@ binary_search <- function(
     mid <- sqrt(lb * rb)
     message("Resolution: ", mid)
     set.seed(seed)
-    results <- do_clustering(countMatrix, res = mid, ...)
+    results <- do_clustering(seurat_obj, res = mid, ...)
     cluster_ids <- results@active.ident
     # Adjust cluster_ids extraction per method
     n_clust <- length(unique(cluster_ids))
@@ -250,24 +231,66 @@ binary_search <- function(
   }
   return(results)
 }
+## Your code goes here
 
-# Clustering
+# SpatialExperiment
+spe <- get_SpatialExperiment(
+    feature_file = feature_file,
+    observation_file = observation_file,
+    coord_file = coord_file,
+    matrix_file = matrix_file#,
+    #reducedDim_file = dimred_file
+)
 
-if (method == "weight"){
-    do_clustering <- weightStardust
-    formals(do_clustering)$spaceWeight <- config$weight
+## Your code goes here
+countMatrix <- as.data.frame(SummarizedExperiment::assay(spe, "counts"))
+if (technology %in% c("ST", "Visium")){
+    spotPositions <- as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")])
 } else {
-    do_clustering <- autoStardust
+    spotPositions <- as.data.frame(SpatialExperiment::spatialCoords(spe)[,c(1,2)])
 }
 
+# Clustering
 options(future.globals.maxSize = 100 * 1000 * 1024^2)
 
+countMatrix <- countMatrix[,sort(colnames(countMatrix))]
+d <- dim(spotPositions)[2]
+spotPositions <- spotPositions[,(d-1):d]
+spotPositions <- spotPositions[sort(rownames(spotPositions)),]
+
+seuratObject <- Seurat::CreateSeuratObject(countMatrix)
+seuratObject <- suppressWarnings(Seurat::SCTransform(seuratObject, assay = "RNA", verbose = FALSE))
+seuratObject <- Seurat::RunPCA(seuratObject, assay = "SCT", verbose = FALSE)
+if(pcaDimensions <= 2){
+  pcaDimensions = 2
+}
+m <- seuratObject@reductions[["pca"]]@cell.embeddings[,1:pcaDimensions]
+distPCA = dist(m,method="minkowski",p=2)
+distCoord <- dist(spotPositions,method="minkowski",p=2)
+distCoord <- distCoord*(max(distPCA)/max(distCoord))
+
+if (method == "weight"){
+  spaceWeight <- config$weight
+  distCoord <- distCoord*((max(distPCA)*as.double(spaceWeight))/(max(distCoord)))
+} else {
+  expr_norm <- (distPCA - min(distPCA)) / (max(distPCA) - min(distPCA))
+  distCoord <- (distCoord)*(as.double(as.vector(expr_norm)))
+}
+
+finalDistance <- as.matrix(distPCA + distCoord)
+neighbors <- suppressWarnings(Seurat::FindNeighbors(finalDistance))
+neighbors <- list(neighbors_nn=neighbors$nn,neighbors_snn=neighbors$snn)
+seuratObject@graphs <- neighbors
+
+do_clustering <- Seurat::FindClusters
+
 output <- binary_search(
-    countMatrix, n_clust_target = n_clusters, 
+    countMatrix, 
+    n_clust_target = n_clusters, 
     do_clustering = do_clustering, 
     # stardust specific
-    spotPositions = spotPositions,
-    pcaDimensions = npcs)
+    verbose = FALSE,
+    graph.name = "neighbors_snn")
 
 # save data
 label_df <- data.frame("label" = output@active.ident, row.names=colnames(output))
