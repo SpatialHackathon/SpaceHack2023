@@ -160,6 +160,7 @@ set.seed(seed)
 
 # Config
 ndims <- config$ndims
+npcs  <- config$npcs
 algorithm <- config$algorithm
 
 if (!exists("matrix_file")) {
@@ -191,7 +192,7 @@ seurat_obj <- as.Seurat(spe, data=NULL)
 
 # Preprocessing: SC-Transform + PCA
 seurat_obj <- SCTransform(seurat_obj, assay = "originalexp", verbose = FALSE)
-seurat_obj <- RunPCA(seurat_obj, assay = "SCT", verbose = FALSE)
+seurat_obj <- RunPCA(seurat_obj, assay = "SCT", verbose = FALSE, npcs = npcs)
 
 # Find neighbors
 seurat_obj <- FindNeighbors(seurat_obj, reduction = "pca", dims = 1:ndims)
