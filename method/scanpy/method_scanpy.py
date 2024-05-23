@@ -49,6 +49,16 @@ parser.add_argument(
     help="Optional config file (json) used to pass additional parameters.",
     required=False,
 )
+parser.add_argument(
+    "--n_pcs",
+    help="Optional specific number of prinicpal components to use.",
+    required=False,
+)
+parser.add_argument(
+    "--n_genes",
+    help="Optional specific number of variable features to take.",
+    required=False,
+)
 
 args = parser.parse_args()
 
@@ -172,15 +182,26 @@ import warnings
 
 # warnings.warn("Scanpy uses leiden/louvain for clustering, which relies on the resolution parameter in the config file. The parameter num_clusters will be ignored.", UserWarning)
 
+if "n_genes" not in config.keys():
+    config["n_genes"] = None
+if "n_pcs" not in config.keys():
+    config["n_pcs"] = None
+
+n_pcs = args.n_pcs if args.n_pcs is not None else config["n_pcs"]
+n_genes = args.n_genes if args.n_genes is not None else config["n_genes"]
+directed = None if "directed" not in config.keys() else config["directed"]
+n_iterations = -1 if "n_iterations" not in config.keys() else config["n_iterations"]
+flavor = "leidenalg" if "flavor" not in config.keys() else config["flavor"]
+
 # scanpy starts here
 if not args.dim_red:
     sc.pp.normalize_total(adata)
     sc.pp.log1p(adata)
     if adata.n_vars > 2000:
-        sc.pp.highly_variable_genes(adata, flavor="seurat", n_top_genes=2000)
+        sc.pp.highly_variable_genes(adata, flavor="seurat", n_top_genes=n_genes)
     sc.pp.scale(adata)
     sc.tl.pca(adata)
-    sc.pp.neighbors(adata, n_neighbors=config["n_neighbors"], n_pcs=config["n_pcs"], random_state=seed)
+    sc.pp.neighbors(adata, n_neighbors=config["n_neighbors"], n_pcs=n_pcs, random_state=seed)
 else:
     sc.pp.neighbors(adata, n_neighbors=config["n_neighbors"], use_rep="reduced_dimensions")
 
@@ -189,8 +210,12 @@ if config['clustering'] not in ["louvain", "leiden"]:
     print("No clustering method defined or your method is not available, performing leiden")
     label_df = binary_search(adata, n_clust_target=n_clusters, method="leiden", seed = seed)
 else:
-    label_df = binary_search(adata, n_clust_target=n_clusters, method=config['clustering'], 
-                             seed = seed, flavor = config["flavor"])
+    label_df = binary_search(adata, n_clust_target=n_clusters, 
+                             method=config['clustering'], 
+                             seed = seed, 
+                             directed = directed,
+                             n_iterations = n_iterations,
+                             flavor = flavor,)
 
 # sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
 
