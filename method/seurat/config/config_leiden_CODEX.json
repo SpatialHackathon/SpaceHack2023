@@ -1,0 +1,6 @@
+{
+  "algorithm": 4,
+  "n_genes":2000,
+  "n_pcs":20,
+  "reference": "https://satijalab.org/seurat/articles/seurat5_spatial_vignette_2#human-lymph-node-akoya-codex-system"
+}

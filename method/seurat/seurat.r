@@ -9,6 +9,12 @@ suppressPackageStartupMessages({
     library(SpatialExperiment)
     library(Seurat)
 })
+# Get script path
+initial_options <- commandArgs(trailingOnly = FALSE)
+file_arg_name <- "--file="
+script_path <- dirname(sub(file_arg_name, "", initial_options[grep(file_arg_name, initial_options)]))
+# Source binary search function
+source(file.path(script_path, "../search_res.r"))
 
 assignInNamespace("is_conda_python", function(x){ return(FALSE) }, ns="reticulate")
 
@@ -72,6 +78,16 @@ option_list <- list(
     c("--config"),
     type = "character", default = NA,
     help = "Optional config file (json) used to pass additional parameters."
+  ),
+    make_option(
+    c("--n_clusters"),
+    type = "integer", default = NULL,
+    help = "Number of clusters to return."
+  ),
+  make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
   )
 )
 
@@ -159,7 +175,10 @@ seed <- opt$seed
 set.seed(seed)
 
 # Config
-ndims <- config$ndims
+n_pcs <- config$n_pcs
+n_pcs <- ifelse(is.null(opt$n_pcs), n_pcs, opt$n_pcs)
+n_genes <- config$n_genes
+n_genes <- ifelse(is.null(opt$n_genes), n_genes, opt$n_genes)
 algorithm <- config$algorithm
 
 if (!exists("matrix_file")) {
@@ -184,88 +203,15 @@ if (is.null(assayNames(spe))){
     assay(spe, "counts", withDimnames = FALSE) <- Matrix::Matrix(0, nrow=nrow(spe), ncol=ncol(spe), sparse=TRUE)
 }
 
-
 # Convert to Seurat object
 seurat_obj <- as.Seurat(spe, data=NULL)
-# saveRDS(seurat_obj, "seurat.rds")
 
 # Preprocessing: SC-Transform + PCA
-seurat_obj <- SCTransform(seurat_obj, assay = "originalexp", verbose = FALSE)
-seurat_obj <- RunPCA(seurat_obj, assay = "SCT", verbose = FALSE)
+seurat_obj <- SCTransform(seurat_obj, assay = "originalexp", verbose = FALSE, variable.features.n = n_genes)
+seurat_obj <- RunPCA(seurat_obj, assay = "SCT", verbose = FALSE, npcs = n_pcs)
 
 # Find neighbors
-seurat_obj <- FindNeighbors(seurat_obj, reduction = "pca", dims = 1:ndims)
-
-
-# Resolution optimization
-binary_search <- function(
-    seurat_obj,
-    do_clustering,
-    n_clust_target,
-    resolution_update = 2,
-    resolution_init = 1,
-    resolution_boundaries=NULL,
-    num_rs = 100,
-    tolerance = 1e-3,
-    ...) {
-
-  # Initialize boundaries
-  lb <- rb <- NULL
-  n_clust <- -1
-
-  if (!is.null(resolution_boundaries)){
-    lb <- resolution_boundaries[1]
-    rb <- resolution_boundaries[2]
-  } else {
-    res <-  resolution_init
-    results <- do_clustering(seurat_obj, resolution = res, ...)
-    # Adjust cluster_ids extraction per method
-    n_clust <- length(unique(Idents(results)))
-    if (n_clust > n_clust_target) {
-      while (n_clust > n_clust_target && res > 1e-5) {
-        rb <- res
-        res <- res/resolution_update
-        results <- do_clustering(seurat_obj, resolution = res, ...)
-        n_clust <- length(unique(Idents(results)))
-      }
-      lb <- res
-    } else if (n_clust < n_clust_target) {
-      while (n_clust < n_clust_target) {
-        lb <- res 
-        res <- res*resolution_update
-        results <- do_clustering(seurat_obj, resolution = res, ...)
-        n_clust <- length(unique(Idents(results)))
-      }
-      rb <- res
-    }
-    if (n_clust == n_clust_target) {lb = rb = res}
-  }
-
-  i <- 0
-  while ((rb - lb > tolerance) && i < num_rs) {
-    mid <- sqrt(lb * rb)
-    message("Resolution: ", mid)
-    results <- do_clustering(seurat_obj, resolution = mid, ...)
-    cluster_ids <- Idents(results)
-    # Adjust cluster_ids extraction per method
-    n_clust <- length(unique(cluster_ids))
-    message("Cluster: ", n_clust)
-    if (n_clust == n_clust_target || lb == rb) break
-    if (n_clust > n_clust_target) {
-      rb <- mid
-    } else {
-      lb <- mid
-    }
-    i <- i + 1
-  }
-
-  # Warning if target not met
-  if (n_clust != n_clust_target) {
-    warning(sprintf("Warning: n_clust = %d not found in binary search, return best approximation with res = %f and n_clust = %d. (rb = %f, lb = %f, i = %d)", n_clust_target, mid, n_clust, rb, lb, i))
-  }
-  return(results)
-}
-
+seurat_obj <- FindNeighbors(seurat_obj, reduction = "pca", dims = 1:n_pcs)
 
 # Clustering
 seurat_obj <- binary_search(
