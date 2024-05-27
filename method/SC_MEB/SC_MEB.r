@@ -5,6 +5,11 @@
 
 suppressPackageStartupMessages({
     library(optparse)
+    library(jsonlite)
+    library(SingleCellExperiment)
+    library(scuttle)
+    library(scran)
+    library(scater)
     library(SC.MEB)
 })
 
@@ -55,6 +60,16 @@ option_list <- list(
     help = "Number of clusters to return."
   ),
   make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
+  ),
+  make_option(
     c("--technology"),
     type = "character", default = NULL,
     help = "The technology of the dataset (Visium, ST, imaging-based)."
@@ -93,31 +108,93 @@ observation_file <- opt$observations
 
 if (!is.na(opt$neighbors)) {
   neighbors_file <- opt$neighbors
-  neighbors <- as(Matrix::readMM(neighbors_file), "CsparseMatrix")
+}
+
+if (!is.na(opt$matrix)) {
+  matrix_file <- opt$matrix
 }
 
 if (!is.na(opt$dim_red)) {
   dimred_file <- opt$dim_red
-  dimred <- read.delim(dimred_file, stringsAsFactors = FALSE, row.names = 1)
 }
 if (!is.na(opt$image)) {
   image_file <- opt$image
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
+if (!technology %in% c("Visium", "ST")) {
+    warning("This method was built for Visium and ST. 
+            Setting technology to ST.")
+    technology <- "ST"
+    # ST: Square spots
+    # Visium: Hexagonal spots
+}
 n_clusters <- opt$n_clusters
-
-
-# Seed
 seed <- opt$seed
+# Load configuration
+n_pcs <- ifelse(is.null(opt$n_pcs), config$n_pcs, opt$n_pcs)
+n_genes <- ifelse(is.null(opt$n_genes), config$n_genes, opt$n_genes)
+
+# SingleCellExperiment
+get_SingleCellExperiment <- function(
+    feature_file,
+    observation_file,
+    coord_file,
+    matrix_file = NA,
+    assay_name = "counts",
+    reducedDim_name = "reducedDim") {
+  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
+  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
+
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
+  coordinates <- as.matrix(coordinates[rownames(colData), ])
+  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
+
+    sce <- SingleCellExperiment::SingleCellExperiment(
+    rowData = rowData, colData = colData, metadata = list("spatialCoords" = coordinates))
+
+  if (!is.na(matrix_file)) {
+    assay(sce, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+    assay(sce, "logcounts", withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
+  }
+
+  # Filter features and samples
+  if ("selected" %in% colnames(rowData(sce)) && FALSE) { # Don't subset here
+    sce <- sce[as.logical(rowData(sce)$selected), ]
+  }
+  if ("selected" %in% colnames(colData(sce))) {
+    sce <- sce[, as.logical(colData(sce)$selected)]
+  }
+
+  return(sce)
+}
+
+sce <- get_SingleCellExperiment(
+    feature_file = feature_file, 
+    observation_file = observation_file,
+    coord_file = coord_file, 
+    matrix_file = matrix_file)
+
+# Preprocess
 set.seed(seed)
+sce <- spatialPreprocess(
+    sce,
+    platform = technology,
+    n.PCs = n_pcs,
+    n.HVGs = n_genes)
+
+# Fidn neighbors
+Adj_sp  <- find_neighbors2(sce, platform = technology)
+
+y <- reducedDim(sce, "PCA")[,seq_len(n_pcs)]
 
 ## Your code goes here
-fit <- SC.MEB(as.matrix(dimred), neighbors, K_set = n_clusters, num_core = 2)
-label_df <- data.frame("label" = unlist(fit["x", ]), row.names = rownames(dimred))
+fit <- SC.MEB(y, Adj_sp, K_set = n_clusters, num_core = 2)
+label_df <- data.frame("label" = unlist(fit["x", ]), row.names = colnames(sce))
 
 
 ## Write output
