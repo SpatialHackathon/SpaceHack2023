@@ -1,6 +1,0 @@
-{ 
-    "n_neighbors" : 20, 
-    "n_pcs": 20, 
-    "clustering" : "leiden", 
-    "flavor": "leidenalg"
-}

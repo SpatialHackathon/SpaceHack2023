@@ -1,0 +1,9 @@
+{ 
+    "n_genes": 2000, 
+    "n_pcs":15,
+    "n_neighbors" : 15, 
+    "clustering" : "leiden",
+    "directed": false, 
+    "n_iterations":2,
+    "reference": "https://scanpy.readthedocs.io/en/stable/tutorials/spatial/basic-analysis.html#qc-and-preprocessing"
+}
