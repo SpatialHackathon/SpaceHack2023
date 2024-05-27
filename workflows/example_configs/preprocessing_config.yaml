@@ -14,19 +14,19 @@ neighbors_infos:
 
 use_datasets:
 #  - "libd_dlpfc"
-#  - "visium_breast_cancer_SEDR"
+  - "visium_breast_cancer_SEDR"
 #  - "xenium-mouse-brain-SergioSalas"
 #  - "visium_chicken_heart"
 #  - "mouse_brain_sagittal_anterior"
 #  - "mouse_brain_sagittal_posterior"
-  - "STARmap_plus"
+#  - "STARmap_plus"
+#  - "stereoseq_developing_Drosophila_embryos_larvae"
 #  - "abc_atlas_wmb_thalamus"           # neighbor network wrong
 
 #  - "mouse_kidney_coronal"
 #  - "osmfish_Ssp"           # only 13 features, 20 pca too much
 #  - "sotip_simulation"
 #  - "spatialDLPFC"
-
 
 # Data unavail
 #  - "xenium-breast-cancer"
