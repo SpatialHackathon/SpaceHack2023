@@ -1,5 +1,6 @@
 {
     "n_genes": 3000,
     "n_pcs": 50,
-    "n_neighbours": 50
+    "n_neighbours": 50,
+    "source":"https://github.com/hongleir/SpaceFlow/blob/master/tutorials/seqfish_mouse_embryogenesis.ipynb"
 }
