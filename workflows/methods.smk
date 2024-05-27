@@ -217,7 +217,7 @@ rule method_with_config:
         config_file_name="config_[a-zA-Z0-9_-]+",
     shell:
         """
-        ulimit -s 32768
+        ulimit -s unlimited
         {input.script} \
             -c {input.coordinates} \
             {params.matrix}{input.matrix} \
@@ -266,7 +266,7 @@ rule method_without_config:
         method="[a-zA-Z0-9_-]+",
     shell:
         """
-        ulimit -s 32768
+        ulimit -s unlimited
         {params.script} \
             -c {input.coordinates} \
             {params.matrix}{input.matrix} \

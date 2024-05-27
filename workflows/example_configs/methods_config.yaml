@@ -8,26 +8,27 @@ datasets:
   - abc_atlas_wmb_thalamus
   - libd_dlpfc                            # Visium Comparison
   - visium_breast_cancer_SEDR
-#  - stereoseq_developing_Drosophila_embryos_larvae
   - visium_chicken_heart
+#  - stereoseq_developing_Drosophila_embryos_larvae
+#  - "stereoseq_mouse_embryo"
 
 seed: 2023
 
 # Methods to run for the pipeline, modify based on your need
 use_methods:
-  - "BANKSY"
-  - "CellCharter"
+#  - "BANKSY"
+#  - "CellCharter"
   - "DRSC"
   - "precast"
   - "SpaceFlow"
-  - "scanpy"
+#  - "scanpy"
   - "seurat"
-#  - "SEDR"            # memory or time consuming methods
+  - "SEDR"            # memory or time consuming methods
   - "bass"
-  - "stardust"
-  - "STAGATE"
-  - "spaGCN"
-  - "GraphST"         # Only for Visium, stereoseq and slide-seq V2
+#  - "stardust"
+#  - "STAGATE"
+#  - "spaGCN"
+#  - "GraphST"         # Only for Visium, stereoseq and slide-seq V2
 #  - "BayesSpace"      # Only for Visium
 
 
