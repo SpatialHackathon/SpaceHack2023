@@ -1,0 +1,7 @@
+{
+  "n_genes":2000,
+  "n_pcs": 15,
+  "gamma": 3,
+  "nrep": 50000,
+  "reference": "Default is the same as flpfc"
+}
