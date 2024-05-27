@@ -76,16 +76,17 @@ def process_adata(input_path,output_folder,sample_df):
 
     # add info for sample.tsv
     domain_annotation = pd.read_table(os.path.join(input_path,"spatial/metadata.tsv"))
-    sample_data_basis = {"patient": "1", "sample": "1", "position": "0", "replicate": "1", "n_clusters": domain_annotation.annot_type.nunique(), "directory": "visium_breast_cancer_SEDR"}
+
+    # Write labels.tsv
+    labels = domain_annotation
+    labels.index = adata.obs.index
+    labels = labels.rename(columns={'fine_annot_type':'label'})
+    labels.to_csv(f"{complete_path}/labels.tsv",sep="\t",index_label="")
+
+    sample_data_basis = {"patient": "1", "sample": "1", "position": "0", "replicate": "1", "n_clusters": labels.label.nunique(), "directory": "visium_breast_cancer_SEDR"}
     
     # Concatenating the new DataFrame to sample_df
     sample_df.iloc[0] = sample_data_basis
-
-    # Write labels.tsv
-    labels = domain_annotation["annot_type"]
-    labels.index = adata.obs.index
-    labels = labels.rename(columns={'annot_type':'label'})
-    labels.to_csv(f"{complete_path}/labels.tsv",sep="\t",index_label="")
         
     # Move image files
     shutil.move(os.path.join(input_path,"spatial/tissue_hires_image.png"),os.path.join(complete_path,"H_E.tiff"))
