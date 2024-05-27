@@ -1,0 +1,9 @@
+{
+    "method": "louvain", 
+    "refine": true, 
+    "alpha": 1, 
+    "p": 0.5, 
+    "n_pcs": 50, 
+    "n_neighbors": 10,
+    "reference": "https://github.com/jianhuupenn/SpaGCN/blob/master/tutorial/tutorial.ipynb"
+}
