@@ -1,13 +1,14 @@
-name: scmeb_env
 channels:
   - conda-forge
   - bioconda
 dependencies:
   - r-base=4.3.1
   - r-optparse=1.7.3
+  - r-jsonlite=1.8.8
   - r-remotes=2.4.2
-  - r-mclust=6.0.1
+  - r-mclust=6.1.1
   - r-purrr=1.0.2
+  - r-rcpparmadillo=0.12.8.3.0
   - r-BiocManager=1.30.22
   - bioconductor-SingleCellExperiment=1.24.0
   - bioconductor-BiocSingular=1.18.0 
