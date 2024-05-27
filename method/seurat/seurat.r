@@ -207,8 +207,7 @@ if (is.null(assayNames(spe))){
 seurat_obj <- as.Seurat(spe, data=NULL)
 
 # Preprocessing: SC-Transform + PCA
-seurat_obj <- FindVariableFeatures(seurat_obj, nfeatures=n_genes)
-seurat_obj <- SCTransform(seurat_obj, assay = "originalexp", verbose = FALSE)
+seurat_obj <- SCTransform(seurat_obj, assay = "originalexp", verbose = FALSE, variable.features.n = n_genes)
 seurat_obj <- RunPCA(seurat_obj, assay = "SCT", verbose = FALSE, npcs = n_pcs)
 
 # Find neighbors
