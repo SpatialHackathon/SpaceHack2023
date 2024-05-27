@@ -1,0 +1,9 @@
+{
+  "betas": [0, 2, 10],
+  "beta": 10,
+  "k": 10,
+  "n_pcs": 10,
+  "n_genes": 0,
+  "bin_method": "kmeans",
+  "source": "https://github.com/drieslab/Giotto/blob/a60fbfcaff30a2942f354e63267ae5894aa84cd4/R/python_hmrf.R#L38"
+}
