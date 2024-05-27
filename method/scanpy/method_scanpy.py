@@ -215,7 +215,7 @@ else:
                              seed = seed, 
                              directed = directed,
                              n_iterations = n_iterations,
-                             flavor = flavor,)
+                             flavor = flavor)
 
 # sc.tl.leiden(adata, resolution=config["resolution"], random_state=seed)
 
