@@ -106,8 +106,8 @@ def data_retrieval(out):
         meta['Unnamed: 0'] = meta['Unnamed: 0'].str.split('_').str[1]
         meta = meta.set_index('Unnamed: 0')
         meta = meta[meta['orig.ident']== sample]
-        meta_label = meta[['celltype_prediction']]
-        meta_label = meta_label.rename(columns={'celltype_prediction':'label'})
+        meta_label = meta[['region']]
+        meta_label = meta_label.rename(columns={'region':'label'})
         meta_label.to_csv(os.path.join(res_path,"labels.tsv"), sep="\t", index_label="")
 
         obs = adata.obs.copy()
