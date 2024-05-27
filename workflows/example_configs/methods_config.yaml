@@ -16,29 +16,34 @@ seed: 2023
 
 # Methods to run for the pipeline, modify based on your need
 use_methods:
-#  - "BANKSY"
-#  - "CellCharter"
+############ Native Implementation Done ############
+  - "BANKSY"
+  - "CellCharter"
   - "DRSC"
   - "precast"
   - "SpaceFlow"
-#  - "scanpy"
+  - "scanpy"
+  - "meringue"
   - "seurat"
   - "SEDR"            # memory or time consuming methods
   - "bass"
-#  - "stardust"
-#  - "STAGATE"
-#  - "spaGCN"
-#  - "GraphST"         # Only for Visium, stereoseq and slide-seq V2
-#  - "BayesSpace"      # Only for Visium
+  - "stardust"
+  - "STAGATE"
+  - "spaGCN"
+  - "GraphST"         # Only for Visium, stereoseq and slide-seq V2
+  - "BayesSpace"      # Only for Visium
+  - "SC_MEB"          # Only for Visium and ST
 
-
-
-#  - "DeepST"         # Import error
-
+############ TODO Native ############
 #  - "SpiceMix"      # Remaining implementation
-#  - "SOTIP"
-
-#  - "meringue"      # Extremely long runtime?
-#  - "SC_MEB"  # error: neighbor returned 0...
 #  - "maple"
 #  - "SCAN-IT"
+#  - "SOTIP"
+#  - "Giotto"
+#  - "spatialGE"
+#  - "conST"
+
+############ Implementation Error ############
+#  - "DeepST"         # Import error
+
+
