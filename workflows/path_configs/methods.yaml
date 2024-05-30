@@ -1,4 +1,4 @@
-# All existing methods on the repo 14.02.2024
+# All existing methods on the repo 27.05.2024
 # Make sure the methods name is the same as the folder name
 methods:
   BANKSY:
@@ -15,39 +15,33 @@ methods:
     env: method/BayesSpace/BayesSpace.yml
     script: method/BayesSpace/BayesSpace.r
     optargs: method/BayesSpace/BayesSpace_optargs.json
+  CellCharter:
+    env: method/CellCharter/CellCharter.yml
+    script: method/CellCharter/CellCharter.py
+    optargs: method/CellCharter/CellCharter_optargs.json
+  conST:
+    env: method/conST/conST.yml
+    script: method/conST/conST.py
+    optargs: method/conST/conST_optargs.json
+  DeepST:
+    env: method/DeepST/DeepST.yml
+    script: method/DeepST/DeepST.py
+    optargs: method/DeepST/DeepST_optargs.json
+    env_additional: method/DeepST/DeepST_env.sh
   DRSC:
     env: method/DRSC/DRSC.yml
     script: method/DRSC/DRSC.r
     env_additional: method/DRSC/drsc_env.sh
     optargs: method/DRSC/DRSC_optargs.json
+  Giotto:
+    env: method/Giotto/Giotto.yml
+    script: method/Giotto/Giotto.r
+    env_additional: method/Giotto/Giotto_env.sh
+    optargs: method/Giotto/Giotto_optargs.json
   GraphST:
     env: method/GraphST/GraphST.yml
     script: method/GraphST/method_GraphST.py
     optargs: method/GraphST/GraphST_optargs.json
-  SCAN-IT:
-    env: method/SCAN-IT/scanit.yml
-    script: method/SCAN-IT/method_scanit.py
-    optargs: method/SCAN-IT/scanit_optargs.json
-  SEDR:
-    env: method/SEDR/SEDR.yml
-    script: method/SEDR/SEDR_method.py
-    optargs: method/SEDR/SEDR_optargs.json
-  SOTIP:
-    env: method/SOTIP/sotip.yml
-    script: method/SOTIP/method_sotip.py
-    optargs: method/SOTIP/sotip_optargs.json
-  STAGATE:
-    env: method/STAGATE/STAGATE.yml
-    script: method/STAGATE/method_STAGATE.py
-    optargs: method/STAGATE/STAGATE_optargs.json
-  SpaceFlow:
-    env: method/SpaceFlow/spaceflow.yml
-    script: method/SpaceFlow/method_spaceflow.py
-    optargs: method/SpaceFlow/spaceflow_optargs.json
-  SpiceMix:
-    env: method/SpiceMix/SpiceMix.yml
-    script: method/SpiceMix/SpiceMix.py
-    optargs: method/SpiceMix/SpiceMix_optargs.json
   maple:
     env: method/maple/maple.yml
     script: method/maple/maple.r
@@ -68,149 +62,160 @@ methods:
     script: method/SC_MEB/SC_MEB.r
     env_additional: method/SC_MEB/scmeb_env.sh
     optargs: method/SC_MEB/SC_MEB_optargs.json
+  SCAN-IT:
+    env: method/SCAN-IT/scanit.yml
+    script: method/SCAN-IT/method_scanit.py
+    optargs: method/SCAN-IT/scanit_optargs.json
   scanpy:
     env: method/scanpy/scanpy_env.yaml
     script: method/scanpy/method_scanpy.py
     optargs: method/scanpy/scanpy_optargs.json
+  SEDR:
+    env: method/SEDR/SEDR.yml
+    script: method/SEDR/SEDR_method.py
+    optargs: method/SEDR/SEDR_optargs.json
   seurat:
     env: method/seurat/seurat.yml
     script: method/seurat/seurat.r
     optargs: method/seurat/seurat_optargs.json
+  SOTIP:
+    env: method/SOTIP/sotip.yml
+    script: method/SOTIP/method_sotip.py
+    optargs: method/SOTIP/sotip_optargs.json
+  SpaceFlow:
+    env: method/SpaceFlow/spaceflow.yml
+    script: method/SpaceFlow/method_spaceflow.py
+    optargs: method/SpaceFlow/spaceflow_optargs.json
   spaGCN:
     env: method/spaGCN/spaGCN.yml
     script: method/spaGCN/spaGCN.py
     optargs: method/spaGCN/spaGCN_optargs.json
+  spatialGE:
+    env: method/spatialGE/spatialGE.yml
+    script: method/spatialGE/spatialGE.r
+    env_additional: method/spatialGE/spatialGE_env.sh
+    optargs: method/spatialGE/spatialGE_optargs.json
+  SpiceMix:
+    env: method/SpiceMix/SpiceMix.yml
+    script: method/SpiceMix/SpiceMix.py
+    optargs: method/SpiceMix/SpiceMix_optargs.json
+  STAGATE:
+    env: method/STAGATE/STAGATE.yml
+    script: method/STAGATE/method_STAGATE.py
+    optargs: method/STAGATE/STAGATE_optargs.json
   stardust:
     env: method/stardust/stardust.yml
     script: method/stardust/stardust.r
     env_additional: method/stardust/stardust_env.sh
     optargs: method/stardust/stardust_optargs.json
-  DeepST:
-    env: method/DeepST/DeepST.yml
-    script: method/DeepST/DeepST.py
-    optargs: method/DeepST/DeepST_optargs.json
-    env_additional: method/DeepST/DeepST_env.sh
-  CellCharter:
-    env: method/CellCharter/CellCharter.yml
-    script: method/CellCharter/CellCharter.py
-    optargs: method/CellCharter/CellCharter_optargs.json
+
 # All config files for existing methods on the repo 14.02.2024
 # make sure the config_files name is the same as methods name
 config_files:
   BANKSY:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+    config_github: "config/config_github.json"
+    config_starmap: "config/config_starmap.json"
+  bass:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+    config_starmap: "config/config_starmap.json"
+    config_1: "config/config_1.json"
+    #config_2: "config/config_2.json"
+    # config_3: "config/config_3.json"
+  BayesSpace:
+    config_default: "config/config_default.json"
+    config_melanoma: "config/config_melanoma.json"
+    config_scc: "config/config_scc.json"
+    config_1: "config/config_1.json"
+  CellCharter:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-    config_5: "config/config_5.json"
-#    config_6: "config/config_6.json"
-#    config_7: "config/config_7.json"
-#    config_8: "config/config_8.json"
+  conST:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
   DeepST:
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
     config_3: "config/config_3.json"
+  DRSC:
+    config_default: "config/config_default.json"
+    config_all_genes: "config/config_all_genes.json"
+    config_FindSVGs: "config/config_FindSVGs.json"
+    config_FindVariableFeatures: "config/config_FindVariableFeatures.json"
+  Giotto:
+    config_1: "config/config_1.json"
   GraphST:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-    config_5: "config/config_5.json"
-    config_6: "config/config_6.json"
-    config_7: "config/config_7.json"
-    config_8: "config/config_8.json"
-    config_9: "config/config_9.json"
+    #config_3: "config/config_3.json"
+    #config_4: "config/config_4.json"
+  maple:
+    config_default: "TBA"
+  meringue:
+    config_default: "config/config_default.json"
+    config_clusteringvignette: "config/config_clusteringvignette.json"
+    config_mob: "config/config_mob.json"
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+  precast:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+    config_BC: "config/config_BC.json"
+    config_1: "config/config_1.json"
+  SC_MEB:
+    config_default: "config/config_default.json"
   SCAN-IT:
     config_1: "config.json"
-  DRSC:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
+  scanpy:
+    config_leiden_1: "config/config_leiden_1.json"
+    config_leiden_2: "config/config_leiden_2.json"
+    config_leiden_3: "config/config_leiden_3.json"
+    config_leiden_4: "config/config_leiden_4.json"
   SEDR:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+    # config_stereoseq: "config/config_stereoseq.json"
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-    config_5: "config/config_5.json"
-    config_6: "config/config_6.json"
+  seurat:
+    config_leiden_1: "config/config_leiden_1.json"
+    config_leiden_2: "config/config_leiden_2.json"
+    config_leiden_3: "config/config_leiden_3.json"
+    config_leiden_4: "config/config_leiden_4.json"
   SOTIP:
     config_1: "config/config.json"
-  STAGATE:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-#    config_5: "config/config_5.json"
-#    config_6: "config/config_6.json"
-#    config_7: "config/config_7.json"
-#    config_8: "config/config_8.json"
-#    config_9: "config/config_9.json"
-    config_10: "config/config_10.json"
-    config_11: "config/config_11.json"
-    config_12: "config/config_12.json"
-    config_13: "config/config_13.json"
-#   config_14: "config/config_14.json"
-#    config_15: "config/config_15.json"
-#    config_16: "config/config_16.json"
-#    config_17: "config/config_17.json"
-#    config_18: "config/config_18.json"
   SpaceFlow:
+    config_default: "config/config_default.json"
+    config_seqfish: "config/config_seqfish.json"
+  spaGCN:
+    config_default: "config/config_default.json"
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
     config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
+  spatialGE:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
   SpiceMix:
     config_1: "config/config_1.json"
-  meringue:
+  STAGATE:
+    config_default: "config/config_default.json"
+    config_slide_stereo: "config/config_slide_stereo.json"
+    config_starmap: "config/config_starmap.json"
     config_1: "config/config_1.json"
-  scanpy:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-#    config_4: "config/config_4.json"
-  precast:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-  seurat:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-  spaGCN:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-    config_5: "config/config_5.json"
-    config_6: "config/config_6.json"
-    config_7: "config/config_7.json"
-    config_8: "config/config_8.json"
-    config_9: "config/config_9.json"
-    config_10: "config/config_10.json"
-    config_11: "config/config_11.json"
-    config_12: "config/config_12.json"
-    config_13: "config/config_13.json"
-    config_14: "config/config_14.json"
-    config_15: "config/config_15.json"
-    config_16: "config/config_16.json"
-  bass:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"     #decrepated
-    config_5: "config/config_5.json"
+    #config_2: "config/config_2.json"
+    #config_3: "config/config_3.json"
+    #config_4: "config/config_4.json"
+    #config_5: "config/config_5.json"
   stardust:
+    config_default: "config/config_default.json"
+    config_tutorial: "config/config_tutorial.json"
     config_1: "config/config_1.json"
     config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-    config_4: "config/config_4.json"
-  CellCharter:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
-  BayesSpace:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
+

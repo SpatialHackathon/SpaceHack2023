@@ -16,6 +16,7 @@ GIT_DIR = get_git_directory(config)
 # Get all the methods and metrics that's being used
 metrics = config["metrics"]
 methods = list(config["methods"].keys())
+DATASET_DIR = config["dataset_dir"]
 
 
 def generate_metrics_results(data_dir, metrics_name, methods, file_ext):
@@ -76,12 +77,14 @@ def generate_metrics_results(data_dir, metrics_name, methods, file_ext):
 def generate_all_input(wildcards):
     all_input = []
     for metric in config["use_metrics"]:
-        all_input += generate_metrics_results(
-            data_dir=config["data_dir"],
-            metrics_name=metric,
-            methods=methods,
-            file_ext="txt",
-        )
+        for dataset in config["datasets"]:
+            data_dir = DATASET_DIR + "/" + dataset
+            all_input += generate_metrics_results(
+                data_dir=data_dir,
+                metrics_name=metric,
+                methods=methods,
+                file_ext="txt",
+            )
     return all_input
 
 
@@ -106,9 +109,9 @@ def get_sample_labels(wildcards):
         opt = json.load(file)
 
     if opt["groundtruth"]:
-        samples_folder = os.path.join(config["data_dir"], wildcards.sample)
+        samples_folder = os.path.join(DATASET_DIR, wildcards.dataset, wildcards.sample)
         if "labels.tsv" not in os.listdir(samples_folder):
-            stop("wrong optargs file (groundtruth)")
+            raise Exception("wrong optargs file (groundtruth)")
 
         return "-g " + os.path.join(samples_folder, "labels.tsv")
     else:
@@ -123,10 +126,10 @@ def get_method_embedding(wildcards):
 
     if opt["embedding"]:
         method_config_folder = os.path.join(
-            config["data_dir"], wildcards.sample, wildcards.method_config
+            DATASET_DIR, wildcards.dataset, wildcards.sample, wildcards.method_config
         )
         if "embedding.tsv" not in os.listdir(method_config_folder):
-            stop("wrong optargs file (embedding)!")
+            raise Exception("wrong optargs file (embedding)!")
 
         return "-e " + os.path.join(method_config_folder, "embedding.tsv")
     else:
@@ -142,7 +145,7 @@ def get_metric_config(wildcards):
     if opt["config_file"]:
         config_key = wildcards.metric_config[wildcards.metric_config.find("/") + 1 :]
         if len(config) == 0:
-            stop("Wrong optargs or no config folder found")
+            raise Exception("Wrong optargs or no config folder found")
         return (
             "-c "
             + GIT_DIR
@@ -165,8 +168,8 @@ def get_sample_coordinate(wildcards):
         if opt["physical_coordinate"]:
             return (
                 "--coordinates "
-                + config["data_dir"]
-                + f"/{wildcards.sample}/coordinates.tsv"
+                + DATASET_DIR
+                + f"/{wildcards.dataset}/{wildcards.sample}/coordinates.tsv"
             )
         else:
             return ""
@@ -176,12 +179,13 @@ def get_sample_coordinate(wildcards):
 
 rule metric:
     input:
-        domains=config["data_dir"] + "/{sample}/{method_config}/domains.tsv",
+        domains=DATASET_DIR + "/{dataset}/{sample}/{method_config}/domains.tsv",
         script=lambda wildcards: GIT_DIR + metrics[get_metric(wildcards)]["script"],
     output:
-        file=config["data_dir"]
-        + "/{sample}/{method_config}/{metric_config}/results.txt",
+        file=DATASET_DIR 
+        + "/{dataset}/{sample}/{method_config}/{metric_config}/results.txt",
     wildcard_constraints:
+        dataset="[a-zA-Z0-9_-]+",
         sample="[a-zA-Z0-9_-]+",
         method_config="[a-zA-Z0-9_-]+(\/config_[a-zA-Z0-9_-]+)?",
         metric_config="[a-zA-Z0-9_-]+(\/config_[a-zA-Z0-9_-]+)?",
