@@ -18,8 +18,13 @@ LINKS = [
     "https://cf.10xgenomics.com/samples/spatial-exp/3.0.0/Visium_HD_Human_Colon_Cancer/Visium_HD_Human_Colon_Cancer_tissue_image.btf",
     "https://cf.10xgenomics.com/samples/spatial-exp/3.0.0/Visium_HD_Human_Colon_Cancer/Visium_HD_Human_Colon_Cancer_feature_slice.h5",
     "https://cf.10xgenomics.com/samples/spatial-exp/3.0.0/Visium_HD_Human_Colon_Cancer/Visium_HD_Human_Colon_Cancer_spatial.tar.gz",
+    "https://cf.10xgenomics.com/samples/spatial-exp/3.0.0/Visium_HD_Human_Colon_Cancer/Visium_HD_Human_Colon_Cancer_square_002um_outputs.tar.gz",
     "https://cf.10xgenomics.com/samples/spatial-exp/3.0.0/Visium_HD_Human_Colon_Cancer/Visium_HD_Human_Colon_Cancer_square_008um_outputs.tar.gz",
-    "https://zenodo.org/records/11077886/files/8um_squares_annotation.csv",
+    "https://cf.10xgenomics.com/samples/spatial-exp/3.0.0/Visium_HD_Human_Colon_Cancer/Visium_HD_Human_Colon_Cancer_square_016um_outputs.tar.gz",
+    "https://zenodo.org/records/11402686/files/segmented_nuclei.zip",
+    "https://zenodo.org/records/11402686/files/2um_squares_annotation.csv",
+    "https://zenodo.org/records/11402686/files/8um_squares_annotation.csv",
+    "https://zenodo.org/records/11402686/files/16um_squares_annotation.csv",
 ]
 
 META_DICT = {"technology": "Visium HD"}
@@ -55,74 +60,87 @@ def download_links(links, temp_dir):
 
     # Extract the tar.gz files
     for file in os.listdir(temp_dir):
-        if file.endswith(".tar.gz"):
+        if file.endswith(".tar.gz") or file.endswith(".zip"):
             shutil.unpack_archive(os.path.join(temp_dir, file), temp_dir)
+
+    print(os.listdir(temp_dir))
 
 
 def process_adata(input_path, output_folder, sample_df):
-    complete_path = os.path.join(output_folder, "visium_hd_cancer_colon")
-    os.makedirs(complete_path, exist_ok=True)
-    adata = visium_hd(
-        input_path,
-        bin_size=8,
+    results = {"square_002um":"2um_squares_annotation.csv","square_008um" : "8um_squares_annotation.csv","square_016um":"16um_squares_annotation.csv"}
+    for result in results.keys():
+        os.makedirs(os.path.join(output_folder, f"visium_hd_cancer_colon_{result}"), exist_ok=True)
+    sdata = visium_hd(input_path)
+
+    for result,annotation_file in results.items():
+        table = sdata.tables[result]
+        table.var_names_make_unique()
+        domain_annotation = pd.read_table(
+            os.path.join(input_path, annotation_file),
+            index_col=0,
+            header=None,
+            names=["annot_type"],
+        )
+        complete_path  = os.path.join(output_folder, f"visium_hd_cancer_colon_{result}")
+
+        # Obs
+        obs = table.obs.copy()
+        obs["selected"] = "true"
+        # A few bins are outside the image + disconnected, so we remove them
+        obs.loc[domain_annotation.loc[:, "annot_type"] == "Outside", "selected"] = "false"
+
+        obs.rename(columns={"array_row": "row", "array_col": "col"}, inplace=True)
+        obs.to_csv(f"{complete_path}/observations.tsv", sep="\t", index_label="")
+
+        # Features
+        vars = table.var.copy()
+        vars["selected"] = "true"
+        vars.to_csv(f"{complete_path}/features.tsv", sep="\t", index_label="")
+
+        # Coordinates
+        coords = pd.DataFrame(table.obsm["spatial"], columns=["x", "y"])
+        coords.index = table.obs.index
+        coords.to_csv(f"{complete_path}/coordinates.tsv", sep="\t", index_label="")
+
+        # Matrix
+        scipy.io.mmwrite(f"{complete_path}/counts.mtx", table.X)
+
+        # Write labels.tsv
+        labels = domain_annotation.loc[:, "annot_type"]
+        labels.index = table.obs.index
+        labels = labels.rename("label")
+        labels.to_csv(f"{complete_path}/labels.tsv", sep="\t", index_label="")
+
+        # Move image files
+        shutil.copy(
+            os.path.join(input_path, "Visium_HD_Human_Colon_Cancer_tissue_image.btf"),
+            os.path.join(complete_path, "H_E.tiff"),
     )
 
-    adata = adata.tables["square_008um"]
-    adata.var_names_make_unique()
-
-    domain_annotation = pd.read_table(
-        os.path.join(input_path, "8um_squares_annotation.csv"),
-        index_col=0,
-        header=None,
-        names=["annot_type"],
-    )
-    # Obs
-    obs = adata.obs.copy()
-    obs["selected"] = "true"
-    # A few bins are outside the image + disconnected, so we remove them
-    obs.loc[domain_annotation.loc[:, "annot_type"] == "Outside", "selected"] = "false"
-
-    obs.rename(columns={"array_row": "row", "array_col": "col"}, inplace=True)
-    obs.to_csv(f"{complete_path}/observations.tsv", sep="\t", index_label="")
-
-    # Features
-    vars = adata.var.copy()
-    vars["selected"] = "true"
-    vars.to_csv(f"{complete_path}/features.tsv", sep="\t", index_label="")
-
-    # Coordinates
-    coords = pd.DataFrame(adata.obsm["spatial"], columns=["x", "y"])
-    coords.index = adata.obs.index
-    coords.to_csv(f"{complete_path}/coordinates.tsv", sep="\t", index_label="")
-
-    # Matrix
-    scipy.io.mmwrite(f"{complete_path}/counts.mtx", adata.X)
 
     # add info for sample.tsv
-    sample_data_basis = {
-        "patient": "1",
-        "sample": "1",
-        "position": "0",
-        "replicate": "1",
-        "n_clusters": domain_annotation.loc[:, "annot_type"].nunique()
-        - 1,  # -1 because we removed the "Outside" class
-        "directory": "visium_hd_cancer_colon",
-    }
+    # sample_data_basis = {
+    #     "patient": "1",
+    #     "sample": "1",
+    #     "position": "0",
+    #     "replicate": "1",
+    #     "n_clusters": domain_annotation.loc[:, "annot_type"].nunique()
+    #     - 1,  # -1 because we removed the "Outside" class
+    #     "directory": "visium_hd_cancer_colon",
+    # }
 
-    # Concatenating the new DataFrame to sample_df
-    sample_df.iloc[0] = sample_data_basis
+    # # Concatenating the new DataFrame to sample_df
+    # sample_df.iloc[0] = sample_data_basis
 
-    # Write labels.tsv
-    labels = domain_annotation.loc[:, "annot_type"]
-    labels.index = adata.obs.index
-    labels = labels.rename("label")
-    labels.to_csv(f"{complete_path}/labels.tsv", sep="\t", index_label="")
 
-    # Move image files
-    shutil.move(
-        os.path.join(input_path, "Visium_HD_Human_Colon_Cancer_tissue_image.btf"),
-        os.path.join(complete_path, "H_E.tiff"),
-    )
+
+
+
+
+def process_nuclei(input_path, output_folder):
+    input = os.path.join(input_path, "output")
+    output = os.path.join(output_folder, "visium_hd_cancer_colon_segmented_nuclei")
+    shutil.move(input, output)
 
 
 def write_json(dict, output_path):
@@ -149,7 +167,12 @@ def main():
         download_links(LINKS, temp_dir)
         os.makedirs(args.out_dir, exist_ok=True)
         sample_df = pd.DataFrame(columns=SAMPLE_COLUMNS, index=[0])
+
+        # Segmented Nuclei are already in the correct format
+        process_nuclei(temp_dir, args.out_dir)
+
         process_adata(temp_dir, args.out_dir, sample_df)
+
         # write json
         write_json(META_DICT, f"{args.out_dir}/experiment.json")
 
