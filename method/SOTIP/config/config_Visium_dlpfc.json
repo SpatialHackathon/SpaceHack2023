@@ -1,0 +1,6 @@
+{
+    "n_pcs": 100,
+    "res": 2,
+    "n_neighbours": 200,
+    "source": "https://github.com/TencentAILabHealthcare/SOTIP/blob/master/SOTIP_analysis/Visium_Cortex/SDM_Visium_cortex.ipynb"
+}
