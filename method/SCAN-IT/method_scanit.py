@@ -37,6 +37,9 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_genes", help="Number of genes to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, imaging-based).",
     required=True,
@@ -117,7 +120,7 @@ import json
 
 with open(args.config, "r") as f:
     config = json.load(f)
-    
+
 # Set the seed
 import random
 random.seed(seed)
@@ -141,24 +144,35 @@ from search_res import binary_search
 use_cuda = torch.cuda.is_available()
 device = 'cuda' if use_cuda else 'cpu'
 
-# Assuming transform=log1p, here's the scaling step: https://github.com/zcang/SCAN-IT/blob/main/examples/Slide-seq/scanit.ipynb
+# Update native preprocessing steps: https://github.com/zcang/SCAN-IT/blob/main/examples/Slide-seq/scanit.ipynb
+sc.pp.normalize_total(adata)
+
+# SV genes
+from somde import SomNode
+pts = adata.obsm['spatial']
+df_sp = pd.DataFrame(data=adata.X, columns=list(adata.var_names))
+som = SomNode(pts, config["SomNode_k"])
+ndf,ninfo = som.mtx(df_sp.T)
+nres = som.norm()
+df_somde, SVnum =som.run()
+
+# Subset and scale
+n_genes = args.n_genes if args.n_genes is not None else min(adata.n_vars, config["n_genes"])
+sv_genes = list( df_somde['g'].values[:n_genes] )
+adata = adata[:, sv_genes]
+sc.pp.log1p(adata)
 sc.pp.scale(adata)
 
 # Construct the spatial graph
-scanit.tl.spatial_graph(adata, method='alpha shape', alpha_n_layer=2, knn_n_neighbors=5)
+scanit.tl.spatial_graph(adata, method='alpha shape', 
+                        alpha_n_layer=config["alpha_n_layers"], 
+                        knn_n_neighbors=config["knn_n_neighbours"])
 
 # Generate low dimentional embedding (saved to X_scanit)
-scanit.tl.spatial_representation(adata, n_h=30, n_epoch=2000, lr=0.001, device=device, n_consensus=1, projection='mds', python_seed=seed, torch_seed=seed, numpy_seed=seed)
-
-if config is not None:
-    res = int(config['res'])
-    nn = int(config['n_neighbours'])
-else:
-    res = 0.5
-    nn = 15
+scanit.tl.spatial_representation(adata, n_h=config["n_h"], n_epoch=config["n_epoch"], lr=0.001, device=device, n_consensus=1, projection='mds', python_seed=seed, torch_seed=seed, numpy_seed=seed)
     
 # Construct a NN graph based on the embedding
-sc.pp.neighbors(adata, use_rep='X_scanit', n_neighbors=nn)
+sc.pp.neighbors(adata, use_rep='X_scanit', n_neighbors=int(config['n_neighbours']))
 
 # Raise a warning that clustering is based on resolution and not n_clusters
 # warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
