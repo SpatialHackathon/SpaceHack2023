@@ -1,6 +1,0 @@
-{
-    "knn_distanceType": "euclidean",
-    "use_img": false,
-    "using_mask": false,
-    "refinement": true
-}

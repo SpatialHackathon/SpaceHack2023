@@ -40,6 +40,9 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_pcs", help="Number of PCs to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, imaging-based).",
     required=True,
@@ -82,7 +85,7 @@ if args.config is not None:
 n_clusters = args.n_clusters
 technology = args.technology
 seed = args.seed
-
+    
 # ... or AnnData if you want
 def get_anndata(args):
     import anndata as ad
@@ -149,9 +152,9 @@ for key, value in config.items():
 
 # default parameters of conST which are not necessary to be changed
 default = {
-    "k": 10,  # parameter k in spatial graph
+    #"k": 10,  # parameter k in spatial graph
     "epochs": 200,  # Number of epochs to train.
-    "cell_feat_dim": -1,  # Will be overwritten by adata_preprocess()
+    "cell_feat_dim": 300,  # Dim of PCA
     "feat_hidden1": 100,  # Dim of DNN hidden 1-layer.
     "feat_hidden2": 20,  # Dim of DNN hidden 2-layer.
     "gcn_hidden1": 32,  # Dim of GCN hidden 1-layer.
@@ -187,6 +190,11 @@ for key, value in default.items():
 if args.technology == "Visium":
     params.shape = 'hexagon'
 
+if args.n_pcs is not None:
+    n_pcs = args.n_pcs
+else:
+    n_pcs = params.cell_feat_dim # default
+    
 # Tool imports
 import random
 import torch
@@ -212,12 +220,14 @@ os.environ['PYTHONHASHSEED'] = str(seed)
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
 
-def adata_preprocess(i_adata, min_cells):
+# source: https://github.com/ys-zong/conST/blob/main/conST_cluster.ipynb#In[4]
+# https://github.com/ys-zong/conST/blob/main/src/utils_func.py#L51
+def adata_preprocess(i_adata, min_cells, pca_n_comps=n_pcs):
     print('===== Preprocessing Data ')
     sc.pp.filter_genes(i_adata, min_cells=min_cells)
     adata_X = sc.pp.normalize_total(i_adata, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
     adata_X = sc.pp.scale(adata_X)
-    adata_X = sc.tl.pca(adata_X)
+    adata_X = sc.tl.pca(adata_X, n_comps=pca_n_comps)
     params.cell_feat_dim = len(adata_X[0,:])  # needed for the pretraining()
     return adata_X
 
@@ -239,7 +249,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     from src.training import conST_training
 
     # Preprocessing
-    adata_X = adata_preprocess(adata, 5)
+    adata_X = adata_preprocess(adata, config["min_cells"])
 
     # Graph construction
     graph_dict = graph_construction(adata.obsm['spatial'], adata.shape[0], params)
@@ -266,8 +276,10 @@ with tempfile.TemporaryDirectory() as tmpdir:
     adata_conST.obsm['spatial'] = adata.obsm['spatial']
 
     sc.pp.neighbors(adata_conST, n_neighbors=params.eval_graph_n)
-
-    eval_resolution = res_search_fixed_clus(adata_conST, n_clusters)
+    
+    from search_res import binary_search
+    eval_resolution = search_res(adata, n_clusters, start=0.1, step=0.1, tol=5e-3, max_run=10)
+    # eval_resolution = res_search_fixed_clus(adata_conST, n_clusters)
     print(eval_resolution)
 
     sc.tl.leiden(adata_conST, key_added="conST_leiden", resolution=eval_resolution)
