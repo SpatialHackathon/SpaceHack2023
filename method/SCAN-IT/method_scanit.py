@@ -150,7 +150,7 @@ sc.pp.normalize_total(adata)
 # SV genes
 from somde import SomNode
 pts = adata.obsm['spatial']
-df_sp = pd.DataFrame(data=adata.X, columns=list(adata.var_names))
+df_sp = pd.DataFrame(data=adata.X.toarray(), columns=list(adata.var_names))
 som = SomNode(pts, config["SomNode_k"])
 ndf,ninfo = som.mtx(df_sp.T)
 nres = som.norm()
