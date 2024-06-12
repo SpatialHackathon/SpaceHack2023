@@ -39,6 +39,9 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_genes", help="Number of genes to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, imaging-based).",
     required=True,
@@ -87,7 +90,11 @@ from popari import tl
 
 preprocess_parameters = config.pop("preprocess", None)
 
-
+if args.n_genes is not None:
+    n_genes = args.n_genes
+elif preprocess_parameters:
+    n_genes = preprocess_parameters["n_genes"]
+    
 def get_anndata(args):
     """Convert data input into SpiceMix anndata format."""
 
@@ -121,7 +128,7 @@ def get_anndata(args):
         del adata.obsp["spatial_connectivities"]
         sc.pp.normalize_total(adata)
         sc.pp.log1p(adata)
-        sc.pp.highly_variable_genes(adata, n_top_genes=preprocess_parameters["hvgs"])
+        sc.pp.highly_variable_genes(adata, n_top_genes=n_genes)
 
         adata = PopariDataset(adata[:, adata.var["highly_variable"]], "processed")
         adata.compute_spatial_neighbors()
