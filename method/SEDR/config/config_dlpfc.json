@@ -1,0 +1,7 @@
+{
+"n":12,
+"cluster_method": "mclust", 
+"using_dec": true, 
+"HVG": true,
+"reference":"https://sedr.readthedocs.io/en/latest/Tutorial1_Clustering.html"
+}

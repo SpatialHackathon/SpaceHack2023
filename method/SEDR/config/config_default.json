@@ -1,0 +1,7 @@
+{
+    "n":6,
+    "cluster_method": "mclust",
+    "using_dec": true, 
+    "HVG": true,
+    "reference": "https://github.com/JinmiaoChenLab/SEDR/blob/master/SEDR/SEDR_model.py"
+}

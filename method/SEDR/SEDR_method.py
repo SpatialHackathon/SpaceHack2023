@@ -51,6 +51,12 @@ parser.add_argument(
     help="Optional config file (json) used to pass additional parameters.",
     required=False,
 )
+parser.add_argument(
+    "--n_genes", help="Number of genes to use.", required=False, type=int
+)
+parser.add_argument(
+    "--n_pcs", help="Number of PCs to use.", required=False, type=int
+)
 
 ## Session for code
 args = parser.parse_args()
@@ -98,60 +104,6 @@ def get_anndata(args):
         adata.uns["image"] = np.array(Image.open(args.img))
     else:
         adata.uns["image"] = None
-
-    return adata
-
-## Cluster code is SEDR had some bugs. Modified below
-def res_search_fixed_clus_leiden(adata, n_clusters, increment=0.01, random_seed=2023):
-    import scanpy as sc
-    import pandas as pd
-    import numpy as np
-    
-    for res in np.arange(0.2, 2, increment):
-        sc.tl.leiden(adata, random_state=random_seed, resolution=res)
-        if len(adata.obs['leiden'].unique()) > n_clusters:
-            break
-    return res-increment
-
-
-def leiden(adata, n_clusters, use_rep='SEDR', key_added='SEDR', random_seed=2023):
-    import scanpy as sc
-    import pandas as pd
-    import numpy as np
-    
-    sc.pp.neighbors(adata, use_rep=use_rep)
-    res = res_search_fixed_clus_leiden(adata, n_clusters, increment=0.01, random_seed=random_seed)
-    sc.tl.leiden(adata, random_state=random_seed, resolution=res)
-
-    adata.obs[key_added] = adata.obs['leiden']
-    adata.obs[key_added] = adata.obs[key_added].astype('int')
-    adata.obs[key_added] = adata.obs[key_added].astype('category')
-
-    return adata
-
-def res_search_fixed_clus_louvain(adata, n_clusters, increment=0.01, random_seed=2023):
-    import scanpy as sc
-    import pandas as pd
-    import numpy as np
-    
-    for res in np.arange(0.2, 2, increment):
-        sc.tl.louvain(adata, random_state=random_seed, resolution=res)
-        if len(adata.obs['louvain'].unique()) > n_clusters:
-            break
-    return res-increment
-
-def louvain(adata, n_clusters, use_rep='SEDR', key_added='SEDR', random_seed=2023):
-    import scanpy as sc
-    import pandas as pd
-    import numpy as np
-    
-    sc.pp.neighbors(adata, use_rep=use_rep)
-    res = res_search_fixed_clus_louvain(adata, n_clusters, increment=0.01, random_seed=random_seed)
-    sc.tl.louvain(adata, random_state=random_seed, resolution=res)
-
-    adata.obs[key_added] = adata.obs['louvain']
-    adata.obs[key_added] = adata.obs[key_added].astype('int')
-    adata.obs[key_added] = adata.obs[key_added].astype('category')
 
     return adata
 
@@ -218,6 +170,16 @@ n_clusters = args.n_clusters
 technology = args.technology
 seed = args.seed
 
+if args.n_genes is not None:
+    n_genes = args.n_genes
+else:
+    n_genes = config.get("n_genes", 2000)  # Use the only parameter found 
+
+if args.n_pcs is not None:
+    n_pcs = args.n_pcs
+else:
+    n_pcs = config.get("n_pcs", 200)  # Use the only parameter found 
+
 # Set SEED for SEDR
 import random
 random.seed(seed)
@@ -234,53 +196,20 @@ if not isinstance(adata.X, np.ndarray):
     adata.layers['count'] = adata.X.toarray()
 else:
     adata.layers['count'] = adata.X
+
 sc.pp.normalize_total(adata, target_sum=1e6)
-if adata.n_vars > 2000:
-    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", n_top_genes=2000)
+
+if config["HVG"] is True:
+    sc.pp.highly_variable_genes(adata, flavor="seurat_v3", layer='count', n_top_genes=n_genes)
     adata = adata[:, adata.var['highly_variable'] == True]
+
 sc.pp.scale(adata)
 
 from sklearn.decomposition import PCA  # sklearn PCA is used because PCA in scanpy is not stable.
-adata_X = PCA(n_components=200, random_state=seed).fit_transform(adata.X)
+adata_X = PCA(n_components=n_pcs, random_state=seed).fit_transform(adata.X)
 adata.obsm['X_pca'] = adata_X
 
-graph_dict = SEDR.graph_construction(adata, 12)
-
-"""
-# Constructing neighborhood graphs object format
-# Return warning if no neighborhood graph is not provided
-#if args.neighbors is None:
-#    raise ValueError("No neighbor graphs found, define neighbor graphs")
-
-# import intermediate functions
-from SEDR.graph_func import preprocess_graph
-
-# Copy from source code in order for customization
-adj_m1 = adata.obsp["spatial_connectivities"]
-adj_m1 = sp.sparse.coo_matrix(adj_m1)
-
-# Store original adjacency matrix (without diagonal entries) for later
-adj_m1 = adj_m1 - sp.sparse.dia_matrix((adj_m1.diagonal()[np.newaxis, :], [0]), shape=adj_m1.shape)
-adj_m1.eliminate_zeros()
-
-# Some preprocessing
-adj_norm_m1 = preprocess_graph(adj_m1)
-adj_m1 = adj_m1 + sp.sparse.eye(adj_m1.shape[0])
-
-adj_m1 = adj_m1.tocoo()
-shape = adj_m1.shape
-values = adj_m1.data
-indices = np.stack([adj_m1.row, adj_m1.col])
-adj_label_m1 = torch.sparse_coo_tensor(indices, values, shape)
-
-norm_m1 = adj_m1.shape[0] * adj_m1.shape[0] / float((adj_m1.shape[0] * adj_m1.shape[0] - adj_m1.sum()) * 2)
-
-graph_dict = {
-    "adj_norm": adj_norm_m1,
-    "adj_label": adj_label_m1.coalesce(),
-    "norm_value": norm_m1
-}
-"""
+graph_dict = SEDR.graph_construction(adata, config["n"])
 
 # Training SEDR
 # device: using cpu or gpu (if avaliable)
