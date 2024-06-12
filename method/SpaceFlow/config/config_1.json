@@ -1,4 +1,5 @@
 {
-    "n_vars": 3000,
-    "n_neighbours": 50
+    "n_genes": 3000,
+    "n_pcs": 50,
+    "n_neighbours": 15
 }

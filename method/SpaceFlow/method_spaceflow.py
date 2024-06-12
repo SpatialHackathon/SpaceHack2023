@@ -37,6 +37,12 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_genes", help="Number of genes to use.", required=False, type=int
+)
+parser.add_argument(
+    "--n_pcs", help="Number of PCs to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, imaging-based).",
     required=True,
@@ -69,7 +75,19 @@ import json
 
 with open(args.config, "r") as f:
     config = json.load(f)
+
+if args.n_genes is not None:
+    n_genes = args.n_genes
+else:
+    n_genes = config.get("n_genes", None)  # No filtering if no top genes are specified
     
+if args.n_pcs is not None:
+    n_pcs = args.n_pcs
+else:
+    n_pcs = config["n_pcs"] 
+
+nn = config["n_neighbours"]
+
 def get_anndata(args):
     import anndata as ad
     import numpy as np
@@ -119,7 +137,9 @@ def get_anndata(args):
 
 adata = get_anndata(args)
 
-
+if n_genes is not None:
+    n_genes = min(adata.n_vars, n_genes)
+    
 # Set the seed
 import random
 random.seed(seed)
@@ -144,22 +164,25 @@ from search_res import binary_search
 use_cuda = torch.cuda.is_available()
 device = 1 if use_cuda else 0
 
-# adata.write_h5ad("adata.h5ad")
-n_vars = config["n_vars"]
-nn = config["n_neighbours"]
-
 # Create a SpaceFlow object 
-sc.pp.filter_genes(adata, min_cells=1)
+sc.pp.filter_genes(adata, min_cells=3)
 sf = SpaceFlow.SpaceFlow(adata=adata)
-sf.preprocessing_data(n_top_genes = min(adata.n_vars, n_vars))
+
+# modified from preprocessing_data (https://github.com/hongleir/SpaceFlow/blob/master/SpaceFlow/SpaceFlow.py#L110)
+# replace sf.preprocessing_data(n_top_genes = min(adata.n_vars, n_genes))
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+sc.pp.highly_variable_genes(adata, n_top_genes=n_genes, flavor='cell_ranger', subset=True)
+sc.pp.pca(adata, n_pcs)
+spatial_locs = adata.obsm['spatial']
+spatial_graph = sf.graph_alpha(spatial_locs, n_neighbors=10)
+sf.adata_preprocessed = adata
+sf.spatial_graph = spatial_graph
 
 # Train the network
 sf.train(spatial_regularization_strength=0.1, z_dim=50, lr=1e-3, epochs=1000, 
          max_patience=50, min_stop=100, random_seed=seed, gpu=device, regularization_acceleration=True, 
          edge_subset_sz=1000000, embedding_save_filepath=embedding_file)
-
-# Raise a warning that clustering is based on resolution and not n_clusters
-# warnings.warn("The `n_clusters` parameter was not used; config['res'] used instead.")
 
 # Segment the domains given the resolution
 embedding_adata = ad.AnnData(sf.embedding)
