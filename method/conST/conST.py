@@ -278,7 +278,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     sc.pp.neighbors(adata_conST, n_neighbors=params.eval_graph_n)
     
     from search_res import binary_search
-    eval_resolution = search_res(adata, n_clusters, start=0.1, step=0.1, tol=5e-3, max_run=10)
+    eval_resolution = search_res(adata_conST, n_clusters, start=0.1, step=0.1, tol=5e-3, max_run=10)
     # eval_resolution = res_search_fixed_clus(adata_conST, n_clusters)
     print(eval_resolution)
 
