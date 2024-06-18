@@ -242,7 +242,6 @@ def adata_preprocess(i_adata, min_cells, pca_n_comps=n_pcs):
 # Work in a temprary folder
 with tempfile.TemporaryDirectory() as tmpdir:
     gitdir = f"{str(tmpdir)}/conST"
-    print(gitdir)
     # Clone the repository to the specific commit
     os.system(
     f"""
