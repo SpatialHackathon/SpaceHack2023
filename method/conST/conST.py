@@ -40,6 +40,9 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_pcs", help="Number of PCs to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, imaging-based).",
     required=True,
@@ -56,6 +59,13 @@ parser.add_argument(
 args = parser.parse_args()
 
 from pathlib import Path
+import sys
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
 
 out_dir = Path(args.out_dir)
 
@@ -82,7 +92,7 @@ if args.config is not None:
 n_clusters = args.n_clusters
 technology = args.technology
 seed = args.seed
-
+    
 # ... or AnnData if you want
 def get_anndata(args):
     import anndata as ad
@@ -149,9 +159,10 @@ for key, value in config.items():
 
 # default parameters of conST which are not necessary to be changed
 default = {
-    "k": 10,  # parameter k in spatial graph
+    #"k": 10,  # parameter k in spatial graph
+    "knn_distanceType": 'euclidean', # graph distance type: euclidean/cosine/correlation
     "epochs": 200,  # Number of epochs to train.
-    "cell_feat_dim": -1,  # Will be overwritten by adata_preprocess()
+    "cell_feat_dim": 300,  # Dim of PCA
     "feat_hidden1": 100,  # Dim of DNN hidden 1-layer.
     "feat_hidden2": 20,  # Dim of DNN hidden 2-layer.
     "gcn_hidden1": 32,  # Dim of GCN hidden 1-layer.
@@ -187,6 +198,11 @@ for key, value in default.items():
 if args.technology == "Visium":
     params.shape = 'hexagon'
 
+if args.n_pcs is not None:
+    n_pcs = args.n_pcs
+else:
+    n_pcs = params.cell_feat_dim # default
+    
 # Tool imports
 import random
 import torch
@@ -212,19 +228,20 @@ os.environ['PYTHONHASHSEED'] = str(seed)
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
 
-def adata_preprocess(i_adata, min_cells):
+# source: https://github.com/ys-zong/conST/blob/main/conST_cluster.ipynb#In[4]
+# https://github.com/ys-zong/conST/blob/main/src/utils_func.py#L51
+def adata_preprocess(i_adata, min_cells, pca_n_comps=n_pcs):
     print('===== Preprocessing Data ')
     sc.pp.filter_genes(i_adata, min_cells=min_cells)
     adata_X = sc.pp.normalize_total(i_adata, target_sum=1, exclude_highly_expressed=True, inplace=False)['X']
     adata_X = sc.pp.scale(adata_X)
-    adata_X = sc.tl.pca(adata_X)
+    adata_X = sc.tl.pca(adata_X, n_comps=pca_n_comps)
     params.cell_feat_dim = len(adata_X[0,:])  # needed for the pretraining()
     return adata_X
 
 # Work in a temprary folder
 with tempfile.TemporaryDirectory() as tmpdir:
     gitdir = f"{str(tmpdir)}/conST"
-
     # Clone the repository to the specific commit
     os.system(
     f"""
@@ -232,14 +249,14 @@ with tempfile.TemporaryDirectory() as tmpdir:
     cd {gitdir} 
     git reset --hard a32d747
     """)
-
+    sys.path.append(gitdir)
     # Further tool imports
     from src.graph_func import graph_construction
     from src.utils_func import res_search_fixed_clus, plot_clustering
     from src.training import conST_training
 
     # Preprocessing
-    adata_X = adata_preprocess(adata, 5)
+    adata_X = adata_preprocess(adata, config["min_cells"])
 
     # Graph construction
     graph_dict = graph_construction(adata.obsm['spatial'], adata.shape[0], params)
@@ -266,11 +283,8 @@ with tempfile.TemporaryDirectory() as tmpdir:
     adata_conST.obsm['spatial'] = adata.obsm['spatial']
 
     sc.pp.neighbors(adata_conST, n_neighbors=params.eval_graph_n)
-
-    eval_resolution = res_search_fixed_clus(adata_conST, n_clusters)
-    print(eval_resolution)
-
-    sc.tl.leiden(adata_conST, key_added="conST_leiden", resolution=eval_resolution)
+    # eval_resolution = res_search_fixed_clus(adata_conST, n_clusters)
+    adata_conST.obs['conST_leiden'] = binary_search(adata_conST, n_clust_target=n_clusters, method="leiden")
 
     # Plot leiden clsuters without refinement
     plot_clustering(adata_conST, "conST_leiden", savepath = f'{out_dir}/conST_leiden_plot.jpg')
