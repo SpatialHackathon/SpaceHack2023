@@ -1,0 +1,10 @@
+{
+    "n_genes": 3000,
+    "SomNode_k": 5,
+    "knn_n_neighbours": 5,
+    "n_h": 30,
+    "n_epoch": 2000,
+    "alpha_n_layers": 2,
+    "n_neighbours": 15, 
+    "source": "https://github.com/zcang/SCAN-IT/blob/main/examples/Slide-seq"
+}
