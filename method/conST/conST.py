@@ -59,6 +59,13 @@ parser.add_argument(
 args = parser.parse_args()
 
 from pathlib import Path
+import sys
+
+# Add the parent directory of the current file to sys.path
+method_dir = Path(__file__).resolve().parent.parent  # Navigate two levels up
+sys.path.append(str(method_dir))
+
+from search_res import binary_search
 
 out_dir = Path(args.out_dir)
 
@@ -153,6 +160,7 @@ for key, value in config.items():
 # default parameters of conST which are not necessary to be changed
 default = {
     #"k": 10,  # parameter k in spatial graph
+    "knn_distanceType": 'euclidean', # graph distance type: euclidean/cosine/correlation
     "epochs": 200,  # Number of epochs to train.
     "cell_feat_dim": 300,  # Dim of PCA
     "feat_hidden1": 100,  # Dim of DNN hidden 1-layer.
@@ -234,7 +242,7 @@ def adata_preprocess(i_adata, min_cells, pca_n_comps=n_pcs):
 # Work in a temprary folder
 with tempfile.TemporaryDirectory() as tmpdir:
     gitdir = f"{str(tmpdir)}/conST"
-
+    print(gitdir)
     # Clone the repository to the specific commit
     os.system(
     f"""
@@ -242,7 +250,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     cd {gitdir} 
     git reset --hard a32d747
     """)
-
+    sys.path.append(gitdir)
     # Further tool imports
     from src.graph_func import graph_construction
     from src.utils_func import res_search_fixed_clus, plot_clustering
@@ -276,13 +284,8 @@ with tempfile.TemporaryDirectory() as tmpdir:
     adata_conST.obsm['spatial'] = adata.obsm['spatial']
 
     sc.pp.neighbors(adata_conST, n_neighbors=params.eval_graph_n)
-    
-    from search_res import binary_search
-    eval_resolution = search_res(adata_conST, n_clusters, start=0.1, step=0.1, tol=5e-3, max_run=10)
     # eval_resolution = res_search_fixed_clus(adata_conST, n_clusters)
-    print(eval_resolution)
-
-    sc.tl.leiden(adata_conST, key_added="conST_leiden", resolution=eval_resolution)
+    adata_conST.obs['conST_leiden'] = binary_search(adata_conST, n_clust_target=n_clusters, method="leiden")
 
     # Plot leiden clsuters without refinement
     plot_clustering(adata_conST, "conST_leiden", savepath = f'{out_dir}/conST_leiden_plot.jpg')
