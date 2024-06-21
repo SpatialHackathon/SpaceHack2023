@@ -37,6 +37,9 @@ parser.add_argument(
     "--n_clusters", help="Number of clusters to return.", required=True, type=int
 )
 parser.add_argument(
+    "--n_pcs", help="Number of PCs to use.", required=False, type=int
+)
+parser.add_argument(
     "--technology",
     help="The technology of the dataset (Visium, ST, imaging-based).",
     required=True,
@@ -119,7 +122,6 @@ def get_anndata(args):
 
 adata = get_anndata(args)
 
-
 # Set the seed
 import random
 random.seed(seed)
@@ -127,21 +129,38 @@ random.seed(seed)
 from sotip import *
 import scanpy as sc
 
-# Process the data with scanpy routine    
-sc.pp.neighbors(adata, use_rep='reduced_dimensions')
+if "n_pcs" not in config.keys():
+    config["n_pcs"] = 50 # default
+  
+n_pcs = args.n_pcs if args.n_pcs is not None else config["n_pcs"]
+
+# Process the data with scanpy routine
+sc.pp.normalize_total(adata)
+sc.pp.log1p(adata)
+sc.pp.pca(adata,n_comps=n_pcs)
+sc.pp.neighbors(adata, use_rep='X_pca')
 sc.tl.umap(adata)
 
 # Find resolution for the given n_clusters
-res_recom = search_res(adata, n_clusters, start=0.1, step=0.1, tol=5e-3, max_run=10)
+if "res" in config.keys():
+    res_recom = config["res"]
+else:
+    res_recom = search_res(adata, n_clusters, start=0.1, step=0.1, tol=5e-3, max_run=10)
+
 sc.tl.leiden(adata,resolution=res_recom)
+leiden_n_clusters = len(adata.obs['leiden'].cat.categories)
+# If the number of clusters is less than expected, log a message and stop the execution
+import sys
+# import logging
+# logging.error
+if leiden_n_clusters < n_clusters:
+    print(f"Number of clusters obtained ({leiden_n_clusters}) is less than the expected number ({n_clusters}). "
+          f"Consider setting higher resolution values in config['res'] to get more clusters.")
+    sys.exit(1)
 
 # ME size 
-if args.config:
-    knn = int(config['knn'])
-    n_neighbors = int(config['n_neighbours'])
-else:
-    knn = 10
-    n_neighbors=500
+knn = 10
+n_neighbors = config['n_neighbours']
     
 # Order of cluster label for ME representation (adata.obsm['ME'])
 ME_var_names_np_unique = np.array(adata.obs['leiden'].cat.categories) 
@@ -171,7 +190,8 @@ adata_phEMD = MED_phEMD_mp(
 adata.obsp['ME_EMD_mat'] = adata_phEMD.obsm['X_ME_EMD_mat']
 
 # Compute the MEG, each node is a ME, edge is the connectivity
-sc.pp.neighbors(adata, n_neighbors=n_neighbors, use_rep="reduced_dimensions")
+# sc.pp.neighbors(adata, n_neighbors=n_neighbors, use_rep="reduced_dimensions") # related to issues#208
+sc.pp.neighbors(adata, n_neighbors=n_neighbors)
 knn_indices, knn_dists, forest = sc.neighbors.compute_neighbors_umap(adata_phEMD.obsm['X_ME_EMD_mat'], n_neighbors=n_neighbors, metric='precomputed')
 adata.obsp['distances'], adata.obsp['connectivities'] = sc.neighbors._compute_connectivities_umap(
     knn_indices,
@@ -187,12 +207,16 @@ adata.uns['neighbors_EMD'] = adata.uns['neighbors'].copy()
 sc.tl.umap(adata,neighbors_key='neighbors_EMD')
 sc.tl.leiden(adata,neighbors_key='neighbors_EMD', key_added='leiden_EMD')
 
-# Merge regions according to MEG connectivities
-sc.tl.paga(adata, groups='leiden_EMD', neighbors_key='neighbors_EMD')
-merge_cls_paga(adata, thresh=0, min_cls=n_clusters, paga_plot=False)
+if len(adata.obs['leiden_EMD'].cat.categories) > n_clusters:
+    # Merge regions according to MEG connectivities
+    sc.tl.paga(adata, groups='leiden_EMD', neighbors_key='neighbors_EMD')
+    merge_cls_paga(adata, thresh=0, min_cls=n_clusters, paga_plot=False)
+    use_rep = 'leiden_EMD_merge'
+else:
+    use_rep = 'leiden_EMD'
 
 embedding_df = pd.DataFrame(adata.obsm['X_umap'], index=adata.obs_names) # optional, DataFrame with index (cell-id/barcode) and n columns
-label_df = adata.obs[['leiden_EMD']]  # DataFrame with index (cell-id/barcode) and 1 column (label)
+label_df = adata.obs[[use_rep]]  # DataFrame with index (cell-id/barcode) and 1 column (label)
 
 ## Write output
 out_dir.mkdir(parents=True, exist_ok=True)
