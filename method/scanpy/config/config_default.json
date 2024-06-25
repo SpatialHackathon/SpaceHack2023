@@ -1,0 +1,5 @@
+{ 
+    "n_neighbors" : 15, 
+    "clustering" : "leiden",
+    "source": "https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.pca.html,https://scanpy.readthedocs.io/en/stable/api/generated/scanpy.pp.neighbors.html, https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.highly_variable_genes.html"
+}
