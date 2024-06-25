@@ -111,13 +111,13 @@ def get_anndata(args):
         .to_numpy()
     )
 
-    adjacency_matrix = mmread(args.neighbors).T.tocsr()
+    # adjacency_matrix = mmread(args.neighbors).T.tocsr()
 
     adata = ad.AnnData(
         X=counts_matrix,
         obs=observations,
-        obsm={"spatial": coordinates},
-        obsp={"spatial_connectivities": adjacency_matrix},
+        obsm={"spatial": coordinates} #,
+        # obsp={"spatial_connectivities": adjacency_matrix},
     )
 
     # Filter by selected samples
@@ -125,7 +125,7 @@ def get_anndata(args):
         adata = adata[observations["selected"].astype(bool), :]
 
     if preprocess_parameters:
-        del adata.obsp["spatial_connectivities"]
+        # del adata.obsp["spatial_connectivities"]
         sc.pp.normalize_total(adata)
         sc.pp.log1p(adata)
         sc.pp.highly_variable_genes(adata, n_top_genes=n_genes)
@@ -180,6 +180,10 @@ torch_context = {
     "dtype": dtype,
 }
 
+# ignore "source" in configs
+keys_to_ignore = ["source"]
+filtered_config = {key: value for key, value in config.items() if key not in keys_to_ignore}
+
 with tempfile.TemporaryDirectory() as temp_dir:
     temp_path = Path(temp_dir)
     save_anndata(temp_path / "input.h5ad", [adata])
@@ -189,7 +193,7 @@ with tempfile.TemporaryDirectory() as temp_dir:
         random_state=args.seed,
         initial_context=torch_context,
         torch_context=torch_context,
-        **config,
+        **filtered_config,
     )
 
     # Run
@@ -199,7 +203,6 @@ with tempfile.TemporaryDirectory() as temp_dir:
     tl.leiden(
         model, joint=True, target_clusters=args.n_clusters, use_rep="normalized_X"
     )
-
     # TODO: add optional smoothing step
     label_df = model.datasets[0].obs[["leiden"]]
 
