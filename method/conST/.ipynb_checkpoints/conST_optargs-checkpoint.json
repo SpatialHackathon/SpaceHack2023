@@ -1,7 +1,0 @@
-{
-    "matrix": "counts",
-    "integrated_feature_selection": false,
-    "image": true,
-    "neighbors": false,
-    "config_file": true
-}
