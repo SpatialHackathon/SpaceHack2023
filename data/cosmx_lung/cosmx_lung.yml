@@ -1,0 +1,7 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9.18
+  - scanpy=1.10.1
+  - r-base=4.3.3
+  - rpy2=3.5.11

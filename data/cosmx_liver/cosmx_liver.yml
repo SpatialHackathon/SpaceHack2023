@@ -1,0 +1,7 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9.18
+  - pip
+  - pip:
+    - tiledbsc==0.1.5
