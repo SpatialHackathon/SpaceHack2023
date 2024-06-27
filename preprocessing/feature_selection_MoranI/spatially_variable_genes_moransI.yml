@@ -2,7 +2,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.9.18
-  - scanpy=1.9.6
+  - scanpy=1.10.1
   - pip
   - pip:
-    - squidpy==1.3.1  
+    - squidpy==1.5.0

@@ -4,4 +4,4 @@ dependencies:
   - python=3.9.18
   - pip
   - pip:
-    - squidpy==1.3.1
+    - squidpy==1.5.0
