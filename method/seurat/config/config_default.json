@@ -1,0 +1,6 @@
+{
+  "algorithm": 4,
+  "n_genes":3000,
+  "n_pcs":50,
+  "source": "https://satijalab.org/seurat/reference/sctransform, https://satijalab.org/seurat/reference/runpca",
+}

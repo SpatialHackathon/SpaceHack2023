@@ -5,5 +5,5 @@
     "clustering" : "leiden",
     "directed": false, 
     "n_iterations":2,
-    "reference": "https://scanpy.readthedocs.io/en/stable/tutorials/spatial/basic-analysis.html#qc-and-preprocessing"
+    "source": "https://scanpy.readthedocs.io/en/stable/tutorials/spatial/basic-analysis.html#qc-and-preprocessing"
 }
