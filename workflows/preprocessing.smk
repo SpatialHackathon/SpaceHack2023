@@ -3,17 +3,18 @@ from shared.functions import check_files_in_folder, get_git_directory, get_sampl
 
 configfile: "example_configs/preprocessing_config.yaml"
 configfile: "path_configs/datasets.yaml"
-config["data_dir"] = config["dataset_dir"] + config["use_datasets"][0]
+#config["data_dir"] = config["dataset_dir"] + config["use_datasets"][0]
 
 GIT_DIR = get_git_directory(config)
-DATASETS = config.pop("datasets")
+DATASETS = config.pop("use_datasets")
+ALL_DATASETS = config.pop("datasets")
 NEIGHBORS_INFOS = config.pop("neighbors_infos")
 
 
 # If all required input files are in the folder, generate the required output file for all sample folders
-def create_input(file_list, input_file_name):
+def create_input(file_list, input_file_name, data_dir):
     input_files = []
-    for sample_dir in get_sample_dirs(config["data_dir"]):
+    for sample_dir in get_sample_dirs(data_dir):
         if check_files_in_folder(sample_dir, file_list):
             input_files.append(sample_dir + input_file_name)
     return input_files
@@ -33,11 +34,13 @@ def create_neighbors_input(wildcards):
 def create_quality_control_input(wildcards):
     file_list = ["coordinates.tsv", "counts.mtx", "features.tsv", "observations.tsv"]
     all_qc_file = []
-    if "experiment.json" in os.listdir(config["data_dir"]):
-        all_qc_file += create_input(file_list, "/qc/counts.mtx")
-        all_qc_file += create_input(file_list, "/qc/features.tsv")
-        all_qc_file += create_input(file_list, "/qc/observations.tsv")
-        all_qc_file += create_input(file_list, "/qc/coordinates.tsv")
+    for dataset in DATASETS:
+        data_dir = config["dataset_dir"] +  "/" + dataset
+        if "experiment.json" in os.listdir(data_dir):
+            all_qc_file += create_input(file_list, "/qc/counts.mtx", data_dir)
+            all_qc_file += create_input(file_list, "/qc/features.tsv", data_dir)
+            all_qc_file += create_input(file_list, "/qc/observations.tsv", data_dir)
+            all_qc_file += create_input(file_list, "/qc/coordinates.tsv", data_dir)
 
     return all_qc_file
 
@@ -63,11 +66,9 @@ def create_dimensionality_reduction_pca_input(wildcards):
 def get_opt(wildcards):
     import json
     from pathlib import Path
-
-    dataset = Path(config["data_dir"]).name
-
-    if os.path.exist(GIT_DIR + DATASETS[dataset]["optargs"]):
-        with open(GIT_DIR + DATASETS[dataset]["optargs"], "r") as file:
+    dataset = wildcards["dataset"]
+    if "optargs" in ALL_DATASETS[dataset] and os.path.exists(GIT_DIR + ALL_DATASETS[dataset]["optargs"]):
+        with open(GIT_DIR + ALL_DATASETS[dataset]["optargs"], "r") as file:
             opt = json.load(file)
     else:
         opt = {"min_cells":1, "min_genes":1, "min_counts":1}
@@ -86,16 +87,16 @@ rule all:
 
 rule quality_control:
     input:
-        coordinates=config["data_dir"] + "/{sample}/coordinates.tsv",
-        matrix=config["data_dir"] + "/{sample}/counts.mtx",
-        features=config["data_dir"] + "/{sample}/features.tsv",
-        observations=config["data_dir"] + "/{sample}/observations.tsv",
+        coordinates=config["dataset_dir"] + "/{dataset}/{sample}/coordinates.tsv",
+        matrix=config["dataset_dir"] + "/{dataset}/{sample}/counts.mtx",
+        features=config["dataset_dir"] + "/{dataset}/{sample}/features.tsv",
+        observations=config["dataset_dir"] + "/{dataset}/{sample}/observations.tsv",
     output:
-        dir=directory(config["data_dir"] + "/{sample}/qc"),
-        counts=config["data_dir"] + "/{sample}/qc/counts.mtx",
-        features=config["data_dir"] + "/{sample}/qc/features.tsv",
-        observations=config["data_dir"] + "/{sample}/qc/observations.tsv",
-        coordinates=config["data_dir"] + "/{sample}/qc/coordinates.tsv",
+        dir=directory(config["dataset_dir"] + "/{dataset}/{sample}/qc"),
+        counts=config["dataset_dir"] + "/{dataset}/{sample}/qc/counts.mtx",
+        features=config["dataset_dir"] + "/{dataset}/{sample}/qc/features.tsv",
+        observations=config["dataset_dir"] + "/{dataset}/{sample}/qc/observations.tsv",
+        coordinates=config["dataset_dir"] + "/{dataset}/{sample}/qc/coordinates.tsv",
     conda:
         GIT_DIR + "preprocessing/quality_control/qc_scanpy.yml"
     params:
@@ -130,14 +131,14 @@ rule quality_control:
 
 rule neighbors:
     input:
-        coordinates=config["data_dir"] + "/{sample}/qc/coordinates.tsv",
-        matrix=config["data_dir"] + "/{sample}/qc/counts.mtx",
-        features=config["data_dir"] + "/{sample}/qc/features.tsv",
-        observations=config["data_dir"] + "/{sample}/qc/observations.tsv",
+        coordinates=config["dataset_dir"] + "/{dataset}/{sample}/qc/coordinates.tsv",
+        matrix=config["dataset_dir"] + "/{dataset}/{sample}/qc/counts.mtx",
+        features=config["dataset_dir"] + "/{dataset}/{sample}/qc/features.tsv",
+        observations=config["dataset_dir"] + "/{dataset}/{sample}/qc/observations.tsv",
     output:
-        file=config["data_dir"]
-        + "/{sample}/{neighbors_method}/spatial_connectivities.mtx",
-        outdir=directory(config["data_dir"] + "/{sample}/{neighbors_method}"),
+        file=config["dataset_dir"]
+        + "/{dataset}/{sample}/{neighbors_method}/spatial_connectivities.mtx",
+        outdir=directory(config["dataset_dir"] + "/{dataset}/{sample}/{neighbors_method}"),
     conda:
         lambda wildcards: GIT_DIR + NEIGHBORS_INFOS[wildcards.neighbors_method]["env"]
     wildcard_constraints:
@@ -158,13 +159,13 @@ rule neighbors:
 
 rule transformation_log1p:
     input:
-        coordinates=config["data_dir"] + "/{sample}/qc/coordinates.tsv",
-        matrix=config["data_dir"] + "/{sample}/qc/counts.mtx",
-        features=config["data_dir"] + "/{sample}/qc/features.tsv",
-        observations=config["data_dir"] + "/{sample}/qc/observations.tsv",
+        coordinates=config["dataset_dir"] + "/{dataset}/{sample}/qc/coordinates.tsv",
+        matrix=config["dataset_dir"] + "/{dataset}/{sample}/qc/counts.mtx",
+        features=config["dataset_dir"] + "/{dataset}/{sample}/qc/features.tsv",
+        observations=config["dataset_dir"] + "/{dataset}/{sample}/qc/observations.tsv",
     output:
-        dir=directory(config["data_dir"] + "/{sample}/log1p"),
-        file=config["data_dir"] + "/{sample}/log1p/counts.mtx",
+        dir=directory(config["dataset_dir"] + "/{dataset}/{sample}/log1p"),
+        file=config["dataset_dir"] + "/{dataset}/{sample}/log1p/counts.mtx",
     conda:
         GIT_DIR + "preprocessing/transformation/log1p.yml"
     shell:
@@ -180,13 +181,13 @@ rule transformation_log1p:
 
 rule selection_hvg:
     input:
-        coordinates=config["data_dir"] + "/{sample}/qc/coordinates.tsv",
-        matrix=config["data_dir"] + "/{sample}/log1p/counts.mtx",
-        features=config["data_dir"] + "/{sample}/qc/features.tsv",
-        observations=config["data_dir"] + "/{sample}/qc/observations.tsv",
+        coordinates=config["dataset_dir"] + "/{dataset}/{sample}/qc/coordinates.tsv",
+        matrix=config["dataset_dir"] + "/{dataset}/{sample}/log1p/counts.mtx",
+        features=config["dataset_dir"] + "/{dataset}/{sample}/qc/features.tsv",
+        observations=config["dataset_dir"] + "/{dataset}/{sample}/qc/observations.tsv",
     output:
-        dir=directory(config["data_dir"] + "/{sample}/log1p/hvg"),
-        file=config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
+        dir=directory(config["dataset_dir"] + "/{dataset}/{sample}/log1p/hvg"),
+        file=config["dataset_dir"] + "/{dataset}/{sample}/log1p/hvg/features.tsv",
     conda:
         GIT_DIR + "preprocessing/feature_selection/highly_variable_genes_scanpy.yml"
     shell:
@@ -202,19 +203,19 @@ rule selection_hvg:
 
 rule dimensionality_reduction_pca:
     input:
-        coordinates=config["data_dir"] + "/{sample}/qc/coordinates.tsv",
-        matrix=config["data_dir"] + "/{sample}/log1p/counts.mtx",
-        features=config["data_dir"] + "/{sample}/log1p/hvg/features.tsv",
-        observations=config["data_dir"] + "/{sample}/qc/observations.tsv",
+        coordinates=config["dataset_dir"] + "/{dataset}/{sample}/qc/coordinates.tsv",
+        matrix=config["dataset_dir"] + "/{dataset}/{sample}/log1p/counts.mtx",
+        features=config["dataset_dir"] + "/{dataset}/{sample}/log1p/hvg/features.tsv",
+        observations=config["dataset_dir"] + "/{dataset}/{sample}/qc/observations.tsv",
     params:
         n_components=config["n_pcs"],
         seed=config["seed"]
     output:
         folder=directory(
-            config["data_dir"] + "/{sample}/log1p/hvg/pca_" + config["n_pcs"]
+            config["dataset_dir"] + "/{dataset}/{sample}/log1p/hvg/pca_" + config["n_pcs"]
         ),
-        file=config["data_dir"]
-        + "/{sample}/log1p/hvg/pca_"
+        file=config["dataset_dir"]
+        + "/{dataset}/{sample}/log1p/hvg/pca_"
         + config["n_pcs"]
         + "/dimensionality_reduction.tsv",
     conda:
