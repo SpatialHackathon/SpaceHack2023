@@ -10,11 +10,11 @@ use_datasets:
   - "libd_dlpfc"
   - "visium_breast_cancer_SEDR"
   - "visium_chicken_heart"
-  - "mouse_brain_sagittal_anterior"
-#  - "mouse_brain_sagittal_posterior"
   - "STARmap_plus"
+  - "stereoseq_mouse_embryo"
 
 ### Not used in this project
+#  - "stereoseq_developing_Drosophila_embryos_larvae"
 #  - "mouse_kidney_coronal"
 #  - "osmfish_Ssp"
 #  - "sotip_simulation"

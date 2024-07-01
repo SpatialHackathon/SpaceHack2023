@@ -55,3 +55,15 @@ datasets:
     env: data/xenium-mouse-brain-SergioSalas/environment.yml
     script: data/xenium-mouse-brain-SergioSalas/xenium-mouse-brain-SergioSalas.py
     optargs: data/xenium-mouse-brain-SergioSalas/xenium-mouse-brain-SergioSalas_optargs.json
+  STARmap_plus:
+    env: data/STARmap_plus/STARmap_plus.yml
+    script: data/STARmap_plus/STARmap_plus.py
+    optargs: data/STARmap_plus/STARmap_plus_optargs.json
+  stereoseq_developing_Drosophila_embryos_larvae:
+    env: data/stereoseq_developing_Drosophila_embryos_larvae/stereoseq_developing_Drosophila_embryos_larvae.yml
+    script: data/stereoseq_developing_Drosophila_embryos_larvae/stereoseq_developing_Drosophila_embryos_larvae.py
+    optargs: data/stereoseq_developing_Drosophila_embryos_larvae/stereoseq_developing_Drosophila_embryos_larvae_optargs.json
+  stereoseq_mouse_embryo:
+    env: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo.yml
+    script: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo.py
+    optargs: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo_optargs.json

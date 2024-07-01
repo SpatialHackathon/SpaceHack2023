@@ -4,8 +4,8 @@ from shared.functions import check_files_in_folder, get_git_directory, get_sampl
 
 configfile: "path_configs/datasets.yaml"
 
-GIT_DIR = "/home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow/SpaceHack2023/"
-DATASET_DIR = "/home/jovyan/scratch/SpaceHack2/userfolders/jsun/workflow"
+GIT_DIR = "/work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack2023/"
+DATASET_DIR = "/work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data"
 DATASETS = config.pop("datasets")
 
 def create_visualization(data_dir):
@@ -34,6 +34,12 @@ def get_opt(wildcards):
         opt = json.load(file)
     return opt
 
+def get_technology(wildcards):
+    import json
+
+    with open(DATASET_DIR + f"/{wildcards.dataset}/experiment.json", "r") as file:
+        info = json.load(file)
+    return info["technology"]
 
 ##################### start visualization #####################
 
@@ -53,6 +59,8 @@ rule qc_visualization:
     output:
         dir=directory(DATASET_DIR + "/{dataset}/{sample}/visualization/" ),
         file=DATASET_DIR + "/{dataset}/{sample}/visualization/pp_report_sample.pdf"
+    params:
+        technology=get_technology
     conda:
         GIT_DIR + "preprocessing/visualization/visualization.yml"
     wildcard_constraints:
@@ -68,6 +76,7 @@ rule qc_visualization:
           --observation_qc {input.obs_qc} \
           --feature_qc {input.fea_qc} \
           --opt {input.opt} \
+          --technology {params.technology} \
           -d {output.dir}
         """
 

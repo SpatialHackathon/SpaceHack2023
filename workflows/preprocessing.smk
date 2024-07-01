@@ -66,18 +66,21 @@ def get_opt(wildcards):
 
     dataset = Path(config["data_dir"]).name
 
-    with open(GIT_DIR + DATASETS[dataset]["optargs"], "r") as file:
-        opt = json.load(file)
+    if os.path.exist(GIT_DIR + DATASETS[dataset]["optargs"]):
+        with open(GIT_DIR + DATASETS[dataset]["optargs"], "r") as file:
+            opt = json.load(file)
+    else:
+        opt = {"min_cells":1, "min_genes":1, "min_counts":1}
     return opt
 
 
 ####################### Preprocessing #######################
 rule all:
     input:
-        create_neighbors_input,
-        create_transformation_log1p_input,
-        create_selection_hvg_input,
-        create_dimensionality_reduction_pca_input,
+#        create_neighbors_input,
+#        create_transformation_log1p_input,
+#        create_selection_hvg_input,
+#        create_dimensionality_reduction_pca_input,
         create_quality_control_input,
 
 
