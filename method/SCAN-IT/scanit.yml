@@ -4,13 +4,14 @@ channels:
   - anaconda
   - conda-forge
 dependencies:
+  - python=3.10.14
   - umap-learn=0.5.5
   - gcc=12.1.0
   - anndata=0.10.3
   - gudhi=3.8.0
   - matplotlib=3.8.0
-  - torchvision=0.16.0
-  - torchaudio=2.1.0
+  - torchvision=0.15.2
+  - torchaudio=0.12.1 #ytorch/noarch::pytorch-mutex-1.0-cuda; pytorch/linux-64::torchaudio-0.12.1-py310_cu116 <- 2.1.0
   - cpuonly=2.0
   - pytorch=2.1.0
   - pyg=2.4.0
@@ -23,6 +24,9 @@ dependencies:
   - pandas=2.1.4
   - networkx=2.6.3
   - leidenalg=0.10.1
+  - somoclu=1.7.6
+  - patsy=0.5.6
+  - pip
   - pip:
-      - somoclu==1.7.6
+      - somde==0.1.8     
       - "git+https://github.com/zcang/SCAN-IT.git@ebf38949eea9348cd1791f392789a8a8c0ae1e47#egg=scanit"

@@ -1,0 +1,10 @@
+{
+    "n_genes": 3000,
+    "SomNode_k": 20,
+    "knn_n_neighbours": 10,
+    "n_h": 32,
+    "n_epoch": 1000,
+    "alpha_n_layers": 1,
+    "n_neighbours": 15, 
+    "source": "https://github.com/zcang/SCAN-IT/blob/main/scanit/tools/_scanit_representation.py"
+}
