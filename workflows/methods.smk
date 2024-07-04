@@ -227,7 +227,7 @@ rule method_with_config:
             {params.image} \
             {params.neighbors}{input.neighbors} \
             --n_clusters {params.n_clusters} \
-            --technology {params.technology} \
+            --technology "{params.technology}" \
             --seed {params.seed} \
             --config {params.configfile}
         """

@@ -2,6 +2,6 @@ channels:
   - conda-forge
 dependencies:
   - anndata=0.10.3
-  - gdown=4.7.1
+  - gdown=4.7.3
   - scipy=1.11.4
   - pandas=2.1.4

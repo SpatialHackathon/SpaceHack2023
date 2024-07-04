@@ -58,8 +58,6 @@ def get_data(out_dir):
         download_data('https://cdn.10xgenomics.com/raw/upload/v1695234604/Xenium%20Preview%20Data/Cell_Barcode_Type_Matrices.xlsx', 
                       f'{tmpdir}', False)
     
-        shutil.move(f'{tmpdir}/Xenium_FFPE_Human_Breast_Cancer_Rep2_gene_panel.json', f'{out_dir}/experiment.json')
-    
         for replicate in ['replicate1', 'replicate2']:
             print(f'Extract data for {replicate}...')
             
@@ -92,7 +90,8 @@ def get_data(out_dir):
             df_labels.to_csv(f'{out_dir}/{replicate}/labels.tsv.csv', sep="\t", index_label="")
     
             print('...done')
-    
+        shutil.move(f'{tmpdir}/Xenium_FFPE_Human_Breast_Cancer_Rep2_gene_panel.json', f'{out_dir}/experiment.json')
+
 def main():
     # Set up command-line argument parser
     parser = argparse.ArgumentParser(
