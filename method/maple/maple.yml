@@ -5,6 +5,7 @@ channels:
 dependencies:
   - r-base=4.3.1
   - r-optparse=1.7.3
+  - r-jsonlite=1.8.8
   - r-Seurat=4.4.0
   - bioconductor-SpatialExperiment=1.12.0
   - r-remotes=2.4.2

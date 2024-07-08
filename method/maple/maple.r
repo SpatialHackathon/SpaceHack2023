@@ -5,6 +5,7 @@
 
 suppressPackageStartupMessages({
     library(optparse)
+    library(jsonlite)
     library(SpatialExperiment)
     library(Seurat)
     library(maple)
@@ -47,6 +48,16 @@ option_list <- list(
     help = "Reduced dimensionality representation (e.g. PCA)."
   ),
   make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
+  ),
+  make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
     c("--image"),
     type = "character", default = NA,
     help = "Path to H&E staining."
@@ -73,7 +84,6 @@ option_list <- list(
   )
 )
 
-# TODO adjust description
 description <- "MAPLE: Bayesian spatial finite mixture models for identification of cell sub-populations in multi-sample spatial transcriptomics experiments"
 
 opt_parser <- OptionParser(
@@ -108,11 +118,13 @@ if (!is.na(opt$image)) {
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
 n_clusters <- opt$n_clusters
-
+n_genes <- ifelse(is.null(opt$n_genes), config$n_genes, opt$n_genes)
+n_pcs <- ifelse(is.null(opt$n_pcs), config$n_pcs, opt$n_pcs)
 
 # You can get SpatialExperiment directly
 get_SpatialExperiment <- function(
@@ -160,39 +172,43 @@ get_SpatialExperiment <- function(
 # Seed
 seed <- opt$seed
 set.seed(seed)
-# TODO if the method requires the seed elsewhere please pass it on
-
-if (!exists("matrix_file")) {
-    matrix_file <- NA
-}
 
 # You can use the data as SpatialExperiment
 spe <- get_SpatialExperiment(feature_file = feature_file,observation_file = observation_file,
-                                    coord_file = coord_file, reducedDim_file = dimred_file, matrix_file = matrix_file)
+                                    coord_file = coord_file, matrix_file = matrix_file)
 
-# Create a dummy matrix for seurat object requirement
-if (is.null(assayNames(spe))){
-    assay(spe, "counts", withDimnames = FALSE) <- Matrix::Matrix(0, nrow=nrow(spe), ncol=ncol(spe), sparse=TRUE)
+# Preprocess
+counts <- assay(spe, "counts")
+seu <- CreateSeuratObject(counts = counts)
+
+seu <- SCTransform(seu, variable.features.n = n_genes)
+if (length(Seurat::VariableFeatures(seu)) == 0) seu <- FindVariableFeatures(seu, nfeatures = n_genes)
+
+seu <- RunPCA(seu)
+
+
+# Insert image coordinates (Class, assay, and key are required but unused)
+coordinates <- data.frame("ID" = rownames(spe))
+if (technology %in% c("ST", "Visium")){
+    coordinates <- as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")])
+} else {
+    coordinates <- as.data.frame(SpatialExperiment::spatialCoords(spe))
 }
 
-## Your code goes here
-# TODO
-seurat_obj <- as.Seurat(spe, data=NULL)
-
-# Insert image coordinates
-seurat_obj@images$image =  new(
+seu@images$image =  new(
   Class = 'SlideSeq',
   assay = "Spatial",
   key = "coordinates_",
-  coordinates = as.data.frame(colData(spe))
+  coordinates = coordinates
 )
 
 # Run maple
 maple_results <- fit_maple(
-  seurat_obj, 
+  seu, 
   K = n_clusters, 
   emb = "PCs", 
-  covars = "sample_id" #, n_dim = d 
+  #covars = "sample_id",
+  n_dim = n_pcs
   )
 
 # The data.frames with observations may contain a column "selected" which you need to use to
@@ -201,7 +217,7 @@ maple_results <- fit_maple(
 # embedding_df = NULL  # optional, data.frame with row.names (cell-id/barcode) and n columns
 
 # save data
-label_df <- data.frame("label" = maple_results$z, row.names=colnames(seurat_obj))
+label_df <- data.frame("label" = maple_results$z, row.names=colnames(seu))
 embedding_df <- as.data.frame(maple_results$Y)
 
 ## Write output
