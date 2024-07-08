@@ -174,6 +174,7 @@ n_clusters <- opt$n_clusters
 method <- config$method
 pcaDimensions <- config$npcs
 pcaDimensions <- ifelse(is.null(opt$n_pcs), pcaDimensions, opt$n_pcs)
+n_genes <- ifelse(is.null(opt$n_genes), config$n_genes, opt$n_genes)
 
 # Seed
 seed <- opt$seed
@@ -207,7 +208,10 @@ spotPositions <- spotPositions[,(d-1):d]
 spotPositions <- spotPositions[sort(rownames(spotPositions)),]
 
 seuratObject <- Seurat::CreateSeuratObject(countMatrix)
-seuratObject <- suppressWarnings(Seurat::SCTransform(seuratObject, assay = "RNA", verbose = FALSE))
+seuratObject <- suppressWarnings(Seurat::SCTransform(
+    seuratObject,
+    variable.features.n = n_genes,
+    assay = "RNA", verbose = FALSE))
 seuratObject <- Seurat::RunPCA(seuratObject, assay = "SCT", verbose = FALSE)
 if(pcaDimensions <= 2){
   pcaDimensions = 2
@@ -231,11 +235,13 @@ neighbors <- list(neighbors_nn=neighbors$nn,neighbors_snn=neighbors$snn)
 seuratObject@graphs <- neighbors
 
 do_clustering <- Seurat::FindClusters
+extract_nclust <- function(results) length(unique(results@active.ident))
 
 output <- binary_search(
-    countMatrix, 
+    seuratObject, 
     n_clust_target = n_clusters, 
     do_clustering = do_clustering, 
+    extract_nclust = extract_nclust,
     # stardust specific
     verbose = FALSE,
     graph.name = "neighbors_snn")

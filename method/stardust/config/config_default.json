@@ -1,5 +1,6 @@
 {
   "method": "auto",
   "npcs": 10,
-  "reference": "https://github.com/InfOmics/stardust/blob/master/R/autoStardust.R"
+  "n_genes": 3000,
+  "source": "https://github.com/InfOmics/stardust/blob/master/R/autoStardust.R"
 }
