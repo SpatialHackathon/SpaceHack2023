@@ -1,0 +1,6 @@
+{
+  "weight": 0.025,
+  "n_genes": 2000,
+  "method": "sct",
+  "source": "https://fridleylab.github.io/spatialGE/reference/transform_data.html"
+}

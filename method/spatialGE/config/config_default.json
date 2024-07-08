@@ -1,0 +1,5 @@
+{
+  "weight": 0.025,
+  "n_genes": 2000,
+  "source": "https://github.com/FridleyLab/spatialGE/blob/8440639d32b4bac83750f93c2c5ac020fc4c4791/R/STclust.R#L48C92-L48C105"
+}
