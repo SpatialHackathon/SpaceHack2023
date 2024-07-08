@@ -1,0 +1,7 @@
+{
+  "method": "weight",
+  "npcs": 10,
+  "n_genes": 3000,
+  "weight": 0.75,
+  "source":"https://github.com/InfOmics/stardust/blob/master/README.md"
+}
