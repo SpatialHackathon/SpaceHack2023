@@ -48,11 +48,6 @@ option_list <- list(
     help = "Reduced dimensionality representation (e.g. PCA)."
   ),
   make_option(
-    c("--n_pcs"),
-    type = "integer", default = NULL,
-    help = "Number of PCs to use."
-  ),
-  make_option(
     c("--n_genes"),
     type = "integer", default = NULL,
     help = "Number of genes to use."
