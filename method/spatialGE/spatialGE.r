@@ -48,6 +48,11 @@ option_list <- list(
     help = "Reduced dimensionality representation (e.g. PCA)."
   ),
   make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
+  ),
+  make_option(
     c("--image"),
     type = "character", default = NA,
     help = "Path to H&E staining."
@@ -74,7 +79,6 @@ option_list <- list(
   )
 )
 
-# TODO adjust description
 description <- "spatialGE: Hierarchical clustering on weighted distance matrices"
 
 opt_parser <- OptionParser(
@@ -115,6 +119,8 @@ if (!is.na(opt$config)) {
 technology <- opt$technology
 n_clusters <- opt$n_clusters
 weight <- config$weight
+n_genes <- ifelse(is.null(opt$n_genes), config$n_genes, opt$n_genes)
+method <- ifelse(is.null(config$method), "log", config$method)
 
 # You can get SpatialExperiment directly
 get_SpatialExperiment <- function(
@@ -188,6 +194,7 @@ STobject <- transform_data(STobject, method = "log")
 # Clustering
 STobject <- STclust(
     STobject, 
+    topgenes = n_genes,
     ks = c(n_clusters), 
     ws = c(weight))
 

@@ -1,0 +1,5 @@
+{
+  "weight": 0.2,
+  "n_genes": 2000,
+  "source": "https://fridleylab.github.io/spatialGE/articles/basic_functions_vignette.html#unsupervised-spatially-informed-clustering-stclust"
+}
