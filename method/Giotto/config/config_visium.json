@@ -1,0 +1,9 @@
+{
+  "betas": [0, 1, 6],
+  "beta": 2,
+  "k": 4,
+  "n_pcs": 10,
+  "n_genes": 100,
+  "bin_method": "rank",
+  "source": "https://drieslab.github.io/Giotto_website/articles/visium_mouse_kidney.html#spatial-genes"
+}

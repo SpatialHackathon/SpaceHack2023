@@ -147,7 +147,7 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    assay(spe, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
+    #spe <- scuttle::logNormCounts(spe)
   }
 
   # Filter features and samples
@@ -199,7 +199,7 @@ instrs <- createGiottoInstructions(save_dir = out_dir,
 createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, instructions = NULL){
   raw_expr <- SummarizedExperiment::assay(spe, "counts")
   #colnames(raw_expr) <- colData(sce)[,"Barcode"]
-  norm_expression <- SummarizedExperiment::assay(spe, "logcounts")
+  #norm_expression <- SummarizedExperiment::assay(spe, "logcounts")
   
   cell_metadata <- SingleCellExperiment::colData(spe)
   cell_metadata$cell_ID <- rownames(SingleCellExperiment::colData(spe))
@@ -223,10 +223,12 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
 }
 # Convert to Giotto object
 gobj <- createGiotto_fn(spe, instructions = instrs)
-print(gobj)
+
 # Normalize
-gobj <- Giotto::normalizeGiotto(gobj)
-# Alternatively, use the Giotto normalization
+gobj <- Giotto::normalizeGiotto(gobj, scalefactor = 6000)
+
+## highly variable features (genes)
+gobj <- calculateHVF(gobj)
 
 # PCA
 gobj <- runPCA(gobject = gobj, center = TRUE, scale_unit = TRUE, name = "PCA", feats_to_use = NULL)
