@@ -48,9 +48,9 @@ option_list <- list(
     help = "Reduced dimensionality representation (e.g. PCA)."
   ),
   make_option(
-    c("--n_clusters"),
+    c("--n_genes"),
     type = "integer", default = NULL,
-    help = "Number of clusters to return."
+    help = "Number of genes to use."
   ),
   make_option(
     c("--n_pcs"),
@@ -118,7 +118,7 @@ if (!is.na(opt$image)) {
 }
 if (!is.na(opt$config)) {
   config_file <- opt$config
-  config_file <- opt$config
+  config <- fromJSON(config_file)
 }
 
 technology <- opt$technology
