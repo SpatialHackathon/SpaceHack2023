@@ -1,1 +1,1 @@
-{"min.reads": 1, "min.lib.size" = 1, "k": 50, "alpha": 1, "beta": 1, "n_pcs": 5, "filterDist": 2, "source": "https://github.com/JEFworks-Lab/MERINGUE/blob/ca9e2ccabd95680d9ca0b323a8a507c038f2ea13/R/cluster.R#L130"}
+{"min.reads": 1, "min.lib.size" : 1, "k": 50, "alpha": 1, "beta": 1, "n_pcs": 5, "filterDist": 2, "source": "https://github.com/JEFworks-Lab/MERINGUE/blob/ca9e2ccabd95680d9ca0b323a8a507c038f2ea13/R/cluster.R#L130"}

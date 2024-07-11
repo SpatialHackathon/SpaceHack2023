@@ -1,1 +1,1 @@
-{"min.reads": 100, "min.lib.size" = 100, "k": 50, "alpha": 0, "beta": 0, "n_pcs": 60, "filterDist": 2, "source": "https://jef.works/MERINGUE/spatial_clustering"}
+{"min.reads": 100, "min.lib.size": 100, "k": 50, "alpha": 0, "beta": 0, "n_pcs": 60, "filterDist": 2, "source": "https://jef.works/MERINGUE/spatial_clustering"}
