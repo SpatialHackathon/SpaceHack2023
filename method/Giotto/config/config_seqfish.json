@@ -1,0 +1,9 @@
+{
+  "betas": [28, 2, 3],
+  "beta": 28,
+  "k": 9,
+  "n_pcs": 20,
+  "n_genes": 100,
+  "bin_method": "kmeans",
+  "source": "https://drieslab.github.io/Giotto_website/articles/seqfish_cortex.html#hmrf-spatial-domains"
+}

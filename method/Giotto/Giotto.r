@@ -58,6 +58,16 @@ option_list <- list(
     help = "Number of clusters to return."
   ),
   make_option(
+    c("--n_pcs"),
+    type = "integer", default = NULL,
+    help = "Number of PCs to use."
+  ),
+  make_option(
+    c("--n_genes"),
+    type = "integer", default = NULL,
+    help = "Number of genes to use."
+  ),
+  make_option(
     c("--technology"),
     type = "character", default = NULL,
     help = "The technology of the dataset (Visium, ST, imaging-based)."
@@ -137,7 +147,7 @@ get_SpatialExperiment <- function(
 
   if (!is.na(matrix_file)) {
     assay(spe, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")
-    assay(spe, "logcounts", withDimnames = FALSE) <- log1p(as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix"))
+    #spe <- scuttle::logNormCounts(spe)
   }
 
   # Filter features and samples
@@ -165,15 +175,17 @@ spe <- get_SpatialExperiment(
     feature_file = feature_file,
     observation_file = observation_file,
     coord_file = coord_file,
-    matrix_file = matrix_file,
-    reducedDim_file = dimred_file
+    matrix_file = matrix_file
 )
 
 ## Configuration
 method <- "HMRF"
 k <- config$k
-dims_used <- config$dims_used
-
+n_pcs <- ifelse(is.null(opt$n_pcs), config$n_pcs, opt$n_pcs)
+n_genes <- ifelse(is.null(opt$n_genes), config$n_genes, opt$n_genes)
+beta <- config$beta
+betas <- config$betas
+bin_method <- config$bin_method
 ## Giotto instructions
 python_path <- Sys.which(c("python"))
 instrs <- createGiottoInstructions(save_dir = out_dir,
@@ -187,7 +199,7 @@ instrs <- createGiottoInstructions(save_dir = out_dir,
 createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, instructions = NULL){
   raw_expr <- SummarizedExperiment::assay(spe, "counts")
   #colnames(raw_expr) <- colData(sce)[,"Barcode"]
-  norm_expression <- SummarizedExperiment::assay(spe, "logcounts")
+  #norm_expression <- SummarizedExperiment::assay(spe, "logcounts")
   
   cell_metadata <- SingleCellExperiment::colData(spe)
   cell_metadata$cell_ID <- rownames(SingleCellExperiment::colData(spe))
@@ -201,18 +213,11 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
     #rownames(norm_expression) <- c(SingleCellExperiment::rowData(sce)[,"SYMBOL"])
   }
   gobj = Giotto::createGiottoObject(
-      expression = list("raw" = raw_expr#,
-                        #"normalized" = norm_expression
-                       ),
+      expression = list("raw" = raw_expr),
       cell_metadata = cell_metadata,
       spatial_locs = as.data.frame(SpatialExperiment::spatialCoords(spe)),
       feat_metadata = feat_metadata,
-      instructions = instructions#,
-      # Add dimred (doesn't quite work)
-      #dimension_reduction = GiottoClass::createDimObj(
-      #    coordinates = SingleCellExperiment::reducedDim(spe, "reducedDim"),
-      #    name = "PCA",
-      #    method = "pca")
+      instructions = instructions
   )
   return(gobj)
 }
@@ -220,8 +225,10 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
 gobj <- createGiotto_fn(spe, instructions = instrs)
 
 # Normalize
-gobj <- Giotto::normalizeGiotto(gobj)
-# Alternatively, use the Giotto normalization
+gobj <- Giotto::normalizeGiotto(gobj, scalefactor = 6000)
+
+## highly variable features (genes)
+gobj <- calculateHVF(gobj)
 
 # PCA
 gobj <- runPCA(gobject = gobj, center = TRUE, scale_unit = TRUE, name = "PCA", feats_to_use = NULL)
@@ -244,19 +251,20 @@ gobj <- Giotto::createSpatialNetwork(
 )
 
 # identify genes with a spatial coherent expression profile (Not necessary - default uses all 'selected' features)
-km_spatialgenes <- Giotto::binSpect(gobj, bin_method = 'rank')
+km_spatialgenes <- Giotto::binSpect(gobj, bin_method = bin_method)
+my_spatial_genes <- ifelse(n_genes == 0, km_spatialgenes$feats, km_spatialgenes[1:n_genes]$feats)
 
-#my_spatial_genes <- km_spatialgenes[1:100]$feats
+
 HMRF_spatial_genes <- Giotto::doHMRF(
     gobject = gobj,
     spat_unit = "cell",
     feat_type = "rna",
-    betas = c(0, 2, config$beta),
+    betas = betas,
     # expression_values = "normalized", # not used when dim_reduction_to_use is given
-    spatial_genes = km_spatialgenes,
+    spatial_genes = my_spatial_genes,
     dim_reduction_to_use = "pca",
     dim_reduction_name = "PCA",
-    dimensions_to_use = 1:dims_used,
+    dimensions_to_use = 1:n_pcs,
     k = n_clusters,
     name = method,
     seed = seed
@@ -272,7 +280,7 @@ HMRF_spatial_genes <- Giotto::doHMRF(
 gobj <- addHMRF(
     gobject = gobj,
     HMRFoutput = HMRF_spatial_genes,
-    k = k, betas_to_add = c(config$beta),
+    k = k, betas_to_add = beta,
     hmrf_name = method)
     
 
