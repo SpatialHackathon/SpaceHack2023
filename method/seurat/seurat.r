@@ -60,11 +60,6 @@ option_list <- list(
     help = "Path to H&E staining."
   ),
   make_option(
-    c("--n_clusters"),
-    type = "integer", default = NULL,
-    help = "Number of clusters to return."
-  ),
-  make_option(
     c("--technology"),
     type = "character", default = NULL,
     help = "The technology of the dataset (Visium, ST, imaging-based)."
@@ -131,6 +126,9 @@ if (!is.na(opt$config)) {
 technology <- opt$technology
 n_clusters <- opt$n_clusters
 
+extract_nclust <- function(result) {
+  return(nlevels(Idents(result)))
+}
 
 # Function to create SpatialExperiment
 get_SpatialExperiment <- function(
@@ -141,11 +139,12 @@ get_SpatialExperiment <- function(
     reducedDim_file = NA,
     assay_name = "counts",
     reducedDim_name = "PCs") {
-  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
-  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
+  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
+  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
 
-  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1, numerals="no.loss")
   coordinates <- as.matrix(coordinates[rownames(colData), ])
+  mode(coordinates) = "numeric"
 
   spe <- SpatialExperiment::SpatialExperiment(
     rowData = rowData, colData = colData, spatialCoords = coordinates
@@ -217,6 +216,7 @@ seurat_obj <- FindNeighbors(seurat_obj, reduction = "pca", dims = 1:n_pcs)
 seurat_obj <- binary_search(
     seurat_obj, n_clust_target = n_clusters,
     do_clustering = FindClusters, 
+    extract_nclust=extract_nclust,
     # Seurat specific
     algorithm = algorithm,
     method = "igraph",

@@ -129,12 +129,12 @@ get_SingleCellExperiment <- function(
     matrix_file = NA,
     assay_name = "counts",
     reducedDim_name = "reducedDim") {
-  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
-  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
+  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
+  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
 
-  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1, numerals="no.loss")
   coordinates <- as.matrix(coordinates[rownames(colData), ])
-  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
+  mode(coordinates) = "numeric"
 
     sce <- SingleCellExperiment::SingleCellExperiment(
     rowData = rowData, colData = colData, metadata = list("spatialCoords" = coordinates))
@@ -164,7 +164,7 @@ set.seed(seed)
 
 # Load configuration
 feature_method <- config$feature_method
-n_genes <- congig$n_genes
+n_genes <- config$n_genes
 
 
 # You can use the data as SingleCellExperiment
@@ -177,6 +177,12 @@ sce <- get_SingleCellExperiment(
 ## Create Seurat and normalize
 seurat_obj <- as.Seurat(sce)
 seurat_obj <- NormalizeData(seurat_obj, verbose = F)
+
+# Fit the DRSC requirement
+if (!("row" %in% colnames(seurat_obj@meta.data) & "col" %in% colnames(seurat_obj@meta.data))){
+    seurat_obj@meta.data$col <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 1]
+    seurat_obj@meta.data$row <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 2]
+}
 
 # Variable features (if given - opt takes priority)
 n_genes <- ifelse(is.null(opt$n_genes), n_genes, opt$n_genes)
@@ -195,13 +201,6 @@ if (nrow(seurat_obj) > n_genes){
     seurat_obj[["originalexp"]]@var.features <- rownames(rowData(sce))
 }
 
-
-
-# Fit the DRSC requirement
-if (!("row" %in% colnames(seurat_obj@meta.data) & "col" %in% colnames(seurat_obj@meta.data))){
-    seurat_obj@meta.data$col <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 1]
-    seurat_obj@meta.data$row <- sce@metadata$spatialCoords[rownames(seurat_obj@meta.data), 2]
-}
 seu_drsc <- DR.SC::DR.SC(seurat_obj, K = n_clusters, platform = technology)
 
 # The data.frames with observations may contain a column "selected" which you need to use to
