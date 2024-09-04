@@ -10,8 +10,10 @@ dependencies:
   - anndata=0.10.3
   - gudhi=3.8.0
   - matplotlib=3.8.0
-  - torchvision=0.15.2
-  - torchaudio=0.12.1 #ytorch/noarch::pytorch-mutex-1.0-cuda; pytorch/linux-64::torchaudio-0.12.1-py310_cu116 <- 2.1.0
+    #  - torchvision=0.15.2
+    #- torchaudio=0.12.1 #ytorch/noarch::pytorch-mutex-1.0-cuda; pytorch/linux-64::torchaudio-0.12.1-py310_cu116 <- 2.1.0
+  - torchvision=0.16.0
+  - torchaudio=2.1.0
   - cpuonly=2.0
   - pytorch=2.1.0
   - pyg=2.4.0

@@ -147,15 +147,15 @@ get_SingleCellExperiment <- function(
     matrix_file = NA,
     assay_name = "counts",
     reducedDim_name = "reducedDim") {
-  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
-  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
+  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
+  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
 
-  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1, numerals="no.loss")
   coordinates <- as.matrix(coordinates[rownames(colData), ])
-  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
+  mode(coordinates) = "numeric"
 
-    sce <- SingleCellExperiment::SingleCellExperiment(
-    rowData = rowData, colData = colData, metadata = list("spatialCoords" = coordinates))
+  sce <- SingleCellExperiment::SingleCellExperiment(
+  rowData = rowData, colData = colData, metadata = list("spatialCoords" = coordinates))
 
   if (!is.na(matrix_file)) {
     assay(sce, assay_name, withDimnames = FALSE) <- as(Matrix::t(Matrix::readMM(matrix_file)), "CsparseMatrix")

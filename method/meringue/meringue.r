@@ -124,11 +124,14 @@ n_clusters <- opt$n_clusters
 
 if (technology %in% c("Visium", "ST")){
     pos_file <- opt$observations
-    positions <- read.delim(pos_file, stringsAsFactors = FALSE, row.names = 1)
+    positions <- read.delim(pos_file, stringsAsFactors = FALSE, row.names = 1,
+                           numerals = "no.loss")
 } else {
     pos_file <- opt$coordinates
-    positions <- as.matrix(read.delim(pos_file, sep = "\t", row.names = 1))
-    positions[,c(1:2)] <- as.numeric(positions[,c(1:2)])
+    positions <- as.matrix(read.delim(pos_file, sep = "\t", row.names = 1,
+                                     numerals = "no.loss"))
+    #positions[,c(1:2)] <- as.numeric(positions[,c(1:2)])
+    mode(positioins) = "numeric"
 }
 
 if ("selected" %in% colnames(positions)) {

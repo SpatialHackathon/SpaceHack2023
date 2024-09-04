@@ -1,1 +1,1 @@
-{"min.reads": 100, "min.lib.size" = 100, "k": 18, "alpha": 0, "beta": 0, "n_pcs": 5, "filterDist": 2}
+{"min.reads": 100, "min.lib.size": 100, "k": 18, "alpha": 0, "beta": 0, "n_pcs": 5, "filterDist": 2}

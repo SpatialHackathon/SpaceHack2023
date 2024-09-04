@@ -19,7 +19,7 @@ dependencies:
 #  - markdown-it-py=2.2.0
 #  - torchmetrics=0.11.4
 #  - scipy=1.10.1
-#  - scanpy=1.9.8
+  - scanpy=1.9.8
 #  - pandas=2.2.1
 #  - python-igraph=0.11.4
 #  - igraph=0.10.10

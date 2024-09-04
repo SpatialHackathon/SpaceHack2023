@@ -135,21 +135,20 @@ get_SpatialExperiment <- function(
     reducedDim_file = NA,
     assay_name = "counts",
     reducedDim_name = "PCs") {
-  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
-  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
+  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
+  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
 
-  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1, numerals="no.loss")
   coordinates <- as.matrix(coordinates[rownames(colData), ])
-  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
-
-    
-    if (!is.na(reducedDim_file)) {
+  mode(coordinates) = "numeric"
+   
+  if (!is.na(reducedDim_file)) {
     dimRed <- read.delim(reducedDim_file, stringsAsFactors = FALSE, row.names = 1)
     #reducedDim(spe, reducedDim_name) <- as.matrix(dimRed[colnames(spe), ])
   }
   spe <- SpatialExperiment::SpatialExperiment(
-    rowData = rowData, colData = colData, spatialCoords = coordinates,
-      reducedDims = list(pca = as.matrix(dimRed[rownames(colData), ]))
+    rowData = rowData, colData = colData, spatialCoords = coordinates
+      #reducedDims = list(pca = as.matrix(dimRed[rownames(colData), ]))
   )
 
   if (!is.na(matrix_file)) {

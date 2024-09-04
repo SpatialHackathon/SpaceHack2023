@@ -134,13 +134,13 @@ get_SpatialExperiment <- function(
     reducedDim_file = NA,
     assay_name = "counts",
     reducedDim_name = "reducedDim") {
-  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1)
-  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1)
+  rowData <- read.delim(feature_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
+  colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
 
-  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1)
+  coordinates <- read.delim(coord_file, sep = "\t", row.names = 1, numerals="no.loss")
   coordinates <- as.matrix(coordinates[rownames(colData), ])
-  coordinates[,c(1:2)] <- as.numeric(coordinates[,c(1:2)])
-    
+  mode(coordinates) = "numeric"
+  
   spe <- SpatialExperiment::SpatialExperiment(
     rowData = rowData, colData = colData, spatialCoords = coordinates
   )
@@ -201,8 +201,7 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
   #colnames(raw_expr) <- colData(sce)[,"Barcode"]
   #norm_expression <- SummarizedExperiment::assay(spe, "logcounts")
   
-  cell_metadata <- SingleCellExperiment::colData(spe)
-  cell_metadata$cell_ID <- rownames(SingleCellExperiment::colData(spe))
+  cell_metadata <- SingleCellExperiment::colData(spe) 
   colnames(cell_metadata)[c(1,2)] <- c("sdimx", "sdimy")
   cell_metadata <- as.data.frame(cell_metadata[,c(4,1,2,3)])
   feat_metadata <- tibble::as_tibble(SingleCellExperiment::rowData(spe),rownames = "feat_ID")
@@ -212,6 +211,7 @@ createGiotto_fn = function(spe, annotation = FALSE, selected_clustering = NULL, 
     rownames(raw_expr) <- c(SingleCellExperiment::rowData(spe)[, "SYMBOL"])
     #rownames(norm_expression) <- c(SingleCellExperiment::rowData(sce)[,"SYMBOL"])
   }
+  cell_metadata$cell_ID <- rownames(SingleCellExperiment::colData(spe))
   gobj = Giotto::createGiottoObject(
       expression = list("raw" = raw_expr),
       cell_metadata = cell_metadata,

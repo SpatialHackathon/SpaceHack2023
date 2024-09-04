@@ -207,13 +207,28 @@ adata.uns['neighbors_EMD'] = adata.uns['neighbors'].copy()
 sc.tl.umap(adata,neighbors_key='neighbors_EMD')
 sc.tl.leiden(adata,neighbors_key='neighbors_EMD', key_added='leiden_EMD')
 
-if len(adata.obs['leiden_EMD'].cat.categories) > n_clusters:
-    # Merge regions according to MEG connectivities
-    sc.tl.paga(adata, groups='leiden_EMD', neighbors_key='neighbors_EMD')
-    merge_cls_paga(adata, thresh=0, min_cls=n_clusters, paga_plot=False)
-    use_rep = 'leiden_EMD_merge'
-else:
-    use_rep = 'leiden_EMD'
+#use_rep = 'leiden_EMD'
+#if len(adata.obs[use_rep].cat.categories) > n_clusters:
+# Merge regions according to MEG connectivities
+sc.tl.paga(adata, groups='leiden_EMD', neighbors_key='neighbors_EMD')
+import seaborn as sns
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+import scanpy as sc
+import palettable
+import anndata as ad
+import scanpy.external as sce
+import sys
+from scipy.stats import *
+from sklearn.metrics import *
+
+# cls_key = 'leiden_EMD'
+# neighbor_key = 'neighbors_EMD'
+# thresh = 0.5
+
+merge_cls_paga(adata, thresh=0, min_cls=n_clusters, paga_plot=False)
+use_rep = 'leiden_EMD_merge'
 
 embedding_df = pd.DataFrame(adata.obsm['X_umap'], index=adata.obs_names) # optional, DataFrame with index (cell-id/barcode) and n columns
 label_df = adata.obs[[use_rep]]  # DataFrame with index (cell-id/barcode) and 1 column (label)

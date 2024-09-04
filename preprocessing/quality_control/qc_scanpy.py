@@ -144,6 +144,7 @@ coordinates_df = pd.DataFrame(adata.obsm["spatial"], index = adata.obs_names, co
 import scipy as sp
 
 out_dir.mkdir(parents=True, exist_ok=True)
+filter_counts=sp.sparse.coo_matrix(filter_counts)
 sp.io.mmwrite(filter_counts_file, filter_counts, precision=5)
 observation_df.to_csv(filter_obserations_file, sep="\t", index_label="")
 feature_df.to_csv(filter_features_file, sep="\t", index_label="")

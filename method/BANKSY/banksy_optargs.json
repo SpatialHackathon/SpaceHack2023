@@ -3,5 +3,5 @@
     "integrated_feature_selection": false,
     "image": false,
     "neighbors": false,
-    "config_file": false
+    "config_file": true
 }

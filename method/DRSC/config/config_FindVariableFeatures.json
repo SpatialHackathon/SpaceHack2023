@@ -1,1 +1,1 @@
-{"feature_method": "FindVariableFeatures", n_genes: 500, "source": "https://github.com/feiyoung/DR.SC/blob/64d95135ab79e3e42e86e4a2e31724d17bec29d5/vignettes/DR.SC.DLPFC.Rmd#L57"}
+{"feature_method": "FindVariableFeatures", "n_genes": 500, "source": "https://github.com/feiyoung/DR.SC/blob/64d95135ab79e3e42e86e4a2e31724d17bec29d5/vignettes/DR.SC.DLPFC.Rmd#L57"}
