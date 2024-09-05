@@ -131,7 +131,8 @@ if (technology %in% c("Visium", "ST")){
     positions <- as.matrix(read.delim(pos_file, sep = "\t", row.names = 1,
                                      numerals = "no.loss"))
     #positions[,c(1:2)] <- as.numeric(positions[,c(1:2)])
-    mode(positioins) = "numeric"
+    mode(positions) = "numeric"
+    positions <- positions[, c(1:2)]
 }
 
 if ("selected" %in% colnames(positions)) {

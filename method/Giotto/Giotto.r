@@ -138,7 +138,7 @@ get_SpatialExperiment <- function(
   colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
 
   coordinates <- read.delim(coord_file, sep = "\t", row.names = 1, numerals="no.loss")
-  coordinates <- as.matrix(coordinates[rownames(colData), ])
+  coordinates <- as.matrix(coordinates[rownames(colData), c(1,2)])
   mode(coordinates) = "numeric"
   
   spe <- SpatialExperiment::SpatialExperiment(
