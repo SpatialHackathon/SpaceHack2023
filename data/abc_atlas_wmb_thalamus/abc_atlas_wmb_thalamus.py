@@ -552,6 +552,7 @@ def split_adata_into_components(adata):
                                    'z_reconstructed':'z'},
                           inplace=True)
     counts = adata.X.astype('int')  # CSR sparse matrix as dtype-int64
+    #TODO Label df should be aligned with what was used for n_clusters
     labels_df = adata.obs[['parcellation_substructure', 'label_confidence']].copy()
     labels_df.rename(columns={'parcellation_substructure':'label'}, 
                      inplace=True)
