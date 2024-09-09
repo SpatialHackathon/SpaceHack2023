@@ -108,6 +108,7 @@ def get_anndata(args):
     coordinates = (
         pd.read_table(args.coordinates, index_col=0)
         .loc[observations.index, :]
+        .iloc[:, :2]
         .to_numpy()
     )
 
@@ -175,13 +176,15 @@ if dtype == "float32":
 elif dtype == "float64":
     dtype = torch.float64
 
-torch_context = {
-    "device": device,
-    "dtype": dtype,
-}
+torch_context = dict(
+    device=device,
+    dtype=dtype,
+)
+
+print(torch_context)
 
 # ignore "source" in configs
-keys_to_ignore = ["source"]
+keys_to_ignore = ["source", "device"]
 filtered_config = {key: value for key, value in config.items() if key not in keys_to_ignore}
 
 with tempfile.TemporaryDirectory() as temp_dir:
