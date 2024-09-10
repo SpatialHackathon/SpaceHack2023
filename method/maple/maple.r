@@ -192,6 +192,7 @@ if (technology %in% c("ST", "Visium")){
     coordinates <- as.data.frame(SummarizedExperiment::colData(spe)[,c("row", "col")])
 } else {
     coordinates <- as.data.frame(SpatialExperiment::spatialCoords(spe))
+    colnames(coordinates)[1:2] <- c("row", "col")
 }
 
 seu@images$image =  new(
@@ -200,7 +201,7 @@ seu@images$image =  new(
   key = "coordinates_",
   coordinates = coordinates
 )
-
+saveRDS(seu, "seu.rds")
 # Run maple
 maple_results <- fit_maple(
   seu, 
