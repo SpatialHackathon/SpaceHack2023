@@ -181,8 +181,6 @@ torch_context = dict(
     dtype=dtype,
 )
 
-print(torch_context)
-
 # ignore "source" in configs
 keys_to_ignore = ["source", "device"]
 filtered_config = {key: value for key, value in config.items() if key not in keys_to_ignore}

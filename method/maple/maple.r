@@ -201,7 +201,6 @@ seu@images$image =  new(
   key = "coordinates_",
   coordinates = coordinates
 )
-saveRDS(seu, "seu.rds")
 # Run maple
 maple_results <- fit_maple(
   seu, 
