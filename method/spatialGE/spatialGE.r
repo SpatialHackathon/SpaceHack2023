@@ -135,7 +135,8 @@ get_SpatialExperiment <- function(
   colData <- read.delim(observation_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
 
   coordinates <- read.delim(coord_file, sep = "\t", row.names = 1, numerals="no.loss")
-  coordinates <- as.matrix(coordinates[rownames(colData), ])
+  # Need to remove the z-axis here as ST object does not recognized 3d coordinate structure
+  coordinates <- as.matrix(coordinates[rownames(colData), c(1,2)])
   mode(coordinates) = "numeric"
     
   spe <- SpatialExperiment::SpatialExperiment(
@@ -169,7 +170,6 @@ set.seed(seed)
 # You can use the data as SpatialExperiment
 spe <- get_SpatialExperiment(feature_file = feature_file, observation_file = observation_file,
                                     coord_file = coord_file, matrix_file = matrix_file)
-
 # Extract proper coordinates
 spotcoords <- data.frame("ID" = rownames(spe))
 if (technology %in% c("ST", "Visium")){
@@ -190,7 +190,6 @@ STobject <- STlist(
 
 # Seurat-like transformation
 STobject <- transform_data(STobject, method = "log")
-
 # Clustering
 STobject <- STclust(
     STobject, 
