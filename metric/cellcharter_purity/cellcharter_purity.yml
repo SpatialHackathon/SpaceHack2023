@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.13
+  - pip
+  - pip:
+    - cellcharter
+    # cellcharter doesn't have release tags yet
