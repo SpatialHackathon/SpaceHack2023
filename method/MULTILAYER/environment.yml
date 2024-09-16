@@ -1,0 +1,21 @@
+name: MULTILAYER
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python 3.8 recommended in MULTILAYER docs
+  - python=3.8.*
+  - pip=23.*
+  - pip:
+    # no dependency versions listed in MULTILAYER docs
+    # pinned versions are from installing via
+    # pypi-timemachine set for one day before last commit
+    - matplotlib==3.5.2
+    - networkx==2.8.4
+    - numpy==1.23.1
+    - pandas==1.4.3
+    - pillow==9.2.0
+    - python-louvain==0.16
+    - scikit-learn==1.1.1
+    - scipy==1.8.1
+    - seaborn==0.11.2
