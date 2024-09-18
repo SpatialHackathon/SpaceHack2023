@@ -8,7 +8,7 @@ suppressPackageStartupMessages({
     library(jsonlite)
     library(SpatialExperiment)
     library(Seurat)
-    library(maple)
+    library(spruce)
 })
 
 option_list <- list(
@@ -201,8 +201,8 @@ seu@images$image =  new(
   key = "coordinates_",
   coordinates = coordinates
 )
-# Run maple
-maple_results <- fit_maple(
+# Run maple (spruce is the single-sample version of maple)
+maple_results <- fit_spruce(
   seu, 
   K = n_clusters, 
   emb = "PCs", 
