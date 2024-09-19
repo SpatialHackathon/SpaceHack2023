@@ -71,10 +71,17 @@ def get_data(out_dir):
             shutil.move(f'{tmpdir}/{replicate}/{tif}.tif', f'{out_dir}/{replicate}/{tif}.tif')
             shutil.move(f'{tmpdir}/{replicate}/outs/gene_panel.json', f'{out_dir}/{replicate}/experiment.json')    
             gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/features.tsv.gz', f'{out_dir}/{replicate}/features.tsv')
-            gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/barcodes.tsv.gz', f'{out_dir}/{replicate}/observations.tsv')
             gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/matrix.mtx.gz', f'{out_dir}/{replicate}/counts.mtx')
-            gunzip_file(f'{tmpdir}/{replicate}/outs/cells.csv.gz', f'{out_dir}/{replicate}/coordinates.tsv')
-            
+
+            # Format the metadata object
+            observations = pd.read_csv(f'{tmpdir}/{replicate}/outs/cells.csv.gz', sep=",")
+            observations = observations.set_axis(observations.cell_id, axis=0).rename_axis(None, axis=0)
+            observations.to_csv(f'{out_dir}/{replicate}/observations.tsv', sep="\t", index_label=False)
+
+            # select the coordinates object
+            coordinates = observations.loc[:, ["x_centroid", "y_centroid"]].set_axis(["x", "y"], axis=1)
+            coordinates.to_csv(f'{out_dir}/{replicate}/coordinates.tsv', sep="\t", index_label=False)
+
             # Read the Excel file into a pandas DataFrame
             sheet = ''
             if (replicate == 'replicate1'):
