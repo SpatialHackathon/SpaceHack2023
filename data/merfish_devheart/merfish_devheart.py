@@ -58,7 +58,7 @@ links = [
 
 def download_link(link, filename, temp_dir):
     try:
-        request = urllib.request.Request(url=link, headers={'User-Agent': 'Mozilla/6.0'})
+        request = urllib.request.Request(url=link, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_0) AppleWebKit/600.1.17 (KHTML, like Gecko) Version/8.0 Safari/600.1.17'})
         response = urllib.request.urlopen(request)
         # Extract filename from the URL
         filename = os.path.join(temp_dir, filename)
