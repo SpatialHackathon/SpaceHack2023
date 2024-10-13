@@ -1,0 +1,7 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.6
+  - pip
+  - pip:
+    - pypdl=1.3.2
