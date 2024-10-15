@@ -122,6 +122,7 @@ with tempfile.TemporaryDirectory() as temp_dir:
         heart_sample = heart[heart.obs["sample_id"] == sample_name]
         
         counts = pd.read_csv(os.path.join(temp_dir, f"{sample_name}_single_cell_raw_counts.csv"), index_col=0)
+        counts.index = counts.index.astype(str) + "-" + sample_name
         counts = counts.loc[heart_sample.obs_names]
         
         coordinates_df = pd.DataFrame(heart_sample.obsm["spatial"], index=heart_sample.obs_names, columns=["x", "y"])
