@@ -146,6 +146,7 @@ with tempfile.TemporaryDirectory() as temp_dir:
     sample_name = "R123_N3S5"
 
     counts = pd.read_csv(os.path.join(temp_dir, f"{sample_name}_single_cell_raw_counts.csv"), index_col=0)
+    counts.index = counts.index.astype(str)
     counts = counts.loc[ventricle.obs_names]
     
     coordinates_df = pd.DataFrame(ventricle.obsm["X_spatial"], index=ventricle.obs_names, columns=["x", "y"])
