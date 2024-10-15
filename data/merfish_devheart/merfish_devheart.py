@@ -53,7 +53,11 @@ samples_df = pd.DataFrame(columns=sample_columns)
 
 links = [
          {"name": "ventricle_15pcw_merfish.h5ad", "link":"https://datadryad.org/stash/downloads/file_stream/2801011"}, 
-         {"name": "overall_merfish.h5ad", "link": "https://datadryad.org/stash/downloads/file_stream/2801003"}
+         {"name": "overall_merfish.h5ad", "link": "https://datadryad.org/stash/downloads/file_stream/2801003"},
+         {"name": "R123_N3S5_single_cell_raw_counts.csv", "link": "https://datadryad.org/stash/downloads/file_stream/2801014"},
+         {"name": "R77_4C4_single_cell_raw_counts.csv", "link": "https://datadryad.org/stash/downloads/file_stream/2800996"},
+         {"name": "R78_4C12_single_cell_raw_counts.csv", "link": "https://datadryad.org/stash/downloads/file_stream/2800997"},
+         {"name": "R78_4C15_single_cell_raw_counts.csv", "link": "https://datadryad.org/stash/downloads/file_stream/2800999"},
         ]
 
 def download_link(link, filename, temp_dir):
@@ -89,6 +93,10 @@ def write_sample(
     coordinates_df.to_csv(sample_path / "coordinates.tsv", sep="\t", index_label="")
     features_df.to_csv(sample_path / "features.tsv", sep="\t", index_label="")
     observations_df.to_csv(sample_path / "observations.tsv", sep="\t", index_label="")
+
+    if type(counts) == pd.DataFrame:
+        counts = counts.to_numpy()
+    counts = sp.sparse.csr_matrix(counts)
     sp.io.mmwrite(sample_path / "counts.mtx", counts)
 
     if img_path is not None:
@@ -112,7 +120,10 @@ with tempfile.TemporaryDirectory() as temp_dir:
     # Process 3 13PCW heart samples
     for sample_name in ["R77_4C4", "R78_4C12", "R78_4C15"]:
         heart_sample = heart[heart.obs["sample_id"] == sample_name]
-        counts = heart_sample.X
+        
+        counts = pd.read_csv(os.path.join(temp_dir, f"{sample_name}_single_cell_raw_counts.csv"), index_col=0)
+        counts = counts.loc[heart_sample.obs_names]
+        
         coordinates_df = pd.DataFrame(heart_sample.obsm["spatial"], index=heart_sample.obs_names, columns=["x", "y"])
         labels_df = heart_sample.obs[["communities", "populations"]]
         labels_df.columns = ["label", "populations"]
@@ -132,7 +143,10 @@ with tempfile.TemporaryDirectory() as temp_dir:
 
     # Process 15PCW ventricle sample
     sample_name = "R123_N3S5"
-    counts = ventricle.X
+
+    counts = pd.read_csv(os.path.join(temp_dir, f"{sample_name}_single_cell_raw_counts.csv"), index_col=0)
+    counts = counts.loc[ventricle.obs_names]
+    
     coordinates_df = pd.DataFrame(ventricle.obsm["X_spatial"], index=ventricle.obs_names, columns=["x", "y"])
     labels_df = ventricle.obs[["subpopulations"]]
     labels_df.columns = ["label"]
