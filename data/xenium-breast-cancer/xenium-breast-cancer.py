@@ -73,6 +73,14 @@ def get_data(out_dir):
             gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/features.tsv.gz', f'{out_dir}/{replicate}/features.tsv')
             gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/matrix.mtx.gz', f'{out_dir}/{replicate}/counts.mtx')
 
+            X = sp.io.mmread(f'{out_dir}/{replicate}/counts.mtx')
+            X = X.T
+            sp.io.mmwrite(f'{out_dir}/{replicate}/counts.mtx', X)
+
+            features = pd.read_table(f'{out_dir}/{replicate}/features.tsv', index_col=0, header=None)
+            features.columns = ["Gene name", "Feature type"]
+            features.to_csv(f'{out_dir}/{replicate}/features.tsv', sep="\t")
+
             # Format the metadata object
             observations = pd.read_csv(f'{tmpdir}/{replicate}/outs/cells.csv.gz', sep=",")
             observations = observations.set_axis(observations.cell_id, axis=0).rename_axis(None, axis=0)
