@@ -11,7 +11,7 @@ import shutil
 import gzip
 import pandas as pd
 import json
-
+import scipy as sp
 from zipfile import ZipFile
 
 # pip install openpyxl
