@@ -10,6 +10,7 @@ import requests
 import shutil
 import gzip
 import pandas as pd
+import json
 
 from zipfile import ZipFile
 
@@ -90,6 +91,12 @@ def get_data(out_dir):
             coordinates = observations.loc[:, ["x_centroid", "y_centroid"]].set_axis(["x", "y"], axis=1)
             coordinates.to_csv(f'{out_dir}/{replicate}/coordinates.tsv', sep="\t", index_label=False)
 
+            with open(f'{out_dir}/{replicate}/experiment.json', 'r') as file:
+                experiment = json.load(file)
+            experiment["technology"] = "Xenium"
+            with open(f'{out_dir}/{replicate}/experiment.json', 'w') as file:
+                json.dump(experiment, file)
+
             # Read the Excel file into a pandas DataFrame
             sheet = ''
             if (replicate == 'replicate1'):
@@ -102,10 +109,10 @@ def get_data(out_dir):
             df_labels = pd.read_excel(excel_file, sheet_name=sheet)  # Change 'Sheet1' to the sheet name you want to export
             df_labels.index = df_labels['Barcode']
             df_labels = df_labels.drop(columns='Barcode')
-            df_labels.to_csv(f'{out_dir}/{replicate}/labels.tsv.csv', sep="\t", index_label="")
+            df_labels.to_csv(f'{out_dir}/{replicate}/labels.tsv', sep="\t", index_label="")
     
             print('...done')
-        shutil.move(f'{tmpdir}/Xenium_FFPE_Human_Breast_Cancer_Rep2_gene_panel.json', f'{out_dir}/experiment.json')
+        #shutil.move(f'{tmpdir}/Xenium_FFPE_Human_Breast_Cancer_Rep2_gene_panel.json', f'{out_dir}/experiment.json')
 
 def main():
     # Set up command-line argument parser
