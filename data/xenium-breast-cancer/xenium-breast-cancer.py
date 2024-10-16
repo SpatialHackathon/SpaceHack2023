@@ -58,7 +58,10 @@ def get_data(out_dir):
                       f'{tmpdir}', False)
         download_data('https://cdn.10xgenomics.com/raw/upload/v1695234604/Xenium%20Preview%20Data/Cell_Barcode_Type_Matrices.xlsx', 
                       f'{tmpdir}', False)
-    
+
+        sample_columns = ["patient","sample","position","replicate","n_clusters","directory"]
+        samples_df = pd.DataFrame(columns=sample_columns)
+        
         for replicate in ['replicate1', 'replicate2']:
             print(f'Extract data for {replicate}...')
             
@@ -70,7 +73,7 @@ def get_data(out_dir):
     
             os.makedirs(f'{out_dir}/{replicate}')
             shutil.move(f'{tmpdir}/{replicate}/{tif}.tif', f'{out_dir}/{replicate}/{tif}.tif')
-            shutil.move(f'{tmpdir}/{replicate}/outs/gene_panel.json', f'{out_dir}/{replicate}/experiment.json')    
+            #shutil.move(f'{tmpdir}/{replicate}/outs/gene_panel.json', f'{out_dir}/{replicate}/experiment.json')
             gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/features.tsv.gz', f'{out_dir}/{replicate}/features.tsv')
             gunzip_file(f'{tmpdir}/{replicate}/outs/cell_feature_matrix/matrix.mtx.gz', f'{out_dir}/{replicate}/counts.mtx')
 
@@ -91,12 +94,6 @@ def get_data(out_dir):
             coordinates = observations.loc[:, ["x_centroid", "y_centroid"]].set_axis(["x", "y"], axis=1)
             coordinates.to_csv(f'{out_dir}/{replicate}/coordinates.tsv', sep="\t", index_label=False)
 
-            with open(f'{out_dir}/{replicate}/experiment.json', 'r') as file:
-                experiment = json.load(file)
-            experiment["technology"] = "Xenium"
-            with open(f'{out_dir}/{replicate}/experiment.json', 'w') as file:
-                json.dump(experiment, file)
-
             # Read the Excel file into a pandas DataFrame
             sheet = ''
             if (replicate == 'replicate1'):
@@ -109,10 +106,21 @@ def get_data(out_dir):
             df_labels = pd.read_excel(excel_file, sheet_name=sheet)  # Change 'Sheet1' to the sheet name you want to export
             df_labels.index = df_labels['Barcode']
             df_labels = df_labels.drop(columns='Barcode')
+            df_labels.columns = ["label"]
             df_labels.to_csv(f'{out_dir}/{replicate}/labels.tsv', sep="\t", index_label="")
     
             print('...done')
-        #shutil.move(f'{tmpdir}/Xenium_FFPE_Human_Breast_Cancer_Rep2_gene_panel.json', f'{out_dir}/experiment.json')
+
+            samples_df.loc[len(samples_df)] = [1, replicate, np.nan, np.nan, df_labels["label"].nunique(), replicate]
+
+        shutil.move(f'{tmpdir}/Xenium_FFPE_Human_Breast_Cancer_Rep2_gene_panel.json', f'{out_dir}/experiment.json')
+        with open(f'{out_dir}/experiment.json', 'r') as file:
+            experiment = json.load(file)
+        experiment["technology"] = "Xenium"
+        with open(f'{out_dir}/experiment.json', 'w') as file:
+            json.dump(experiment, file)
+
+        samples_df.loc[:, ["patient", "sample", "position", "replicate", "directory", "n_clusters"]].to_csv(f'{out_dir}/samples.tsv', sep="\t", index_label="")
 
 def main():
     # Set up command-line argument parser
