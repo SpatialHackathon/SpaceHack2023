@@ -10,7 +10,7 @@ import shutil
 from pypdl import Downloader
 
 LINKS = {
-    "https://zenodo.org/records/13897353/files/concordex_sim.zip":"6f3d6f8264b014fb9d612dd1316a06f7"
+    "https://zenodo.org/records/13944111/files/concordex_sim.zip":"fb7c79fd9cec2c79e3b74fb50be40ff4"
 }
 
 
