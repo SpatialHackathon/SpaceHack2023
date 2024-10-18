@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.3.1
+  - r-optparse=1.7.3
+  - r-rjson=0.2.21
+  - r-remotes=2.4.2.1
+  - r-aricode=1.0.3
+  - bioconductor-bluster=1.12.0
+  - r-spdep=0.6_13
