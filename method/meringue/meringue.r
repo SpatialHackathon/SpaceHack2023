@@ -132,8 +132,8 @@ if (technology %in% c("Visium", "ST")){
                                      numerals = "no.loss"))
     #positions[,c(1:2)] <- as.numeric(positions[,c(1:2)])
     mode(positions) = "numeric"
-    positions <- positions[, c(1:2)]
 }
+positions <- positions[, c(1:2)]
 
 if ("selected" %in% colnames(positions)) {
         positions <- positions[as.logical(positions$selected), c(1, 2)]
