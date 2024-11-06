@@ -37,3 +37,21 @@ def get_ncluster(file_path, sample, default_value=7):
         return int(df_filtered["n_clusters"].mean())
     except:
         return default_value
+
+def get_combined_domain(results_path):
+    from pathlib import Path
+    import pandas as pd
+    results_path = Path(results_path)
+
+    results = [f / "domains.tsv" for f in results_path.iterdir() and f.name.startswith("cluster_")]
+
+    combined_labels = []
+    for result in results:
+        folder_name = result.parent.name
+        domain_df = pd.read_table(result, sep="\t", index_col=0)
+        domain_df.columns = [folder_name]
+
+        combined_labels.append(domain_df)
+    
+    combined_df = pd.concat(combined_labels, axis=1)
+    combined_df.to_csv(results_path / "combined_domains.tsv", sep='\t', index_label="")

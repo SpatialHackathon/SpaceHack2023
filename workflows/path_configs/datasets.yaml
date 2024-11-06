@@ -67,3 +67,19 @@ datasets:
     env: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo.yml
     script: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo.py
     optargs: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo_optargs.json
+  cosmx_liver:
+    env: data/cosmx_liver/cosmx_liver.yml
+    script: data/cosmx_liver/cosmx_liver.py
+  cosmx_lung:
+    env: data/cosmx_lung/cosmx_lung.yml
+    script: data/cosmx_lung/cosmx_lung.py
+  merfish_devheart:
+    env: data/merfish_devheart/merfish_devheart.yml
+    script: data/merfish_devheart/merfish_devheart.py
+  stereoseq_liver:
+    env: data/stereoseq_liver/stereoseq_liver.yml
+    script: data/stereoseq_liver/stereoseq_liver.py
+  visium_hd_cancer_colon:
+    env: data/visium_hd_cancer_colon/visium_hd_cancer_colon.yml
+    script: data/visium_hd_cancer_colon/visium_hd_cancer_colon.py
+    optargs: data/visium_hd_cancer_colon/visium_hd_cancer_colon.json

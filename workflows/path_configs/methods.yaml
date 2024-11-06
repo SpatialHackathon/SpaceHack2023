@@ -113,109 +113,79 @@ methods:
 # make sure the config_files name is the same as methods name
 config_files:
   BANKSY:
-    config_default: "config/config_default.json"
+#    config_default: "config/config_default.json"
     config_dlpfc: "config/config_dlpfc.json"
-    config_github: "config/config_github.json"
-    config_starmap: "config/config_starmap.json"
+#    config_github: "config/config_github.json"
+#    config_starmap: "config/config_starmap.json"
   bass:
     config_default: "config/config_default.json"
     config_dlpfc: "config/config_dlpfc.json"
     config_starmap: "config/config_starmap.json"
-    config_1: "config/config_1.json"
-    #config_2: "config/config_2.json"
-    # config_3: "config/config_3.json"
   BayesSpace:
     config_default: "config/config_default.json"
     config_melanoma: "config/config_melanoma.json"
-    config_scc: "config/config_scc.json"
-    config_1: "config/config_1.json"
+    #config_scc: "config/config_scc.json"
   CellCharter:
     config_default: "config/config_default.json"
     config_dlpfc: "config/config_dlpfc.json"
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
   conST:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
+    config_default: "config/config_default.json"
   DeepST:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
+    config_default: "config/config_default.json"
   DRSC:
     config_default: "config/config_default.json"
-    config_all_genes: "config/config_all_genes.json"
+    #config_all_genes: "config/config_all_genes.json"
     config_FindSVGs: "config/config_FindSVGs.json"
     config_FindVariableFeatures: "config/config_FindVariableFeatures.json"
   Giotto:
-    config_1: "config/config_1.json"
+    config_default: "config/config_default.json"
   GraphST:
     config_default: "config/config_default.json"
     config_dlpfc: "config/config_dlpfc.json"
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    #config_3: "config/config_3.json"
-    #config_4: "config/config_4.json"
   maple:
-    config_default: "TBA"
+    config_default: "config/config_default.json"
   meringue:
     config_default: "config/config_default.json"
     config_clusteringvignette: "config/config_clusteringvignette.json"
     config_mob: "config/config_mob.json"
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
   precast:
     config_default: "config/config_default.json"
     config_dlpfc: "config/config_dlpfc.json"
     config_BC: "config/config_BC.json"
-    config_1: "config/config_1.json"
   SC_MEB:
     config_default: "config/config_default.json"
   SCAN-IT:
-    config_1: "config.json"
+    config_default: "config/config_default.json"
   scanpy:
-    config_leiden_1: "config/config_leiden_1.json"
-    config_leiden_2: "config/config_leiden_2.json"
-    config_leiden_3: "config/config_leiden_3.json"
-    config_leiden_4: "config/config_leiden_4.json"
+    #config_default: "config/config_default.json"
+    config_leiden_MERFISH: "config/config_leiden_MERFISH.json"
+    config_leiden_tutorial: "config/config_leiden_tutorial.json"
   SEDR:
     config_default: "config/config_default.json"
     config_dlpfc: "config/config_dlpfc.json"
-    # config_stereoseq: "config/config_stereoseq.json"
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
+    config_stereoseq: "config/config_stereoseq.json"
   seurat:
-    config_leiden_1: "config/config_leiden_1.json"
-    config_leiden_2: "config/config_leiden_2.json"
-    config_leiden_3: "config/config_leiden_3.json"
-    config_leiden_4: "config/config_leiden_4.json"
+    #config_default: "config/config_default.json"
+    #config_leiden_CODEX: "config/config_leiden_CODEX.json"
+    config_leiden_VisiumHD: "config/config_leiden_VisiumHD.json"
+    config_leiden_spatial: "config/config_leiden_spatial.json"
   SOTIP:
-    config_1: "config/config.json"
+    config_default: "config/config_default.json"
+    config_Visium_dlpfc: "config/config_Visium_dlpfc.json"
   SpaceFlow:
     config_default: "config/config_default.json"
     config_seqfish: "config/config_seqfish.json"
   spaGCN:
     config_default: "config/config_default.json"
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
   spatialGE:
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
-    config_3: "config/config_3.json"
+    config_default: "config/config_default.json"
   SpiceMix:
-    config_1: "config/config_1.json"
+    config_default: "config/config_default.json"
   STAGATE:
     config_default: "config/config_default.json"
     config_slide_stereo: "config/config_slide_stereo.json"
     config_starmap: "config/config_starmap.json"
-    config_1: "config/config_1.json"
-    #config_2: "config/config_2.json"
-    #config_3: "config/config_3.json"
-    #config_4: "config/config_4.json"
-    #config_5: "config/config_5.json"
   stardust:
     config_default: "config/config_default.json"
     config_tutorial: "config/config_tutorial.json"
-    config_1: "config/config_1.json"
-    config_2: "config/config_2.json"
 
