@@ -1,0 +1,14 @@
+{
+    "epochs": 200, 
+    "lr": 0.001, 
+    "weight_decay": 5e-4, 
+    "k": 14, 
+    "radius": 560, 
+    "nhid1": 128, 
+    "nhid2": 64, 
+    "dropout": 0, 
+    "alpha": 1, 
+    "beta": 10, 
+    "gamma": 0.1, 
+    "fdim": 3000
+}

@@ -1,0 +1,18 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8.13
+  - numpy=1.22.0
+  - pandas=1.4.4
+  - scipy=1.8.1
+  - matplotlib=3.5.3
+  - pytorch=1.11.0
+  - pip
+  - pip:
+      - stlearn==0.4.12
+      - torch_geometric==2.1.0
+      - torch_sparse==0.6.15
+      - torch_scatter==2.0.9
+      - python-louvain==0.16
+      - scikit-misc==0.2.0
