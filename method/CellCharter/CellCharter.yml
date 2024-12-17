@@ -2,8 +2,8 @@ channels:
   - pytorch
   - conda-forge
 dependencies:
-  - python=3.10.14
-  - pytorch=1.12.1
+  - python>=3.8
+  - pytorch>=1.12
   - torchvision=0.13.1
   - torchaudio=0.12.1
   - cudatoolkit=11.6
@@ -19,7 +19,7 @@ dependencies:
 #  - markdown-it-py=2.2.0
 #  - torchmetrics=0.11.4
 #  - scipy=1.10.1
-  - scanpy=1.9.8
+#  - scanpy=1.9.8
 #  - pandas=2.2.1
 #  - python-igraph=0.11.4
 #  - igraph=0.10.10
@@ -34,6 +34,7 @@ dependencies:
 #    - chex==0.1.7
 #    - squidpy==1.3.0
 #    - sknw==0.14
+    - scanpy
     - cellcharter==0.2.0
 #    - spatialdata==0.1.0
 #    - spatialdata-plot==0.2.0
