@@ -11,6 +11,8 @@ suppressPackageStartupMessages({
     library(spruce)
 })
 
+options(future.globals.maxSize = 8000 * 1024^2)
+
 option_list <- list(
   make_option(
     c("-c", "--coordinates"),
