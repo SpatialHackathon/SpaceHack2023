@@ -204,7 +204,6 @@ if (technology %in% c("ST", "Visium")){
 }
 
 set.seed(seed)
-
 # Variable features (if given - opt takes priority)
 if (nrow(spe) >= n_genes){
     counts <- assay(spe, "counts")
@@ -217,6 +216,7 @@ if (nrow(spe) >= n_genes){
 
 # Normalization to mean library size
 spe <- scuttle::computeLibraryFactors(spe)
+spe <- spe[, sizeFactors(spe)>0]
 assay(spe, assay_name) <- scuttle::normalizeCounts(spe, log = FALSE)
 
 # Run BANKSY
