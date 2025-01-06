@@ -3,25 +3,23 @@ import json
 
 from shared.functions import check_files_in_folder, get_git_directory, get_sample_dirs
 
-
-# this specific pipeline setting
-configfile: "example_configs/metrics_config.yaml"
-# All methods and metrics available
-configfile: "path_configs/metrics.yaml"
-configfile: "path_configs/methods.yaml"
-
+configfile: "path_config.yaml"
+configfile: "excute_config.yaml"
 
 GIT_DIR = get_git_directory(config)
 
 # Get all the methods and metrics that's being used
-metrics = config["metrics"]
-methods = list(config["methods"].keys())
+METRICS = config["metrics"]
 DATASET_DIR = config["dataset_dir"]
+datasets_selected= config["datasets_selected"]
+methods_selected = config["methods_selected"]
+metrics_selected = config["metrics_selected"]
 
 
-def generate_metrics_results(data_dir, metrics_name, methods, file_ext):
+def generate_metrics_results(data_dir, metric_name, methods, file_ext):
+    from pathlib import Path
     # getting metrics optargs.json file
-    with open(GIT_DIR + metrics[metrics_name]["optargs"], "r") as file:
+    with open(GIT_DIR + METRICS[metric_name]["optargs"], "r") as file:
         opt = json.load(file)
 
     result_files = []
@@ -31,67 +29,57 @@ def generate_metrics_results(data_dir, metrics_name, methods, file_ext):
         if opt["groundtruth"] and "labels.tsv" not in os.listdir(sample_dir):
             continue
 
-        # Check all method results
-        for method in methods:
-            method_dir = os.path.join(sample_dir, method)
-            if os.path.exists(method_dir):
-                dirs_to_check = (
-                    [method_dir]
-                    if check_files_in_folder(method_dir, ["domains.tsv"])
-                    else os.listdir(method_dir)
-                )
-                # method config directory
-                for dir_to_check in dirs_to_check:
-                    # Check if embedding is needed
-                    if opt["embedding"] and "embedding.tsv" not in os.listdir(
-                        os.path.join(method_dir, dir_to_check)
-                    ):
-                        continue
+        sample_dir = Path(sample_dir)
+        method_paths = [m for m in os.scandir(sample_dir) if m.name in methods]
 
-                    # Check if results exist
-                    if check_files_in_folder(
-                        os.path.join(method_dir, dir_to_check), ["domains.tsv"]
-                    ):
+        for method in method_list:
+            if any(f.name.startswith("config") for f in method.iterdir()):
+                res_fold = [
+                    (config.name, ffolder) 
+                    for config in os.scandir(method) if config.is_dir() and config.name.startswith("config")
+                    for ffolder in os.scandir(config) if ffolder.is_dir() and ffolder.name.startswith("cluster")
+                ]
+            else:
+                res_fold = [
+                    (ffolder) for ffolder in os.scandir(method) if ffolder.is_dir() and ffolder.name.startswith("cluster")
+                ]
+            if len(res_fold) > 0:
+                for folders in res_fold:
+                    res_folder = folders[len(folders)-1] #Extract the folder information
+                    if os.file.exist(res_folder / "domains.tsv"):
+                        if opt["embedding"] and not os.file.exist(res_folder / "embedding.tsv"):
+                            continue
+                        if opt["config_file"]:
+                            for c in config["config_files"][metric_name].keys():
+                                result_files.append(res_folder / metric_name / c / f"results.{file_ext}")
+                        else:
+                            result_files.append(res_folder / metric_name / f"results.{file_ext}")
 
-                        # Metric config directory
-                        config_files = (
-                            config["config_files"][metrics_name].keys()
-                            if opt["config_file"]
-                            else [""]
-                        )
-
-                        # Generating final metric results path
-                        for config_file_name in config_files:
-                            result_files.append(
-                                os.path.join(
-                                    method_dir,
-                                    dir_to_check,
-                                    metrics_name,
-                                    config_file_name,
-                                    "results." + file_ext,
-                                )
-                            )
     return result_files
 
 
 def generate_all_input(wildcards):
     all_input = []
-    for metric in config["use_metrics"]:
-        for dataset in config["datasets"]:
-            data_dir = DATASET_DIR + "/" + dataset
+
+        
+    for metric in metrics_selected:
+        for dataset in datasets_selected:
+            data_dir = DATASET_DIR / dataset
+            if not data_dir.is_dir():
+                continue
+
             all_input += generate_metrics_results(
                 data_dir=data_dir,
-                metrics_name=metric,
-                methods=methods,
+                metric_name=metric,
+                methods=methods_selected,
                 file_ext="txt",
             )
-    return all_input
 
+    return all_input
 
 rule all:
     input:
         generate_all_input,
-
 
 def get_metric(wildcards):
     # Trim metric_config if it has config path to it
@@ -105,7 +93,7 @@ def get_metric(wildcards):
 def get_sample_labels(wildcards):
     # getting metrics optargs.json file
     metric = get_metric(wildcards)
-    with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
+    with open(GIT_DIR + METRICS[metric]["optargs"], "r") as file:
         opt = json.load(file)
 
     if opt["groundtruth"]:
@@ -121,7 +109,7 @@ def get_sample_labels(wildcards):
 def get_method_embedding(wildcards):
     # getting metrics optargs.json file
     metric = get_metric(wildcards)
-    with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
+    with open(GIT_DIR + METRICS[metric]["optargs"], "r") as file:
         opt = json.load(file)
 
     if opt["embedding"]:
@@ -139,7 +127,7 @@ def get_method_embedding(wildcards):
 def get_metric_config(wildcards):
     # getting metrics optargs.json file
     metric = get_metric(wildcards)
-    with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
+    with open(GIT_DIR + METRICS[metric]["optargs"], "r") as file:
         opt = json.load(file)
 
     if opt["config_file"]:
@@ -161,7 +149,7 @@ def get_metric_config(wildcards):
 def get_sample_coordinate(wildcards):
     # getting metrics optargs.json file
     metric = get_metric(wildcards)
-    with open(GIT_DIR + metrics[metric]["optargs"], "r") as file:
+    with open(GIT_DIR + METRICS[metric]["optargs"], "r") as file:
         opt = json.load(file)
 
     if "physical_coordinate" in opt.keys():
@@ -179,18 +167,18 @@ def get_sample_coordinate(wildcards):
 
 rule metric:
     input:
-        domains=DATASET_DIR + "/{dataset}/{sample}/{method_config}/domains.tsv",
-        script=lambda wildcards: GIT_DIR + metrics[get_metric(wildcards)]["script"],
+        domains=DATASET_DIR + "/{dataset}/{sample}/{method_config}/{nclust}/domains.tsv",
+        script=lambda wildcards: GIT_DIR + METRICS[get_metric(wildcards)]["script"],
     output:
         file=DATASET_DIR 
-        + "/{dataset}/{sample}/{method_config}/{metric_config}/results.txt",
+        + "/{dataset}/{sample}/{method_config}/{nclust}/{metric_config}/results.txt",
     wildcard_constraints:
         dataset="[a-zA-Z0-9_-]+",
         sample="[a-zA-Z0-9_-]+",
         method_config="[a-zA-Z0-9_-]+(\/config_[a-zA-Z0-9_-]+)?",
         metric_config="[a-zA-Z0-9_-]+(\/config_[a-zA-Z0-9_-]+)?",
     conda:
-        lambda wildcards: GIT_DIR + metrics[get_metric(wildcards)]["env"]
+        lambda wildcards: GIT_DIR + METRICS[get_metric(wildcards)]["env"]
     params:
         sample_labels=get_sample_labels,
         embeddings=get_method_embedding,
