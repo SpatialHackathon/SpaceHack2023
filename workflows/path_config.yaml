@@ -1,0 +1,359 @@
+# The yaml file follows the following structure
+
+# * categories (datasets/methods/metrics)
+#     - {name}
+#       - env: path/to/conda/env/.yaml
+#       - script: path/to/script/.{py|r}
+#       - env_additional: (optional)path/to/installation/script/.sh
+#       - optargs: path/to/input/parameters/.json
+
+# * config_files (for methods/metrics)
+#     - {name} # MUST BE THE SAME AS THE METHOD/METRIC NAME
+#       - {config_name}: path/to/config
+#       - script: path to the excutation script
+#       - env_additional: Only for certain methods, need installation shell script (.sh)
+#       - optargs: optional arguments file (for input control/quality control)
+
+# Notice for new addition:
+# - name must be the same as the folder name!
+# - All identation is 2 spaces!
+# - When adding methods/metrics, remember to also add config_files if avaliable! 
+# - Comment out configs that you don't want to run.
+
+datasets:
+  SEA_AD_data:
+    env: data/SEA_AD_data/SEA_AD_data.yml
+    script: data/SEA_AD_data/SEA_AD_data.py
+    optargs: data/SEA_AD_data/SEA_AD_data_optargs.json
+  STARmap-2018-mouse-cortex:
+    env: data/STARmap-2018-mouse-cortex/environment.yml
+    script: data/STARmap-2018-mouse-cortex/STARmap-2018-mouse-cortex.py
+    optargs: data/STARmap-2018-mouse-cortex/STARmap-2018-mouse-cortex_optargs.json
+  abc_atlas_wmb_thalamus:
+    env: data/abc_atlas_wmb_thalamus/abc_atlas_wmb_thalamus.yml
+    script: data/abc_atlas_wmb_thalamus/abc_atlas_wmb_thalamus.py
+    optargs: data/abc_atlas_wmb_thalamus/abc_atlas_wmb_thalamus_optargs.json
+  libd_dlpfc:
+    env: data/libd_dlpfc/libd_dlpfc.yml
+    script: data/libd_dlpfc/libd_dlpfc.r
+    optargs: data/libd_dlpfc/libd_dlpfc_optargs.json
+  mouse_brain_sagittal_anterior:
+    env: data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior.yml
+    script: data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior.py
+    optargs: data/mouse_brain_sagittal_anterior/mouse_brain_sagittal_anterior_optargs.json
+  mouse_brain_sagittal_posterior:
+    env: data/mouse_brain_sagittal_posterior/mouse_brain_sagittal_posterior.yml
+    script: data/mouse_brain_sagittal_posterior/mouse_brain_sagittal_posterior.py
+    optargs: data/mouse_brain_sagittal_posterior/mouse_brain_sagittal_posterior_optargs.json
+  mouse_kidney_coronal:
+    env: data/mouse_kidney_coronal/mouse_kidney_coronal.yml
+    script: data/mouse_kidney_coronal/mouse_kidney_coronal.py
+    optargs: data/mouse_kidney_coronal/mouse_kidney_coronal_optargs.json
+  osmfish_Ssp:
+    env: data/osmfish_Ssp/osmfish_Ssp.yml
+    script: data/osmfish_Ssp/osmfish_Ssp.py
+    optargs: data/osmfish_Ssp/osmfish_Ssp_optargs.json
+  sotip_simulation:
+    env: data/sotip_simulation/sotip.yml
+    script: data/sotip_simulation/sotip_simulation.py
+    optargs: data/sotip_simulation/sotip_simulation_optargs.json
+  spatialDLPFC:
+    env: data/spatialDLPFC/spatialDLPFC.yml
+    script: data/spatialDLPFC/spatialDLPFC.r
+    optargs: data/spatialDLPFC/spatialDLPFC_optargs.json
+  visium_breast_cancer_SEDR:
+    env: data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR.yml
+    script: data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR.py
+    optargs: data/visium_breast_cancer_SEDR/visium_breast_cancer_SEDR_optargs.json
+  visium_chicken_heart:
+    env: data/visium_chicken_heart/chicken_heart.yml
+    script: data/visium_chicken_heart/chicken_heart.py
+    optargs: data/visium_chicken_heart/chicken_heart_optargs.json
+  xenium-breast-cancer:
+    env: data/xenium-breast-cancer/xenium-breast-cancer.yml
+    script: data/xenium-breast-cancer/xenium-breast-cancer.py
+    optargs: data/xenium-breast-cancer/xenium-breast-cancer_optargs.json
+  xenium-mouse-brain-SergioSalas:
+    env: data/xenium-mouse-brain-SergioSalas/environment.yml
+    script: data/xenium-mouse-brain-SergioSalas/xenium-mouse-brain-SergioSalas.py
+    optargs: data/xenium-mouse-brain-SergioSalas/xenium-mouse-brain-SergioSalas_optargs.json
+  STARmap_plus:
+    env: data/STARmap_plus/STARmap_plus.yml
+    script: data/STARmap_plus/STARmap_plus.py
+    optargs: data/STARmap_plus/STARmap_plus_optargs.json
+  stereoseq_developing_Drosophila_embryos_larvae:
+    env: data/stereoseq_developing_Drosophila_embryos_larvae/stereoseq_developing_Drosophila_embryos_larvae.yml
+    script: data/stereoseq_developing_Drosophila_embryos_larvae/stereoseq_developing_Drosophila_embryos_larvae.py
+    optargs: data/stereoseq_developing_Drosophila_embryos_larvae/stereoseq_developing_Drosophila_embryos_larvae_optargs.json
+  stereoseq_mouse_embryo:
+    env: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo.yml
+    script: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo.py
+    optargs: data/stereoseq_mouse_embryo/stereoseq_mouse_embryo_optargs.json
+
+neighbors_infos:
+  delaunay_triangulation:
+    script: preprocessing/neighbors/delaunay_triangulation/delaunay_triangulation.py
+    env: preprocessing/neighbors/delaunay_triangulation/delaunay_triangulation.yml
+
+# Make sure the methods name is the same as the folder name
+methods:
+  BANKSY:
+    env: method/BANKSY/banksy.yml
+    script: method/BANKSY/banksy.r
+    env_additional: method/BANKSY/banksy_env.sh
+    optargs: method/BANKSY/banksy_optargs.json
+  bass:
+    env: method/bass/bass.yml
+    script: method/bass/bass.r
+    env_additional: method/bass/bass_env.sh
+    optargs: method/bass/bass_optargs.json
+  BayesSpace:
+    env: method/BayesSpace/BayesSpace.yml
+    script: method/BayesSpace/BayesSpace.r
+    optargs: method/BayesSpace/BayesSpace_optargs.json
+  CellCharter:
+    env: method/CellCharter/CellCharter.yml
+    script: method/CellCharter/CellCharter.py
+    optargs: method/CellCharter/CellCharter_optargs.json
+  conST:
+    env: method/conST/conST.yml
+    script: method/conST/conST.py
+    optargs: method/conST/conST_optargs.json
+  DeepST:
+    env: method/DeepST/DeepST.yml
+    script: method/DeepST/DeepST.py
+    optargs: method/DeepST/DeepST_optargs.json
+    env_additional: method/DeepST/DeepST_env.sh
+  DRSC:
+    env: method/DRSC/DRSC.yml
+    script: method/DRSC/DRSC.r
+    env_additional: method/DRSC/drsc_env.sh
+    optargs: method/DRSC/DRSC_optargs.json
+  Giotto:
+    env: method/Giotto/Giotto.yml
+    script: method/Giotto/Giotto.r
+    env_additional: method/Giotto/Giotto_env.sh
+    optargs: method/Giotto/Giotto_optargs.json
+  GraphST:
+    env: method/GraphST/GraphST.yml
+    script: method/GraphST/method_GraphST.py
+    optargs: method/GraphST/GraphST_optargs.json
+  maple:
+    env: method/maple/maple.yml
+    script: method/maple/maple.r
+    env_additional: method/maple/maple_env.sh
+    optargs: method/maple/maple_optargs.json
+  meringue:
+    env: method/meringue/meringue.yml
+    script: method/meringue/meringue.r
+    env_additional: method/meringue/meringue_env.sh
+    optargs: method/meringue/meringue_optargs.json
+  precast:
+    env: method/precast/precast.yml
+    script: method/precast/precast.r
+    env_additional: method/precast/precast_env.sh
+    optargs: method/precast/precast_optargs.json
+  SC_MEB:
+    env: method/SC_MEB/SC_MEB.yml
+    script: method/SC_MEB/SC_MEB.r
+    env_additional: method/SC_MEB/scmeb_env.sh
+    optargs: method/SC_MEB/SC_MEB_optargs.json
+  SCAN-IT:
+    env: method/SCAN-IT/scanit.yml
+    script: method/SCAN-IT/method_scanit.py
+    optargs: method/SCAN-IT/scanit_optargs.json
+  scanpy:
+    env: method/scanpy/scanpy_env.yaml
+    script: method/scanpy/method_scanpy.py
+    optargs: method/scanpy/scanpy_optargs.json
+  SEDR:
+    env: method/SEDR/SEDR.yml
+    script: method/SEDR/SEDR_method.py
+    optargs: method/SEDR/SEDR_optargs.json
+  seurat:
+    env: method/seurat/seurat.yml
+    script: method/seurat/seurat.r
+    optargs: method/seurat/seurat_optargs.json
+  SOTIP:
+    env: method/SOTIP/sotip.yml
+    script: method/SOTIP/method_sotip.py
+    optargs: method/SOTIP/sotip_optargs.json
+  SpaceFlow:
+    env: method/SpaceFlow/spaceflow.yml
+    script: method/SpaceFlow/method_spaceflow.py
+    optargs: method/SpaceFlow/spaceflow_optargs.json
+  spaGCN:
+    env: method/spaGCN/spaGCN.yml
+    script: method/spaGCN/spaGCN.py
+    optargs: method/spaGCN/spaGCN_optargs.json
+  spatialGE:
+    env: method/spatialGE/spatialGE.yml
+    script: method/spatialGE/spatialGE.r
+    env_additional: method/spatialGE/spatialGE_env.sh
+    optargs: method/spatialGE/spatialGE_optargs.json
+  SpiceMix:
+    env: method/SpiceMix/SpiceMix.yml
+    script: method/SpiceMix/SpiceMix.py
+    optargs: method/SpiceMix/SpiceMix_optargs.json
+  STAGATE:
+    env: method/STAGATE/STAGATE.yml
+    script: method/STAGATE/method_STAGATE.py
+    optargs: method/STAGATE/STAGATE_optargs.json
+  stardust:
+    env: method/stardust/stardust.yml
+    script: method/stardust/stardust.r
+    env_additional: method/stardust/stardust_env.sh
+    optargs: method/stardust/stardust_optargs.json
+
+# All metrics as of 14.02.2024
+metrics:
+  ARI:
+    env: metric/ARI/ARI.yml
+    script: metric/ARI/ARI.py
+    optargs: metric/ARI/ARI_optargs.json
+  CHAOS:
+    env: metric/CHAOS/CHAOS.yml
+    script: metric/CHAOS/CHAOS.r
+    optargs: metric/CHAOS/CHAOS_optargs.json
+  Calinski-Harabasz:
+    env: metric/Calinski-Harabasz/Calinski-Harabasz.yml
+    script: metric/Calinski-Harabasz/Calinski-Harabasz.py
+    optargs: metric/Calinski-Harabasz/Calinski-Harabasz_optargs.json
+  Completeness:
+    env: metric/Completeness/Completeness.yml
+    script: metric/Completeness/Completeness.py
+    optargs: metric/Completeness/Completeness_optargs.json
+  Davies-Bouldin:
+    env: metric/Davies-Bouldin/Davies-Bouldin.yml
+    script: metric/Davies-Bouldin/Davies-Bouldin.py
+    optargs: metric/Davies-Bouldin/Davies-Bouldin_optargs.json
+  Entropy:
+    env: metric/Entropy/Entropy.yml
+    script: metric/Entropy/Entropy.py
+    optargs: metric/Entropy/Entropy_optargs.json
+  FMI:
+    env: metric/FMI/FMI.yml
+    script: metric/FMI/FMI.py
+    optargs: metric/FMI/FMI_optargs.json
+  Homogeneity:
+    env: metric/Homogeneity/Homogeneity.yml
+    script: metric/Homogeneity/Homogeneity.py
+    optargs: metric/Homogeneity/Homogeneity_optargs.json
+  MCC:
+    env: metric/MCC/MCC.yaml
+    script: metric/MCC/MCC.py
+    optargs: metric/MCC/MCC_optargs.json
+  NMI:
+    env: metric/NMI/NMI.yml
+    script: metric/NMI/NMI.r
+    optargs: metric/NMI/NMI_optargs.json
+  PAS:
+    env: metric/PAS/PAS.yml
+    script: metric/PAS/PAS.r
+    optargs: metric/PAS/PAS_optargs.json
+  cluster-specific-silhouette:
+    env: metric/cluster-specific-silhouette/cluster-specific-silhouette.yml
+    script: metric/cluster-specific-silhouette/cluster-specific-silhouette.r
+    optargs: metric/cluster-specific-silhouette/cluster-specific-silhouette_optargs.json
+  domain-specific-f1:
+    env: metric/domain-specific-f1/domain-specific-f1.yml
+    script: metric/domain-specific-f1/domain-specific-f1.r
+    optargs: metric/domain-specific-f1/domain-specific-f1_optargs.json
+  jaccard:
+    env: metric/jaccard/jaccard.yaml
+    script: metric/jaccard/jaccard.py
+    optargs: metric/jaccard/jaccard_optargs.json
+  V_measure:
+    env: metric/V_measure/V_measure.yml
+    script: metric/V_measure/V_measure.py
+    optargs: metric/V_measure/V_measure_optargs.json
+  LISI:
+    env: metric/LISI/LISI.yml
+    script: metric/LISI/LISI.r
+    optargs: metric/LISI/LISI_optargs.json
+
+
+# make sure the config_files name is the same as methods name
+config_files:
+  BANKSY:
+#    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+#    config_github: "config/config_github.json"
+#    config_starmap: "config/config_starmap.json"
+  bass:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+    config_starmap: "config/config_starmap.json"
+  BayesSpace:
+    config_default: "config/config_default.json"
+    config_melanoma: "config/config_melanoma.json"
+    #config_scc: "config/config_scc.json"
+  CellCharter:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+  conST:
+    config_default: "config/config_default.json"
+  DeepST:
+    config_default: "config/config_default.json"
+  DRSC:
+    config_default: "config/config_default.json"
+    #config_all_genes: "config/config_all_genes.json"
+    config_FindSVGs: "config/config_FindSVGs.json"
+    config_FindVariableFeatures: "config/config_FindVariableFeatures.json"
+  Giotto:
+    config_default: "config/config_default.json"
+  GraphST:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+  maple:
+    config_default: "config/config_default.json"
+  meringue:
+    config_default: "config/config_default.json"
+    config_clusteringvignette: "config/config_clusteringvignette.json"
+    config_mob: "config/config_mob.json"
+  precast:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+    config_BC: "config/config_BC.json"
+  SC_MEB:
+    config_default: "config/config_default.json"
+  SCAN-IT:
+    config_default: "config/config_default.json"
+  scanpy:
+    #config_default: "config/config_default.json"
+    config_leiden_MERFISH: "config/config_leiden_MERFISH.json"
+    config_leiden_tutorial: "config/config_leiden_tutorial.json"
+  SEDR:
+    config_default: "config/config_default.json"
+    config_dlpfc: "config/config_dlpfc.json"
+    config_stereoseq: "config/config_stereoseq.json"
+  seurat:
+    #config_default: "config/config_default.json"
+    #config_leiden_CODEX: "config/config_leiden_CODEX.json"
+    config_leiden_VisiumHD: "config/config_leiden_VisiumHD.json"
+    config_leiden_spatial: "config/config_leiden_spatial.json"
+  SOTIP:
+    config_default: "config/config_default.json"
+    config_Visium_dlpfc: "config/config_Visium_dlpfc.json"
+  SpaceFlow:
+    config_default: "config/config_default.json"
+    config_seqfish: "config/config_seqfish.json"
+  spaGCN:
+    config_default: "config/config_default.json"
+  spatialGE:
+    config_default: "config/config_default.json"
+  SpiceMix:
+    config_default: "config/config_default.json"
+  STAGATE:
+    config_default: "config/config_default.json"
+    config_slide_stereo: "config/config_slide_stereo.json"
+    config_starmap: "config/config_starmap.json"
+  stardust:
+    config_default: "config/config_default.json"
+    config_tutorial: "config/config_tutorial.json"
+  V_measure:
+    config_1: "config/config_1.json"
+    config_2: "config/config_2.json"
+    config_3: "config/config_3.json"
+  LISI:
+    config_1: "config/config_1.json"
