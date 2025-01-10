@@ -102,7 +102,7 @@ python data.py -o /path/to/output
 
 ## Method
 
-Method modules requires 3 files (see templates).
+Method modules requires 4 files (see templates).
 
 * `method.yml`: dependencies of the data module script following the format:
 ```
@@ -150,6 +150,20 @@ neighbors:
 config_file:
    description: Does the method take an additional config file?
    type: boolean
+```
+
+* `config/config_default.json`: defining crucial parameters for the method that might need to be varried. The user can define multiple configs that can be tested with the workflow. For example for conST:
+
+```
+{
+    "k": 10,
+    "min_cells": 3,
+    "use_img": false,
+    "using_mask": false,
+    "refinement": false,
+    "source1": "https://github.com/ys-zong/conST/blob/main/conST_cluster.ipynb",
+    "source2": "https://github.com/ys-zong/conST/blob/main/src/utils_func.py#L51"
+}
 ```
 
 

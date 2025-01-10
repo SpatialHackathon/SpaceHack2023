@@ -1,0 +1,28 @@
+# This yaml file contains all the parameters and settings for the workflow.
+# 1. Universal parameters: Used in all smk file, set once
+# 2. Process-specific parameters: some other parameters, if needed
+# 3. Dataset, methods and metrics: 
+#      select which one to be included in the workflow, comment out unwanted ones.
+#      For methods, you can also specify cluster numbers for specific datasets.
+
+###### Universal parameters #######
+# Directories, modify based on your own
+GIT_DIR: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack2023
+DATASET_DIR: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data
+SEED: 2023
+
+###### Dataset selected for excutation #######
+datasets_selected:
+  - "libd_dlpfc"
+
+###### Methods selected for excutation #######
+methods_selected:
+  - "CellCharter"
+
+# If some datasets specify number of clusters. Add it here
+n_clusters:
+  libd_dlpfc: [9]
+
+###### Metrics selected for excutation #######
+metrics_selected:
+  - "ARI"
