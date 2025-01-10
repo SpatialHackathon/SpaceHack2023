@@ -97,3 +97,12 @@ metrics_selected:
 #  - "CHAOS"                            #phyiscal coord only
 #  - "PAS"      
 
+###### Base clustering selection parameters #######
+consensus_algorithms:
+  - "lca"
+  - "kmode"
+  - "weighted"
+
+lambda: null
+
+bc_numbers: 8

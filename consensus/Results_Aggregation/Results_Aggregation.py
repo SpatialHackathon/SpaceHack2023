@@ -4,7 +4,6 @@
 
 import argparse
 
-# TODO adjust description
 parser = argparse.ArgumentParser(description="Aggregate the results into a single tsv file. Notice that the folder structure should be input_folder/*/results_files")
 
 parser.add_argument(
