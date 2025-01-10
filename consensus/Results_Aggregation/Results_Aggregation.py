@@ -11,29 +11,35 @@ parser.add_argument(
     "-i", "--input_folder", help="Input folder of method results.", required=True
 )
 parser.add_argument(
-    "-f", "--file_name", help="the name of the result files to be merged", required=True
-)
-parser.add_argument(
-    "-p", "--prefix", help="the prefix of the folders to be merged, the prefix will be used to be removed for column name prefix", required=False
-)
-parser.add_argument(
     "-o", "--out_file", help="Output file.", required=True
 )
 
 args = parser.parse_args()
 
-target_file = args.file_name
 output_file = args.out_file
 input_folder = args.input_folder
-
-if args.prefix is not None:
-    prefix = args.prefix
 
 from pathlib import Path
 import pandas as pd
 
 def get_combined_results(input_folder, target_file, output_file, prefix=None):
 
+    """
+    Aggregate the results from each folder into a single tsv file. The folder should have the structure of
+    input_folder/*/results_files. The results_files should be tsv files with the same indexes. And for the 
+    merged tsv, the column name will have its {folder name (i.e. *)} as the prefix. In the case where prefix is 
+    defined, the prefix added to the column will be {folder name} without {prefix}.
+
+    Args:
+        input_folder: The folder containing the results of each method.
+        target_file: The target file name inside each method folder.
+        output_file: The output file name.
+        prefix: The prefix of the folder name. If specified, the folder name will be used as the prefix
+            for the columns of the dataframe.
+
+    Returns:
+        None, but write the output file into a csv in the respective path
+    """
     input_folder = Path(input_folder)
     results_folders = [f for f in input_folder.iterdir() if f.is_dir() and not f.name.startswith([".", "_"])]
 
@@ -46,7 +52,7 @@ def get_combined_results(input_folder, target_file, output_file, prefix=None):
         domain_file = result / target_file
         if domain_file.exists():  # Ensure the file exists
             folder_name = result.name
-            if prefex is not None:
+            if prefix is not None:
                 folder_name = folder_name[len(prefix):]
             domain_df = pd.read_table(domain_file, sep="\t", index_col=0)
             domain_df = domain_df.add_prefix(f"{folder_name}_")
@@ -58,13 +64,13 @@ def get_combined_results(input_folder, target_file, output_file, prefix=None):
     # Write the combined dataframe to the output file
     combined_df.to_csv(output_file, sep="\t", index_label="")
 
+
+# We assume the structure of {input_folder}/{methods}/{config}/{n_clusters}/results.tsv
 # Generate all the potential folders
 config_folders = [(method, config) 
                   for method in Path(input_folder).iterdir() if method.is_dir() and not method.name.startswith([".", "_"])
                   for config in method.iterdir() if config.is_dir() and config.name.startswith("config")
                 ]
-
-
 
 for _, config in config_folders:
     get_combined_results(input_folder=config, 
@@ -72,4 +78,15 @@ for _, config in config_folders:
                          output_file=config / "combined_nclusters.tsv",
                          prefix="cluster_")
 
-for method, 
+for method, _ in config_folders:
+    out_file = method / "combined_configs.tsv"
+    if not out_file.exists():
+        get_combined_results(input_folder=method, 
+                             target_file="combined_nclusters.tsv", 
+                             output_file=out_file,
+                             prefix="config_")
+
+# input folder is the final layer. It should be a sample folder
+get_combined_results(input_folder=input_folder, 
+                     target_file="combined_configs.tsv", 
+                     output_file=output_file)
