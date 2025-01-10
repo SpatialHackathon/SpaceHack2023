@@ -8,14 +8,14 @@ from shared.functions import get_git_directory, get_ncluster, get_sample_dirs, g
 configfile: "path_config.yaml"
 configfile: "excute_config.yaml"
 # TODO should I set the base clusterings in the result folder? 
-configfile: "base_clusterings.yaml"
+#configfile: "base_clusterings.yaml"
 
 GIT_DIR = Path(get_git_directory(config))
 DATASET_DIR = Path(config["dataset_dir"])
 SEED = config["seed"]
 datasets_selected = config["datasets_selected"]
 consensus_algorithms = config["consensus_algorithms"]
-base_clusters = config["base_clusterings"]
+# base_clusters = config["base_clusterings"]
 
 def get_bc(wildcards):
 
@@ -41,6 +41,8 @@ rule all:
 rule consensus_calling:
     input:
         file=DATASET_DIR / "{dataset}/{sample}/combined_methods.tsv"
+        # TODO How to structure this tsv file for proper instruction? Also allow no n_clust specify
+        base_clusterings=DATASET_DIR / "{dataset}/{sample}/base_clustering_selected.tsv"
         script=GIT_DIR / "consensus/Consensus_{algorithm}.r"
     output:
         file=DATASET_DIR / "{dataset}/{sample}/consensus_{algorithm}_{nclust}.tsv",
