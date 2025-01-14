@@ -16,10 +16,20 @@ option_list <- list(
     help = "seed for input"
   ),
   make_option(
-    c("-c", "--columns"),
+    c("-b", "--base_clusterings"),
     type = "character", default = NULL,
-    help = "List of column names for the input BCs"
+    help = "Path to base-clustering ranking file"
   ), 
+  make_option(
+    c("--n_clusters"),
+    type = "character", default = NULL,
+    help = "Desired number of clusters in the consensus output"
+  ),
+  make_option(
+    c("--n_bcs"),
+    type = "integer", default = NULL,
+    help = "Desired number of base clustering results feed into the algorithm"
+  ),
   make_option(
     c("-o", "--output_file"),
     type = "character", default = NULL,
@@ -29,11 +39,6 @@ option_list <- list(
     c("--lambda"),
     type = "numeric", default = NULL,
     help = "regulation term coefficient"
-  ),
-  make_option(
-    c("--n_clust"),
-    type = "integer", default = NULL,
-    help = "desired number of clusters as output"
   ),
   make_option(
     c("--jar_file"),
@@ -53,8 +58,9 @@ opt <- parse_args(opt_parser)
 # Use these filepaths as input
 input_file <- opt$input_file
 output_file <- opt$output_file
-columns <- opt$columns
-n_clust <- opt$n_clust
+bc_file <- opt$base_clusterings
+n_bcs <- ifelse(is.null(opt$n_bcs), 8, opt$n_bcs)
+n_clust <- ifelse(is.null(opt$n_clusters), "7", opt$n_clusters)
 seed <- opt$seed
 jar_file <- opt$jar_file
 lambda <- opt$lambda
@@ -65,7 +71,6 @@ suppressPackageStartupMessages({
     library(Matrix)
     library(dplyr)
     library(future.apply)
-    library()
 })
 
 ###################### Define functions ######################
@@ -296,7 +301,16 @@ get_cluster_label <- function(binary_matrix,
 ###################### Consensus calling begin ######################
 
 label_df <- read.delim(input_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
-label_selected <- label_df[, columns]
+bc_list <- read.delim(bc_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")[[as.character(n_clust)]]
+bc_list <- bc_list[!is.na(bc_list)]
+
+if (length(bc_list) < n_bcs){
+  warning(sprintf("Not enough (%s) base clusterings(BCs) are available, use %s BCs instead.", n_bcs, length(bc_list)))
+}
+bc_list <- bc_list[1:min(n_bcs, length(bc_list))]
+
+label_selected <- label_df[, bc_list]
+
 
 # Make sure all the clusters are ranked 1 to n without jumping (SOTIP)
 label_selected <- apply(label_selected, 2, function(u){
@@ -335,5 +349,6 @@ ensemble_label <- get_cluster_label(binary_ensemble,
                                     verbose=FALSE)
 ensemble_df <- data.frame(consensus_weighted=ensemble_label, row.names = row.names(label_selected))
 
+dir.create(dirname(output_file), showWarnings = FALSE, recursive = TRUE)
 # Save the results
 write.table(ensemble_df, file = output_file, sep = "\t", col.names = NA, quote = FALSE)
