@@ -52,6 +52,95 @@ snakemake -s 05_aggregation.smk --cores <n_of_cores> --use-conda --ri
 snakemake -s 06_consensus.smk --cores <n_of_cores> --use-conda --ri
 ```
 
+## execute_config.yaml
+
+You can use the file excute_config_test.yaml as a template for the execution of the workflow. The config follows the following structure: 
+
+```
+###### Universal parameters #######
+# Directories, modify based on your own
+GIT_DIR: path/for/github/repo
+DATASET_DIR: path/to/datasets
+SEED: 2023     # for the individual methods
+
+###### Dataset selected for excutation #######
+datasets_selected:
+  - "list_datasets_you_want_to_analyse_and_are_placed_in_DATASET_DIR"
+
+### Not used in this project
+  - "list_datasets_you_do_not_want_to_use"
+
+###### Methods selected for excutation #######
+methods_selected:
+## Native Implementation Done 
+  - "list_methods_you_want_to_consider_for_the_consensus"
+
+# If some datasets specify number of clusters. Add it here
+n_clusters:
+  visium_hd_cancer_colon: [5, 6, 7, 9, 11, 14]
+
+###### Metrics selected for excutation #######
+metrics_selected:
+  - "list_implemented_metrices_that_you_want_to_consider_to_analyse_methods"
+
+###### Base clustering selection parameters #######
+# As used by scanpy (sc.pp.neighbors()).
+selection_criteria:
+  - "Cross_method_ARI"
+  - "Smoothness_entropy"
+  - "Manual_selection"
+n_neighbors: 6
+
+###### Consensus Clustering parameters #######
+bc_numbers: [8]     # number of base clustering results
+consensus_algorithms:
+  - "lca"
+  - "kmode"
+  - "weighted"
+# In case you need to re-define desired cluster number. Do it here. Otherwise n_clust value would be used
+n_clust_consensus:
+  abc_atlas_wmb_thalamus: [16, 19, 20, 21, 24, 28, 32]
+
+# For weighted clustering
+lambda: null
+
+# For cross-method entropy
+cross_method_entropy: true
+```
+
+
+## path_config.yaml
+
+You can use the file path_config_test.yaml as a template for the execution of the workflow. The config follows the following structure: 
+
+```
+# The yaml file follows the following structure
+
+# * categories (datasets/methods/metrics)
+#   - {name}
+#     - env: path/to/conda/env/.yaml
+#     - script: path/to/script/.{py|r}
+#     - env_additional: (optional)path/to/installation/script/.sh
+#     - optargs: path/to/input/parameters/.json
+
+# * config_files (for methods/metrics)
+#   - {name} # MUST BE THE SAME AS THE METHOD/METRIC NAME
+#     - {config_name}: path/to/config
+#     - script: path to the excutation script
+#     - env_additional: Only for certain methods, need installation shell script (.sh)
+#     - optargs: optional arguments file (for input control/quality control)
+
+# Notice for new addition:
+# - name must be the same as the folder name!
+# - All identation is 2 spaces!
+# - When adding methods/metrics, remember to also add config_files if avaliable! 
+# - Comment out configs that you don't want to run.
+```
+
+### You can generate the path_config also with generate_path_config.sh
+
+
+
 
 
 
