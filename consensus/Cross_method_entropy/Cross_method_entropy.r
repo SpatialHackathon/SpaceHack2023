@@ -53,7 +53,6 @@ n_clust <- opt$n_clusters
 n_bcs <- opt$n_bcs
 
 suppressPackageStartupMessages({
-  library(dbscan)
   library(clue)
 })
 

@@ -40,7 +40,7 @@ def get_combined_results(input_folder, target_file, output_file, prefix=None):
         None, but write the output file into a csv in the respective path
     """
     input_folder = Path(input_folder)
-    results_folders = [f for f in input_folder.iterdir() if f.is_dir() and not f.name.startswith([".", "_"])]
+    results_folders = [f for f in input_folder.iterdir() if f.is_dir() and not f.name.startswith((".", "_"))]
 
     if prefix is not None:
         results_folders = [f for f in results_folders if f.name.startswith(prefix)]
@@ -63,11 +63,10 @@ def get_combined_results(input_folder, target_file, output_file, prefix=None):
     # Write the combined dataframe to the output file
     combined_df.to_csv(output_file, sep="\t", index_label="")
 
-
 # We assume the structure of {input_folder}/{methods}/{config}/{n_clusters}/results.tsv
 # Generate all the potential folders
 config_folders = [(method, config) 
-                  for method in Path(input_folder).iterdir() if method.is_dir() and not method.name.startswith([".", "_"])
+                  for method in Path(input_folder).iterdir() if method.is_dir() and not method.name.startswith((".", "_"))
                   for config in method.iterdir() if config.is_dir() and config.name.startswith("config")
                 ]
 

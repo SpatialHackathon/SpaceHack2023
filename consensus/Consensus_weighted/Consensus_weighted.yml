@@ -1,0 +1,9 @@
+channels:
+  - r
+  - conda-forge
+dependencies:
+  - r-base=4.4.2
+  - r-optparse=1.7.5
+  - r-matrix=1.6_5
+  - r-dplyr=1.1.4
+  - r-future.apply=1.11.3
