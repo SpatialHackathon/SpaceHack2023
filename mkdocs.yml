@@ -1,5 +1,6 @@
 site_name: SpaceHack 2.0
 repo_url: https://github.com/SpatialHackathon/SpaceHack2023/
+edit_uri: blob/native/docs/
 copyright: Copyright 2025 SpaceHack 2.0 Organizing Committee
 
 nav: 
