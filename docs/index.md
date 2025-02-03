@@ -1,0 +1,3 @@
+![Logo](img/logo.png)
+
+Spaehack 2.0 is a community-driven project ...
