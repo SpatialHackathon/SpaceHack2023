@@ -1,34 +1,131 @@
-# SpaceHack - method modules
+# Method modules
 
-### Implementing a new dataset module
+## Implementing a new method
 
-1. Create or claim a **GitHub issue** from the [SpaceHack issue board.](https://github.com/SpatialHackathon/SpaceHack2023/issues) that describes the dataset module you want to implement. There are currently around 30 methods to implement, but if you come up with a new idea, please **create** a new issue, add the appropriate **tags**, and **assign** the task to yourself.
- 2. Add **metadata** to our metadata [spreadsheet on the methods tab](https://docs.google.com/spreadsheets/d/1QCeAF4yQG4bhZSGPQwwVBj_XF7ADY_2mK5xivAIfHsc/edit#gid=0). Please fill in as much as you can as metadata is helpful! If you feel the need, please also add new columns or add additional notes.
- 3. Now you are ready to create a new git **[branch](https://learngitbranching.js.org/)**. Try to give your new branch an intuitive prefix such as `method...`. You can create a new branch in several ways: (i) [create a branch directly from the issue board](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-a-branch-for-an-issue) and then `git checkout` that branch, or (ii) via the command line:
+To implement a new method follow the [Contribution guide](../contributing.md) and make sure you adopt all the necessary conventions specified in this document.
+
+For examples have a look 
+[here for a method in Python]({{ repo_branch_url }}/method/spaGCN/) or 
+[here for a method in R]({{ repo_branch_url }}/method/BayesSpace/).
+
+## Layout and interface
+
+Method modules require 4 files (see templates). '{method}' in the file names should be
+replaced by the name of your module and all files placed in a subfolder of the same name.
+
+* `{method}.yml`: a conda recipe defining the dependencies of the method module script following the format:
+    
+```yaml
+channels:
+- conda-forge
+dependencies:
+- anndata=0.10.3
+- gitpython=3.1.40
 ```
-# clone the template repository
-git clone https://github.com/SpatialHackathon/SpaceHack2023.git
-# create and switch to a new branch for your e.g. method "SpaGCN"
-git branch method_SpaGCN_naveedishaque # try to make the branch name unique!
-git checkout method_SpaGCN_naveedishaque
-# link the branch to the issue via the issue board: https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue
+* `{method}_optargs.json`: defining optional arguments for the workflow following the format:
+    
+```json
+{
+    "matrix": "counts",
+    "integrated_feature_selection": false,
+    "image": true,
+    "neighbors": false,
+    "config_file": true
+}
 ```
- 4. Modify the files, filenames, and code in `template/`, referring to the examples in the `method` (for the SpaGCN and BayesSpace methods).
- 5. Test. Before you make a pull request make sure that you (... do something...?). You should try to run your method on the default dataset (LIBD Visium DLPFC) and run the results through one of the default metrics (ARI or V). We are currently working on validators and automatic testing scripts... but this is tricky. Reach out to Niklas Muller-Botticher when you are ready to test!
- 6. Create a [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request?tool=cli)
- 7. Code review (by whom?) and merge your contributed module into the GitHub main branch!
 
-For examples have a look [here for a method in Python](spaGCN/) or [here for a method in R](BayesSpace/).
+Entries are:
 
-### Method module layout and interface
+```
+matrix: 
+description: What input does the method take
+type: string
+enum:
+    - counts
+    - transform
+    - dimensionality_reduction
+    # - counts_or_transform
 
-Please define a conda recipe as a `yml` file for all the dependencies required for your methods script. This should list all the dependencies and also explicitly define the versions.
+integrated_feature_selection:
+description: Can the method use existing feature selections?
+type: boolean
 
-Input:
- - Coordinates
- - Counts
- - …
+image:
+description: Can the method use H&E images?
+type: boolean
 
-Output:
- - Predicted labels
- - Embedding (optional)
+neighbors:
+description: Can the method use existing neighbor definitions?
+type: boolean
+
+config_file:
+description: Does the method take an additional config file?
+type: boolean
+```
+
+* `config/config_default.json`: defining crucial parameters for the method that might need to be varied. 
+The user can define multiple configs that can be tested with the workflow. 
+The parameters in this file can be adjusted depending on the requirements of the methods. 
+For example for conST:
+
+```json
+{
+    "k": 10,
+    "min_cells": 3,
+    "use_img": false,
+    "using_mask": false,
+    "refinement": false,
+    "source1": "https://github.com/ys-zong/conST/blob/main/conST_cluster.ipynb",
+    "source2": "https://github.com/ys-zong/conST/blob/main/src/utils_func.py#L51"
+}
+```
+    
+
+
+* `{method}.py/.r`: method module script. 
+   * Check the TODOs in the `method.py` or `method.r` [template]({{ repo_branch_url }}/templates/).
+   * The command line arguments are fixed and should not be modified. Further arguments can be passed using the `config/config_{name}.json` files.
+   * see further instruction below.
+
+### Input Format
+
+* `Coordinates File (-c, --coordinates)`: Path to a TSV file containing spatial coordinates. Index: Observation ID or barcode. Columns: x, y (and optionally z).
+* `Features File (-f, --features)`: Path to a TSV file with rows representing features (e.g., genes). Index: Feature ID or name.
+* `Observations File (-o, --observations)`: Path to a TSV file with rows representing observations (e.g., cells). Index: Observation ID or barcode.
+
+Optional Files:
+
+* `Matrix File (-m, --matrix)`: Path to a counts matrix in Matrix Market (MTX) format.
+* `Neighbors File (-n, --neighbors)`: Path to a square matrix defining neighbors for each observation.
+* `Dimensionality Reduction File (--dim_red)`: Path to reduced-dimensionality data (e.g., PCA) in TSV format.
+* `Image File (--image)`: Path to an H&E stained image.
+* `Config File (--config)`: Path to an optional JSON configuration file.
+
+Parameters:
+
+* `--n_clusters`: Number of clusters to return.
+* `--technology`: Technology of the dataset (e.g., Visium, ST).
+* `--seed`: Seed for random operations.
+
+### Output Format
+
+The script generates the following output files in the specified output directory (`-d, --out_dir`):
+
+1. Domains File (`domains.tsv`):
+   * Contains labels for observations.
+   * Format: TSV with observation IDs as the index and a single label column.
+2. Embedding File (`embedding.tsv`):
+   * Optional output containing reduced-dimensionality representations.
+   * Format: TSV with observation IDs as the index and n columns for embedding dimensions.
+
+## Example usage of module scripts (Testing)
+
+```sh
+python method.py -c coordinates.tsv -f features.tsv -o observations.tsv \
+    -m counts.mtx -d output_dir --n_clusters 5 --technology Visium --seed 42
+```
+
+## Add to workflow
+
+* Add your method to the excute_config.yaml under `Methods selected for execution`.
+* Add your method scripts to the path_config.yaml under `methods`.

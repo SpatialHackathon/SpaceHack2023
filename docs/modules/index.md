@@ -2,6 +2,12 @@
 
 The Spacehack 2.0 workflow consists of multiple module types:
 
-- [Datasets](../data/README.md) to analyze
-- [Methods](../method/README.md) to identify spatial doamins
-- [Metrics](../metric/README.md) to evaluate performance against a groundtruth
+- [Datasets](data.md) to analyze
+- [Methods](method.md) to identify spatial doamins
+- [Metrics](metric.md) to evaluate performance against a groundtruth
+
+If you want to generate a new module you have to make sure to follow the format and 
+specification as defined in their respective sections. 
+Also, it might be worth having a look at the [Contribution guide](../contributing.md).
+
+![Workflow](../img/workflow.svg)

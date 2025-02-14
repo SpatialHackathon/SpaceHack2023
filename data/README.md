@@ -1,37 +1,57 @@
-# SpaceHack - dataset modules
+# Dataset modules
 
-### Implementing a new dataset module
+## Implementing a new dataset
 
-1. Create or claim a **GitHub issue** from the [SpaceHack issue board.](https://github.com/SpatialHackathon/SpaceHack2023/issues) that describes the dataset module you want to implement. There are currently around 20 datasets to implement, but if you come up with a new idea, please **create** a new issue, add the appropriate **tags**, and **assign** the task to yourself.
- 2. Add **metadata** to our metadata [spreadsheet on the dataset tab](https://docs.google.com/spreadsheets/d/1QCeAF4yQG4bhZSGPQwwVBj_XF7ADY_2mK5xivAIfHsc/edit#gid=1453488771). Please fill in as much as you can as metadata is helpful! If you feel the need, please also add new columns or add additional notes.
- 3. Now you are ready to create a new git **[branch](https://learngitbranching.js.org/)**. Try to give your new branch an intuitive prefix such as `data_...`. You can create a new branch in several ways: (i) [create a branch directly from the issue board](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-a-branch-for-an-issue) and then `git checkout` that branch, or (ii) via the command line:
+To implement a new dataset follow the [Contribution guide](../contributing.md) and make sure you adopt all the necessary conventions specified in this document.
+
+For an example have a look [here]({{ repo_branch_url }}/data/libd_dlpfc/).
+
+
+## Layout and interface
+
+Data modules require 3 files (see templates). '{data}' in the file names should be
+replaced by the name of your module and all files placed in a subfolder of the same name.
+
+* `{data}.yml`: a conda recipe defining the dependencies of the data module script following the format:
+     
+```yaml
+channels:
+- conda-forge
+dependencies:
+- anndata=0.10.3
+- gitpython=3.1.40
 ```
-# clone the template repository
-git clone https://github.com/SpatialHackathon/SpaceHack2023.git
-# create and switch to a new branch for your e.g. data "X"
-git branch data_x_naveedishaque # try to make the branch name unique!
-git checkout data_x_naveedishaque
-# link the branch to the issue via the issue board: https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue
+
+* `{data}_optargs.json`: defining optional arguments for the workflow following the format:
+     
+```json
+{
+     "min_cells" : 10,   # Minimum number of cell expressed required for a gene to pass filtering (int)
+     "min_genes" : 20,   # Minimum number of genes expressed required for a cell to pass filtering (int)
+     "min_counts": 30    # Minimum number of counts required for a cell to pass filtering (int)
+}
 ```
- 4. Modify the files, filenames, and code in `template/`, referring to the examples in the `data` (for the LIBD Visium DLPFC dataset).
- 5. Test. Before you make a pull request make sure that you (... do something...?). You should try to run your dataset through one of the two implemented methods (BayesSpace or SpaGCN). We are currently working on validators and automatic testing scripts... but this is tricky. Reach out to Niklas Muller-Botticher when you are ready to test!
- 6. Create a [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request?tool=cli)
- 7. Code review (by whom?) and merge your contributed module into the GitHub main branch!
 
-For an example have a look [here](libd_dlpfc/).
+* `{data}.py/.r`: data module script. 
+   * Check the TODOs in the `data.py` or `data.r` [template]({{ repo_branch_url }}/templates/).
+   * The command line arguments are fixed and should not be modified.
+   * see further instruction below.
 
-### Dataset module layout and interface
+### Input Format
 
-Please define a conda recipe as a `yml` file for all the dependencies required for your script. This should list all the dependencies and also explicitly define the versions.
+* `features_df`: DataFrame with rows representing features (e.g., genes) and columns representing additional metadata. Index: Feature ID or name.
+* `observations_df`: DataFrame with rows representing observations (e.g., cells) and columns representing additional metadata. Index: Observation ID or barcode.
+* `coordinates_df`: DataFrame with rows representing observations and columns (x, y, optionally z) for spatial coordinates. Index: Observation ID or barcode.
+* `counts`: Matrix (2D array, e.g. .mtx file) with dimensions (#observations x #features). Matches the order of features_df and observations_df.
 
-Input:
- - Output directory
+Optional Input Data
 
-Output:
- - Data organized by samples
- - Metadata
+* `labels_df`: DataFrame with observation IDs as the index and a single column (label).
+* `img`: Path to an optional image file (e.g., H&E stained image).
 
-File structure:
+
+### File structure 
+
 ```
 dataset
 ├── sample_1
@@ -47,40 +67,67 @@ dataset
 ├── experiment.json
 └── samples.tsv
 ```
-#### File structure (keep the headers the same - these are important for interfacing!)
-head `coordinates.tsv`
+
+Keep the headers of all files the same - these are important for interfacing!
+
+The index of the observations in the tsv-files, depending on the technology, could be a barcode, cell-ID, or similar.
+
+#### `coordinates.tsv`
 ```
      x    y
 AAAA 1234 9876
 ATAC 1357 9753
 CAAG 3579 7531
 ```
-`counts.mtx`. This should be in MatrixMarket format.
 
-head `features.tsv`/`observations.tsv`
+#### `counts.mtx`
+
+This should be in MatrixMarket format.
+
+#### `features.tsv`/`observations.tsv`
+
 ```
-     row col selected
-AAAA 1   1   true
-ATAC 2   3   true
-CAAG 5   2   false
+     row  col  selected
+AAAA 1    1    true
+ATAC 2    3    true
+CAAG 5    2    false
 ```
+
 The column `selected` is used for subsetting but is optional. `row` and `col` is needed in `observations.tsv` for bead-array based methods (Visium/ST).
 
 
-head `labels.tsv` (annotations of the ground truth domain cluster annotations)
+#### `labels.tsv` 
+Annotations of the ground truth domains
+
 ```
-     label   label_confidence
-AAAA Domain1 True
-ATAC Domain1 True
-CAAG Domain2 False
+     label     label_confidence
+AAAA Domain1   True
+ATAC Domain1   True
+CAAG Domain2   False
 ```
 The column `label_confidence` is optional and used to indicate those cells 
 and/or labels that are ground truth, if not all labels are high enough
 confidence to be considered ground truth.
 
 
-`image.tiff`. Images can be added in any format as appropriate (does not have to be tiff). If an image is available, please also add a json with relevant metadata (e.g. scale, but this might evolve during the hackathon)
+#### `image.tiff`
+Images can be added in any format as appropriate (does not have to be tiff). If an image is available, please also add a json with relevant metadata (e.g. scale, but this might evolve during the hackathon)
 
-`experiment.json`. Currently only technology (e.g. Visium, ST, MERSCOPE, MERFISH, Stereo-seq, Slide-seq, Xenium, STARmap, STARmap+, osmFISH, seqFISH) but more fields might be added.
+#### `experiment.json`
+Currently only technology (e.g. Visium, ST, MERSCOPE, MERFISH, Stereo-seq, Slide-seq, Xenium, STARmap, STARmap+, osmFISH, seqFISH) but more fields might be added.
 
-`samples.tsv`. Sample directory and all relevant metadata, e.g. patient, replicate, slice, … and if applicable #clusters
+#### `samples.tsv`
+Sample directory and all relevant metadata, e.g. patient, replicate, slice, … and if applicable #clusters
+
+
+## Example usage of data scripts (Testing)
+
+```sh
+python data.py -o /path/to/output
+```
+
+## Add to workflow 
+<!-- TODO: update? -->
+
+* Add your data to the excute_config.yaml under `Dataset selected for execution`.
+* Add your data scripts to the path_config.yaml under `datasets`.
