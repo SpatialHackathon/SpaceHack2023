@@ -9,7 +9,7 @@ configfile: "path_config.yaml"
 configfile: "excute_config.yaml"
 
 GIT_DIR = Path(get_git_directory(config))
-DATASET_DIR = Path(config["DATASET-DIR"])
+DATASET_DIR = Path(config["DATASET_DIR"])
 SEED = config["SEED"]
 datasets_selected = config["datasets_selected"]
 consensus_algorithms = config["consensus_algorithms"]
