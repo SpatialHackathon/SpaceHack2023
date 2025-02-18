@@ -29,7 +29,7 @@ rule all:
 
 rule download:
     output:
-        dir=directory(config["results_dir"] + "/{dataset}"),
+        dir=directory(config["DATASET_DIR"] + "/{dataset}"),
     conda:
         lambda wildcards: GIT_DIR + DATASETS[wildcards.dataset]["env"]
     params:
