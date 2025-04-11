@@ -70,17 +70,17 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/Qirongmao97">
-                    <img src="https://avatars.githubusercontent.com/u/57286623?v=4" width="75;" alt="Qirongmao97"/>
-                    <br />
-                    <sub><b>Qirong Mao</b></sub>
-                </a>
-            </td>
-            <td align="center">
                 <a href="https://github.com/naveedishaque">
                     <img src="https://avatars.githubusercontent.com/u/114547?v=4" width="75;" alt="naveedishaque"/>
                     <br />
                     <sub><b>Nav</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Qirongmao97">
+                    <img src="https://avatars.githubusercontent.com/u/57286623?v=4" width="75;" alt="Qirongmao97"/>
+                    <br />
+                    <sub><b>Qirong Mao</b></sub>
                 </a>
             </td>
             <td align="center">
