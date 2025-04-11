@@ -33,6 +33,17 @@ git checkout method_x_naveedishaque
 
 Easy!
 
+### Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
 ### License
 
 We have adopted the "MIT No Attribution" (MIT-0) License. It is currently attributed to the "SpaceHack organizers", but please also make sure to add your name to your contributions. More on MIT-0 [here](https://github.com/aws/mit-0)
