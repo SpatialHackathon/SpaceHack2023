@@ -89,11 +89,11 @@ The existing modules are:
    - domain-specific-f1
    - jaccard
 
-## Contributing and Code of Conduct
+# Contributing and Code of Conduct
 
 Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## Contributors
+# Contributors
 
 <!-- readme: contributors -start -->
 <table>
