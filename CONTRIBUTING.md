@@ -8,18 +8,6 @@ SpaceHack 2023 is an open source project and we love to receive contributions fr
 
 # Getting started
 
-## Making larger contirbutions
-
-For something that is bigger than a one or two line fix:
-
-1. Create your own fork of the code
-2. Do the changes in your fork
-3. If you like the change and think the project could use it:
-    * Be sure you have followed the code style for the project.
-    * Sign the Contributor License Agreement, CLA, with the jQuery Foundation.
-    * Note the jQuery Foundation Code of Conduct.
-    * Send a pull request indicating that you have a CLA on file.
-
 ## Creating new modules
 
  1. First create or claim a **GitHub issue** from the [SpaceHack issue board.](https://github.com/SpatialHackathon/SpaceHack2023/issues) that describes the module you want to implement and add the appropriate **tags**, and **assign** the task to yourself.
@@ -56,7 +44,7 @@ When filing an issue, make sure to answer these five questions:
 
 ### Feature requests
 
-If you find yourself wishing for a feature or modules that don't exist in SpaceHack 2023, you are probably not alone. There are bound to be others out there with similar needs. Many of the features that SpaceHack 2023 has today have been added because our users saw the need. Open an issue on our issues list on GitHub which describes the feature you would like to see, why you need it, and how it should work.
+If you find yourself wishing for a feature or modules that don't exist in SpaceHack 2023, you are probably not alone. There are bound to be others out there with similar needs. Many of the features that SpaceHack 2023 has today have been added because our users saw the need. Open an issue on our issues list on GitHub that describes the feature you would like to see, why you need it, and how it should work.
 
 
 # Code review process
