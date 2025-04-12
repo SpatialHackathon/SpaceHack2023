@@ -254,7 +254,7 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
 
 We are close to releasing a preprint. Until then, please cite us as follows:
 
-> SpaceHack 2.0 participants, Expert in the loop consensus clustering framework, (2025), GitHub repository, https://github.com/SpatialHackathon/SpaceHack2023/
+> SpaceHack 2.0. Participants. SpaceHack 2.0: an expert in the loop consensus driven framework for spatially aware clustering [Computer software]. https://github.com/SpatialHackathon/SpaceHack2023
 
 # License
 
