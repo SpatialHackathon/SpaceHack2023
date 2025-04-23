@@ -1,287 +1,261 @@
-# SpaceHack - contributing modules (data, methods, metrics)
-
-Our workflow is set up to allow everyone to contribute "modules" in their preferred programming language (.. as long as that is either R or Python). A module can either be a dataset, a computational method, or an evaluation metric.
-![image](https://github.com/SpatialHackathon/SpaceHack2023/assets/114547/7c002916-0a90-4fe7-8745-489313bc0192)
-
-This repository contains some templates and examples of how to implement your module so that it interfaces seamlessly with other modules in the workflow. For example, if you want to implement a new method, you do not need to worry about input data or evaluation metrics as long as you follow the template for reading input and writing output - if you correctly adhere to the input and output guidelines, you should be able to interface with our default data modules and default evaluation metrics modules. The default modules are:
- - data: LIBD Visium DLPFC dataset (4 samples, each with 3 replicates)
- - methods: BayesSpace and SpaGCN
- - evaluation metrics: ARI and V
-
-# How to contribute a module (method/dataset/metric)
-
-Module contribution will be managed via GitHub. The steps to contribute a module are:
- 1. Create or claim a **GitHub issue** from the [SpaceHack issue board.](https://github.com/SpatialHackathon/SpaceHack2023/issues) that describes the module you want to implement. There are currently 90 issues to claim, but if you come up with a new idea, please **create** a new issue, add the appropriate **tags**, and **assign** the task to yourself.
- 2. Add **metadata** to our metadata [spreadsheet](https://docs.google.com/spreadsheets/d/1QCeAF4yQG4bhZSGPQwwVBj_XF7ADY_2mK5xivAIfHsc/edit). Please fill in as much as you can as metadata is helpful! If you feel the need, please also add new columns or add additional notes. The metadata should be added to the appropriate tabs:
-    - [datasets](https://docs.google.com/spreadsheets/d/1QCeAF4yQG4bhZSGPQwwVBj_XF7ADY_2mK5xivAIfHsc/edit#gid=1453488771)
-    - [computational methods](https://docs.google.com/spreadsheets/d/1QCeAF4yQG4bhZSGPQwwVBj_XF7ADY_2mK5xivAIfHsc/edit#gid=0)
-    - [evaluation metrics](https://docs.google.com/spreadsheets/d/1QCeAF4yQG4bhZSGPQwwVBj_XF7ADY_2mK5xivAIfHsc/edit#gid=4776337)
-    - [simulations and technical evaluation](https://docs.google.com/spreadsheets/d/1QCeAF4yQG4bhZSGPQwwVBj_XF7ADY_2mK5xivAIfHsc/edit#gid=640974611)
- 3. Now you are ready to create a new git **[branch](https://learngitbranching.js.org/)**. Try to give your new branch an intuitive prefix such as `data_...`, `method_...` or `metric_..`. You can create a new branch in several ways: (i) [create a branch directly from the issue board](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-a-branch-for-an-issue) and then `git checkout` that branch, or (ii) via the command line:
-```
-# clone the template repository
-git clone https://github.com/SpatialHackathon/SpaceHack2023.git
-# create and switch to a new branch for your e.g. method "X"
-git branch method_x_naveedishaque # try to make the branch name unique!
-git checkout method_x_naveedishaque
-# link the branch to the issue via the issue board: https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue
-```
-
-Modify the files, filenames, and code in `template/`, referring to the examples in the `data`, `method`, or `metric` subfolder. If your method requires a specific type or preprocessing, please reach out to the main developers!
-
-**We support python and R, but we will explain everything in python.**
-
-## Data
-
-Data modules requires 3 files (see templates).
-
-* `data.yml`: dependencies of the data module script following the format:
-```
-channels:
-  - conda-forge
-dependencies:
-  - anndata=0.10.3
-  - gitpython=3.1.40
-```
-* `data_optargs.json`: defining optional arguments for the workflow following the format:
-```
-{
-    "min_cells" : 10,   # Minimum number of cell expressed required for a gene to pass filtering (int)
-    "min_genes" : 20,   # Minimum number of genes expressed required for a cell to pass filtering (int)
-    "min_counts": 30    # Minimum number of counts required for a cell to pass filtering (int)
-}
-```
-* `data.py/.r`: data module script. 
-   * Check the TODOs in the data.py or data.r template.
-   * see further instruction below.
-
-### Input Format
-
-* `features_df`: DataFrame with rows representing features (e.g., genes) and columns representing additional metadata. Index: Feature ID or name.
-* `observations_df`: DataFrame with rows representing observations (e.g., cells) and columns representing additional metadata. Index: Observation ID or barcode.
-* `coordinates_df`: DataFrame with rows representing observations and columns (x, y, optionally z) for spatial coordinates. Index: Observation ID or barcode.
-* `counts`: Matrix (2D array, e.g. .mtx file) with dimensions (#observations x #features). Matches the order of features_df and observations_df.
-
-Optional Input Data
-
-* `labels_df`: DataFrame with observation IDs as the index and a single column (label).
-* `img`: Path to an optional image file (e.g., H&E stained image).
-
-### Output Format
-
-The output directory structure is organized as follows:
-
-```
-<out_dir>/
-|___ sample_1/  (Sample name is user-defined)
-|     |___ coordinates.tsv
-|     |___ features.tsv
-|     |___ observations.tsv
-|     |___ counts.mtx  (Matrix Market format using `scipy.io.mmwrite`)
-|     |___ labels.tsv  (Optional)
-|     |___ H_E.(tiff/png/...)  (Optional)
-|     |___ H_E.json  (Optional, required if H&E image is provided)
-|
-|___ sample_2/
-|     |___ ...
-|___ samples.tsv  (Metadata for all samples)
-|___ experiment.json  (Contains metadata such as technology)
-```
-
-### Example usage of data scripts (Testing)
-
-```
-python data.py -o /path/to/output
-```
-
-### Add to workflow
-
-* Add your data to the excute_config.yaml under `Dataset selected for excutation`.
-* Add your data scripts to the path_config.yaml under `datasets`.
-
-
-## Method
-
-Method modules requires 4 files (see templates).
-
-* `method.yml`: dependencies of the data module script following the format:
-```
-channels:
-  - conda-forge
-dependencies:
-  - anndata=0.10.3
-  - gitpython=3.1.40
-```
-* `method_optargs.json`: defining optional arguments for the workflow following the format:
-```
-{
-    "matrix": "counts",
-    "integrated_feature_selection": false,
-    "image": true,
-    "neighbors": false,
-    "config_file": true
-}
-```
-
-Entries are:
-
-```
-matrix: 
-   description: What input does the method take
-   type: string
-   enum:
-      - counts
-      - transform
-      - dimensionality_reduction
-      # - counts_or_transform
-
-integrated_feature_selection:
-   description: Can the method use existing feature selections?
-   type: boolean
-
-image:
-   description: Can the method use H&E images?
-   type: boolean
-
-neighbors:
-   description: Can the method use existing neighbor definitions?
-   type: boolean
-
-config_file:
-   description: Does the method take an additional config file?
-   type: boolean
-```
-
-* `config/config_default.json`: defining crucial parameters for the method that might need to be varried. The user can define multiple configs that can be tested with the workflow. For example for conST:
-
-```
-{
-    "k": 10,
-    "min_cells": 3,
-    "use_img": false,
-    "using_mask": false,
-    "refinement": false,
-    "source1": "https://github.com/ys-zong/conST/blob/main/conST_cluster.ipynb",
-    "source2": "https://github.com/ys-zong/conST/blob/main/src/utils_func.py#L51"
-}
-```
-
-
-* `method.py/.r`: method module script. 
-   * Check the TODOs in the method.py or method.r template.
-   * see further instruction below.
-
-
-### Input Format
-
-* `Coordinates File (-c, --coordinates)`: Path to a TSV file containing spatial coordinates. Index: Observation ID or barcode. Columns: x, y (and optionally z).
-* `Features File (-f, --features)`: Path to a TSV file with rows representing features (e.g., genes). Index: Feature ID or name.
-* `Observations File (-o, --observations)`: Path to a TSV file with rows representing observations (e.g., cells). Index: Observation ID or barcode.
-
-Optional Files:
-
-* `Matrix File (-m, --matrix)`: Path to a counts matrix in Matrix Market (MTX) format.
-* `Neighbors File (-n, --neighbors)`: Path to a square matrix defining neighbors for each observation.
-* `Dimensionality Reduction File (--dim_red)`: Path to reduced-dimensionality data (e.g., PCA) in TSV format.
-* `Image File (--image)`: Path to an H&E stained image.
-* `Config File (--config)`: Path to an optional JSON configuration file.
-
-Parameters:
-
-* `--n_clusters`: Number of clusters to return.
-* `--technology`: Technology of the dataset (e.g., Visium, ST).
-* `--seed`: Seed for random operations.
-
-### Output Format
-
-The script generates the following output files in the specified output directory (`-d, --out_dir`):
-
-1. Domains File (`domains.tsv`):
-   * Contains labels for observations.
-   * Format: TSV with observation IDs as the index and a single label column.
-2. Embedding File (`embedding.tsv`):
-   * Optional output containing reduced-dimensionality representations.
-   * Format: TSV with observation IDs as the index and n columns for embedding dimensions.
-
-
-### Example usage of module scripts (Testing)
-
-```
-python method.py -c coordinates.tsv -f features.tsv -o observations.tsv \
-    -m counts.mtx -d output_dir --n_clusters 5 --technology Visium --seed 42
-```
-
-### Add to workflow
-
-* Add your method to the excute_config.yaml under `Methods selected for excutation`.
-* Add your data scripts to the path_config.yaml under `methods`.
-
-
-## Metric
-
-Metric modules requires 3 files (see templates).
-
-* `metric.yml`: dependencies of the data module script following the format:
-```
-channels:
-  - conda-forge
-dependencies:
-  - anndata=0.10.3
-  - gitpython=3.1.40
-```
-* `metric_optargs.json`: defining optional arguments for the workflow following the format:
-```
-{
-    "groundtruth": true,   # Does the metric need groundtruth labels? (boolean)
-    "embedding": false,    # Does the metric need embeddings? (boolean)
-    "config_file": true    # Does the metric take an additional config file? (boolean)
-}
-```
-
-It is optional to add when your metric requires this:
-
-```
-physical_coordinate:
-   description: Does the metric take physcial coordination of the sample?
-   type: boolean
-```
-
-* `metric.py/.r`: metric module script. 
-   * Check the TODOs in the metric.py or metric.r template.
-   * see further instruction below.
-
-
-### Input Format
-
-* `Labels File (-l, --labels)`: Path to a file containing cluster labels. Format: Text file where each row corresponds to a label for a specific observation.
-
-Optional Files:
-
-* `Ground Truth File (-g, --ground_truth)`: Path to a file containing ground truth labels. Use this for metrics requiring true labels for comparison.
-* `Embedding File (-e, --embedding)`: Path to a file containing latent space embeddings. Useful for metrics that do not rely on ground truth labels.
-* `Config File (-c, --config)`: Path to an optional JSON file with additional parameters for metric calculation.
-
-### Output Format
-
-The script writes the calculated metric to the specified output file (`-o, --out_file`) in scientific notation with five decimal places.
-
-### Example usage of module scripts (Testing)
-
-```
-python metric.py -l labels.txt -g ground_truth.txt -o result.txt
-```
-
-### Add to workflow
-
-* Add your method to the excute_config.yaml under `Metrics selected for excutation`.
-* Add your data scripts to the path_config.yaml under `metrics`.
-
-## Final steps
-
-* Create a [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request?tool=cli)
-* Mark the code as `reads for review`, one of our developers will check it and merge your contributed module into the GitHub main branch!
-
-
-### License
+# SpaceHack 2.0 - evaluating spatially aware custering methods
+
+Spatial omics have transformed tissue architecture and cellular heterogeneity analysis by integrating molecular data with spatial localization. In spatially resolved transcriptomics, identifying spatial domains is critical for analysis of anatomical regions within heterogeneous datasets and understanding tissue function. Since 2020, more than 50 spatially aware clustering methods have been developed for this task. However, the reliability of existing benchmarks is undermined by their narrow focus on Visium and brain tissue datasets, as well as the dependence on questionable ground truth annotations. Here, we implemented a consensus framework that surpasses traditional benchmarking practices.
+
+Our framework comprises a community-driven benchmark-like platform that streamlines data formatting, method integration, and metric evaluation while accommodating new methods and datasets. Currently, the platform includes 22 spatially aware clustering methods across 15 datasets spanning 9 technologies and diverse tissue types. The benchmark approach uncovered significant limitations in generalizability and reproducibility where methods that perform well on healthy tissues often falter on cancer samples. We also found that anatomical labels commonly used as ground truths are often biased, potentially error-prone, and in some cases, unsuitable for benchmarking efforts.
+
+In light of these issues, we adopt a flexible expert-in-the-loop consensus-driven approach. This goes beyond traditional ensemble/consensus methods, and allows researchers to interact with intermediate results to determine which tools should be used to generate a consensus. We believe that the inclusion of an expert-in-the-loop is critical to ensure that the computational analysis matches the biological question at hand, and we believe that when the focus of the analysis is to un cover novel biological discoveries, tissue experts are accessible more often than not.
+
+# General setup
+
+This framework has established (and allows users to contribute)  "modules" in their preferred programming language (.. as long as that is either R or Python). A module is a set of scripts set up something in one of the following categories: a dataset, a computational method, or an evaluation metric. Interfaces between each category enable seamless integration of new data, methods, or metrics, thus enabling an extensible and community-driven framework. 
+
+![image](https://github.com/user-attachments/assets/ed55184d-d43f-4546-bee5-7b12e9ff8154)
+
+## Modules
+
+This repository contains some templates and examples of how to implement your module so that it interfaces seamlessly with other modules in the workflow. For example, if you want to implement a new method, you do not need to worry about input data or evaluation metrics as long as you follow the template for reading input and writing output - if you correctly adhere to the input and output guidelines, you should be able to interface with our default data modules and default evaluation metrics modules. 
+
+The existing modules are:
+ - data (currently 28)
+   - LIBD Visium DLPFC dataset (4 samples, each with 3 replicates)
+   - SEA_AD_data
+   - STARmap-2018-mouse-cortex
+   - STARmap_plus
+   - abc_atlas_wmb_thalamus
+   - cosmx_liver
+   - cosmx_lung
+   - her2st-breast-cancer
+   - locus_coeruleus
+   - merfish_devheart
+   - mouse_brain_sagittal_anterior
+   - mouse_brain_sagittal_posterior
+   - mouse_kidney_coronal
+   - osmfish_Ssp
+   - pachter_simulation
+   - slideseq2_olfactory_bulb
+   -  sotip_simulation
+   - spatialDLPFC
+   - stereoseq_developing_Drosophila_embryos_larvae
+   - stereoseq_liver
+   - stereoseq_mouse_embryo
+   - stereoseq_olfactory_bulb
+   - visium_breast_cancer_SEDR
+   - visium_chicken_heart
+   - visium_hd_cancer_colon
+   - xenium-breast-cancer
+   - xenium-mouse-brain-SergioSalas
+ - methods (currently 24):
+   - BANKSY
+   - BayesSpace
+   - CellCharter
+   - DRSC
+   - DeepST
+   - Giotto
+   - GraphST
+   - SCAN-IT
+   - SC_MEB
+   - SEDR
+   - SOTIP
+   - STAGATE
+   - SpaceFlow
+   - SpiceMix
+   - bass
+   - conST
+   - maple
+   - meringue
+   - precast
+   - scanpy
+   - seurat
+   - spaGCN
+   - spatialGE
+   - stardust
+ - evaluation metrics (currently 17)
+   - ARI
+   - CHAOS
+   - Calinski-Harabasz
+   - Completeness
+   - Davies-Bouldin
+   - Entropy
+   - FMI
+   - Homogeneity
+   - LISI
+   - MCC
+   - NMI
+   - PAS
+   - SpatialARI
+   - V_measure
+   - cluster-specific-silhouette
+   - domain-specific-f1
+   - jaccard
+
+# Contributing and Code of Conduct
+
+Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
+# Contributors
+
+<!-- readme: contributors -start -->
+<table>
+	<tbody>
+		<tr>
+            <td align="center">
+                <a href="https://github.com/Jieran-S">
+                    <img src="https://avatars.githubusercontent.com/u/91852421?v=4" width="75;" alt="Jieran-S"/>
+                    <br />
+                    <sub><b>Jieran S.</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/shdam">
+                    <img src="https://avatars.githubusercontent.com/u/49019552?v=4" width="75;" alt="shdam"/>
+                    <br />
+                    <sub><b>Søren Helweg Dam</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/niklasmueboe">
+                    <img src="https://avatars.githubusercontent.com/u/42138117?v=4" width="75;" alt="niklasmueboe"/>
+                    <br />
+                    <sub><b>niklasmueboe</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/peicai">
+                    <img src="https://avatars.githubusercontent.com/u/55488976?v=4" width="75;" alt="peicai"/>
+                    <br />
+                    <sub><b>peicai</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/kbiharie">
+                    <img src="https://avatars.githubusercontent.com/u/33690856?v=4" width="75;" alt="kbiharie"/>
+                    <br />
+                    <sub><b>kbiharie</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/naveedishaque">
+                    <img src="https://avatars.githubusercontent.com/u/114547?v=4" width="75;" alt="naveedishaque"/>
+                    <br />
+                    <sub><b>Nav</b></sub>
+                </a>
+            </td>
+		</tr>
+		<tr>
+            <td align="center">
+                <a href="https://github.com/heylf">
+                    <img src="https://avatars.githubusercontent.com/u/8162688?v=4" width="75;" alt="heylf"/>
+                    <br />
+                    <sub><b>heylf</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/pakiessling">
+                    <img src="https://avatars.githubusercontent.com/u/104848590?v=4" width="75;" alt="pakiessling"/>
+                    <br />
+                    <sub><b>pakiessling</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Qirongmao97">
+                    <img src="https://avatars.githubusercontent.com/u/57286623?v=4" width="75;" alt="Qirongmao97"/>
+                    <br />
+                    <sub><b>Qirong Mao</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/zsfrbkv">
+                    <img src="https://avatars.githubusercontent.com/u/43470646?v=4" width="75;" alt="zsfrbkv"/>
+                    <br />
+                    <sub><b>zaira seferbekova</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/markrobinsonuzh">
+                    <img src="https://avatars.githubusercontent.com/u/6471769?v=4" width="75;" alt="markrobinsonuzh"/>
+                    <br />
+                    <sub><b>Mark Robinson</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/sebastiantiesmeyer">
+                    <img src="https://avatars.githubusercontent.com/u/25506428?v=4" width="75;" alt="sebastiantiesmeyer"/>
+                    <br />
+                    <sub><b>sebastiantiesmeyer</b></sub>
+                </a>
+            </td>
+		</tr>
+		<tr>
+            <td align="center">
+                <a href="https://github.com/theinvisibleliya">
+                    <img src="https://avatars.githubusercontent.com/u/79532622?v=4" width="75;" alt="theinvisibleliya"/>
+                    <br />
+                    <sub><b>Liya Zaygerman</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/meghanaturner">
+                    <img src="https://avatars.githubusercontent.com/u/22036504?v=4" width="75;" alt="meghanaturner"/>
+                    <br />
+                    <sub><b>Meghan Turner</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Aokht17">
+                    <img src="https://avatars.githubusercontent.com/u/56379827?v=4" width="75;" alt="Aokht17"/>
+                    <br />
+                    <sub><b>Anastasiia Okhtienko</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/berl">
+                    <img src="https://avatars.githubusercontent.com/u/6773896?v=4" width="75;" alt="berl"/>
+                    <br />
+                    <sub><b>Brian Long</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/gmoranzoni">
+                    <img src="https://avatars.githubusercontent.com/u/59561270?v=4" width="75;" alt="gmoranzoni"/>
+                    <br />
+                    <sub><b>Giorgia Moranzoni</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/tmchartrand">
+                    <img src="https://avatars.githubusercontent.com/u/12821536?v=4" width="75;" alt="tmchartrand"/>
+                    <br />
+                    <sub><b>Tom Chartrand</b></sub>
+                </a>
+            </td>
+		</tr>
+		<tr>
+            <td align="center">
+                <a href="https://github.com/alam-shahul">
+                    <img src="https://avatars.githubusercontent.com/u/22669932?v=4" width="75;" alt="alam-shahul"/>
+                    <br />
+                    <sub><b>alam-shahul</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/svedziok">
+                    <img src="https://avatars.githubusercontent.com/u/17719296?v=4" width="75;" alt="svedziok"/>
+                    <br />
+                    <sub><b>Sven Twardziok</b></sub>
+                </a>
+            </td>
+		</tr>
+	<tbody>
+</table>
+<!-- readme: contributors -end -->
+
+# Citation
+
+We are close to releasing a preprint. Until then, please cite us as follows:
+
+> SpaceHack 2.0. Participants. SpaceHack 2.0: an expert in the loop consensus driven framework for spatially aware clustering [Computer software]. https://github.com/SpatialHackathon/SpaceHack2023
+
+# License
 
 We have adopted the "MIT No Attribution" (MIT-0) License. It is currently attributed to the "SpaceHack organizers", but please also make sure to add your name to your contributions. More on MIT-0 [here](https://github.com/aws/mit-0)
