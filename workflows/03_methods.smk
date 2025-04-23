@@ -38,7 +38,7 @@ def create_input(method, data_dir):
         if dataset in config["n_clusters"].keys():
             n_clusters = config["n_clusters"][dataset]
         else:
-            n_clusters = get_ncluster(data_dir / "samples.tsv", sample_dir.name)
+            n_clusters = [get_ncluster(data_dir / "samples.tsv", sample_dir.name)]
 
         if method in config["config_files"].keys():
             for config_file_name in config["config_files"][method].keys():
