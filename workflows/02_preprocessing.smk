@@ -20,7 +20,7 @@ def create_quality_control_input(wildcards):
     file_list = ["coordinates.tsv", "counts.mtx", "features.tsv", "observations.tsv"]
     all_qc_file = []
     for dataset in datasets_selected:
-        data_dir = config["dataset_dir"] +  "/" + dataset
+        data_dir = config["DATASET_DIR"] +  "/" + dataset
         if "experiment.json" in os.listdir(data_dir):
             all_qc_file += create_input(file_list, "/qc/counts.mtx", data_dir)
             all_qc_file += create_input(file_list, "/qc/features.tsv", data_dir)
@@ -53,16 +53,16 @@ rule all:
 
 rule quality_control:
     input:
-        coordinates=config["dataset_dir"] + "/{dataset}/{sample}/coordinates.tsv",
-        matrix=config["dataset_dir"] + "/{dataset}/{sample}/counts.mtx",
-        features=config["dataset_dir"] + "/{dataset}/{sample}/features.tsv",
-        observations=config["dataset_dir"] + "/{dataset}/{sample}/observations.tsv",
+        coordinates=config["DATASET_DIR"] + "/{dataset}/{sample}/coordinates.tsv",
+        matrix=config["DATASET_DIR"] + "/{dataset}/{sample}/counts.mtx",
+        features=config["DATASET_DIR"] + "/{dataset}/{sample}/features.tsv",
+        observations=config["DATASET_DIR"] + "/{dataset}/{sample}/observations.tsv",
     output:
-        dir=directory(config["dataset_dir"] + "/{dataset}/{sample}/qc"),
-        counts=config["dataset_dir"] + "/{dataset}/{sample}/qc/counts.mtx",
-        features=config["dataset_dir"] + "/{dataset}/{sample}/qc/features.tsv",
-        observations=config["dataset_dir"] + "/{dataset}/{sample}/qc/observations.tsv",
-        coordinates=config["dataset_dir"] + "/{dataset}/{sample}/qc/coordinates.tsv",
+        dir=directory(config["DATASET_DIR"] + "/{dataset}/{sample}/qc"),
+        counts=config["DATASET_DIR"] + "/{dataset}/{sample}/qc/counts.mtx",
+        features=config["DATASET_DIR"] + "/{dataset}/{sample}/qc/features.tsv",
+        observations=config["DATASET_DIR"] + "/{dataset}/{sample}/qc/observations.tsv",
+        coordinates=config["DATASET_DIR"] + "/{dataset}/{sample}/qc/coordinates.tsv",
     conda:
         GIT_DIR + "preprocessing/quality_control/qc_scanpy.yml"
     params:
@@ -74,8 +74,8 @@ rule quality_control:
           -m {input.matrix} \
           -f {input.features} \
           -o {input.observations} \
-          --min_genes {params.opt["min_genes"]}\
-          --min_cells {params.opt["min_cells"]} \
-          --min_counts {params.opt["min_counts"]} \
+          --min_genes {params.opt[min_genes]}\
+          --min_cells {params.opt[min_cells]} \
+          --min_counts {params.opt[min_counts]} \
           -d {output.dir}
         """

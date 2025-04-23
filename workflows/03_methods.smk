@@ -3,15 +3,15 @@ import json
 from pathlib import Path
 import pandas as pd
 
-from shared.functions import get_git_directory, get_ncluster, get_sample_dirs, get_combined_domai
+from shared.functions import get_git_directory, get_ncluster, get_sample_dirs
 
 configfile: "path_config.yaml"
 configfile: "excute_config.yaml"
 
 GIT_DIR = Path(get_git_directory(config))
-DATASET_DIR = Path(config["dataset_dir"])
+DATASET_DIR = Path(config["DATASET_DIR"])
 METHODS = config.pop("methods")
-SEED = config["seed"]
+SEED = config["SEED"]
 # Scope of excution: Selected methods + selected datasets
 methods_selected = config["methods_selected"]
 datasets_selected = config["datasets_selected"]
@@ -118,7 +118,7 @@ def get_config_file(wildcards):
 # Find if the method has an additional shell scripts for installation
 def get_requirements(wildcards):
     if METHODS[wildcards.method].get("env_additional") is not None:
-        return f"{wildcards.method}_requirements.info"
+        return f".snakemake/requirements/{wildcards.method}/requirements.info"
     else:
         return []
 
@@ -128,12 +128,19 @@ rule installation_requirements:
     params:
         install_script=lambda wildcards: GIT_DIR / METHODS[wildcards.method]["env_additional"],
     output:
-        "{method}_requirements.info",
+        requirements_dir=directory(".snakemake/requirements/{method}"),
+        requirements_info=".snakemake/requirements/{method}/requirements.info",
     conda:
         lambda wildcards: str(GIT_DIR / METHODS[wildcards.method]["env"])
     shell:
         """
-        {params.install_script} && touch {output}
+        {params.install_script} &&  touch {output.requirements_info}
+        if [ $? -eq 0 ]; then
+            touch "{output.requirements_info}"
+        else
+            echo "Installation failed for {wildcards.method}" >&2
+            exit 1
+        fi
         """
 
 

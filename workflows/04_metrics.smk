@@ -10,7 +10,7 @@ GIT_DIR = get_git_directory(config)
 
 # Get all the methods and metrics that's being used
 METRICS = config["metrics"]
-DATASET_DIR = config["dataset_dir"]
+DATASET_DIR = config["DATASET_DIR"]
 datasets_selected= config["datasets_selected"]
 methods_selected = config["methods_selected"]
 metrics_selected = config["metrics_selected"]

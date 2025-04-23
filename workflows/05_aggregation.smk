@@ -9,7 +9,7 @@ configfile: "excute_config.yaml"
 GIT_DIR = get_git_directory(config)
 
 # Get all the methods and metrics that's being used
-DATASET_DIR = config["dataset_dir"]
+DATASET_DIR = config["DATASET_DIR"]
 datasets_selected= config["datasets_selected"]
 
 def generate_input_files(data_dir):
