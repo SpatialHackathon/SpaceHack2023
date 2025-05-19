@@ -1,10 +1,12 @@
 channels:
+  - nodefaults
   - conda-forge
+  - bioconda
 dependencies:
-  - python=3.11.6
-  - scipy=1.11.4
+  - python==3.11
   - pip
   - pip:
-    - spatialdata==0.1.2
-    - spatialdata-io==0.1.2
-    - pypdl==1.3.2
+      - pypdl==1.3.2
+      - spatialdata==0.3.0
+      - spatialdata-io==0.1.7
+      
