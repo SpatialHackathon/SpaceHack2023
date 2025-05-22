@@ -43,16 +43,19 @@ def create_input(method, data_dir):
         if method in config["config_files"].keys():
             for config_file_name in config["config_files"][method].keys():
                 for n in n_clusters:
+                    #print(f"[DEBUG] Appending input file: {sample_dir / method / config_file_name / f'cluster_{n}' / 'domains.tsv'}")
                     input_files.append(
                         sample_dir / method / config_file_name / f"cluster_{n}" / "domains.tsv"
                         )
-                if len(n_clusters) > 1:
-                    input_files.append(sample_dir / method / config_file_name / "combined_domains.tsv")
+            #    if len(n_clusters) > 1:
+                    #combined_path = sample_dir / method / config_file_name / "combined_domains.tsv"
+                    #print(f"[DEBUG] Appending combined file: {combined_path}")
+                    #input_files.append(sample_dir / method / config_file_name / "combined_domains.tsv")
         else:
             for n in n_clusters:
                 input_files.append(sample_dir / method / f"cluster_{n}" / "domains.tsv")
-            if len(n_clusters) > 1:
-                input_files.append(sample_dir / method / "combined_domains.tsv")
+           # if len(n_clusters) > 1:
+                #input_files.append(sample_dir / method / "combined_domains.tsv")
 
     return input_files
 
@@ -298,7 +301,7 @@ rule method_without_config:
             {params.image} \
             {params.neighbors}{input.neighbors} \
             --n_clusters {wildcards.n_clusters} \
-            --technology {params.technology} \
+            --technology "{params.technology}" \
             --seed {params.seed}
         """
 

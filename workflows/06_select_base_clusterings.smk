@@ -11,8 +11,8 @@ configfile: "excute_config.yaml"
 GIT_DIR = Path(get_git_directory(config))
 DATASET_DIR = Path(config["DATASET_DIR"])
 SEED = config["SEED"]
-datasets_selected = config["dataset_selected"]
-selection_metrics = config["selection_metrics"]
+datasets_selected = config["datasets_selected"]
+selection_metrics = config["selection_criteria"]
 
 def create_input_all(wildcards):
     files = []
@@ -37,18 +37,18 @@ rule all:
 rule Cross_method_ARI:
     input:
         label_file=DATASET_DIR / "{dataset}/{sample}/combined_methods.tsv",
-        script=GIT_DIR / "consensus/Cross_method_ARI/Cross_method_ARI.r"
+        script=GIT_DIR / "consensus/02_Cross_method_ARI/Cross_method_ARI.r"
     output:
         file=DATASET_DIR / "{dataset}/{sample}/consensus/Cross_method_ARI.tsv",
     wildcard_constraints:
         sample="[a-zA-Z0-9_-]+",
     conda:
-        lambda wildcards: str(GIT_DIR / "Cross_method_ARI/Cross_method_ARI.yaml")
+        lambda wildcards: str(GIT_DIR / "consensus/02_Cross_method_ARI/Cross_method_ARI.yaml")
     shell:
         """
         ulimit -s unlimited
         {input.script} \
-            -i {input.file} \
+            -i {input.label_file} \
             -o {output.file} 
         """
 
@@ -56,32 +56,32 @@ rule Smoothness_entropy:
     input:
         label_file=DATASET_DIR / "{dataset}/{sample}/combined_methods.tsv",
         coordinate_file=DATASET_DIR / "{dataset}/{sample}/coordinates.tsv",
-        script=GIT_DIR / "consensus/Smoothness_entropy/Smoothness_entropy.r"
+        script=GIT_DIR / "consensus/02_Smoothness_entropy/Smoothness_entropy.r"
     output:
         file=DATASET_DIR / "{dataset}/{sample}/consensus/Smoothness_entropy.tsv",
     wildcard_constraints:
         sample="[a-zA-Z0-9_-]+",
     params:
-        n_neighbors=config["n_neighbors"]
+        n_neighbors=config["n_neighbors"],
         seed=SEED
     conda:
-        lambda wildcards: str(GIT_DIR / "Smoothness_entropy/Smoothness_entropy.yaml")
+        lambda wildcards: str(GIT_DIR / "consensus/02_Smoothness_entropy/Smoothness_entropy.yaml")
     shell:
         """
         ulimit -s unlimited
         {input.script} \
-            -i {input.file} \
+            -i {input.label_file} \
             -o {output.file} \
             -c {input.coordinate_file} \
-            -n {params.neighbors} \
-            -s {params.SEED}
+            -n {params.n_neighbors} \
+            -s {params.seed}
         """
 
 rule auto_rank_BCs:
     input:
         label_file=DATASET_DIR / "{dataset}/{sample}/combined_methods.tsv",
         selection_metrics=DATASET_DIR / "{dataset}/{sample}/consensus/{s_metrics}.tsv",
-        script=GIT_DIR / "consensus/BC_ranking/BC_ranking.r"
+        script=GIT_DIR / "consensus/02_BC_ranking/BC_ranking.r"
     output:
         file=DATASET_DIR / "{dataset}/{sample}/consensus/base_clusterings/{s_metrics}/BC_rankings.tsv",
     wildcard_constraints:
@@ -89,12 +89,12 @@ rule auto_rank_BCs:
     params:
         max_percentage=0.9 if "max_percentage" not in config.keys() else config["max_percentage"]
     conda:
-        lambda wildcards: str(GIT_DIR / f"consensus/BC_ranking/BC_ranking.yaml")
+        lambda wildcards: str(GIT_DIR / "consensus/02_BC_ranking/BC_ranking.yaml")
     shell:
         """
         ulimit -s unlimited
         {input.script} \
-            -i {input.file} \
+            -i {input.label_file} \
             -o {output.file} \
             --selection_metrics {input.selection_metrics} \
             --max_percentage {params.max_percentage}
@@ -104,14 +104,14 @@ rule manual_select_BCs:
     input:
         directory=DATASET_DIR / "{dataset}/{sample}"
     output:
-        directory==DATASET_DIR / "{dataset}/{sample}/consensus/base_clusterings/Manual_selection"
+        directory(DATASET_DIR / "{dataset}/{sample}/consensus/base_clusterings/Manual_selection")
     shell:
         """
-        if [ -d '{input.directory}' ]; then
-            mkdir -p '{output.directory}';
-            echo "Directory {output.directory} has been created.";
+        if [ -d "{input.directory}" ]; then
+            mkdir -p "{output}"
+            echo "Directory {output} has been created."
         else
-            echo "Directory {input.directory} does not exist. Exiting.";
-            exit 1;
+            echo "Directory {input.directory} does not exist. Exiting."
+            exit 1
         fi
         """
