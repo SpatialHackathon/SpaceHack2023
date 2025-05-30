@@ -61,7 +61,7 @@ suppressPackageStartupMessages({
 
 
 label_df <- read.delim(input_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
-bc_list <- read.delim(bc_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")[[as.character(n_clust)]]
+bc_list <- read.delim(bc_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss", check.names=FALSE)[[as.character(n_clust)]]
 bc_list <- bc_list[!is.na(bc_list)]
 
 if (length(bc_list) < n_bcs){
@@ -72,20 +72,19 @@ bc_list <- bc_list[1:min(n_bcs, length(bc_list))]
 label_selected <- label_df[, bc_list]
 
 # Make sure all the clusters are ranked 1 to n without jumping (SOTIP)
-label_selected <- apply(label_selected, 2, function(u){
+label_selected <- as.data.frame(lapply(label_selected, function(u){
     unique_labels <- sort(unique(u))
     if (all(unique_labels==seq_along(unique_labels))) {
-        return(as.factor(u))
+        return(factor(u, levels = unique_labels))
     } else {
         # Count occurrences of each number
         freq <- table(u)
         rank_map <- rank(-freq, ties.method = "first") # Negative for descending order
-        new_vec <- rank_map[as.character(vec)]
-        new_vec <- as.factor(as.numeric(new_vec))
-        return(new_u)
+        new_vec <- rank_map[as.character(u)]
+        new_vec <- factor(as.numeric(new_vec))
+        return(new_vec)
     }
-})
-
+}))
 lca_vec <- diceR:::LCA(label_selected, is.relabelled = FALSE, seed = seed)
 lca_df <- data.frame(consensus_lca=lca_vec, row.names = row.names(label_selected))
 

@@ -21,7 +21,7 @@ option_list <- list(
     help = "file containing the metric information for BC selection"
   ),
   make_option(
-    c("-mp", "--max_percentage"),
+    c("-m", "--max_percentage"),
     type = "double", default = NULL,
     help = "maximal percentage of the largest class"
   )
@@ -62,9 +62,11 @@ if (!is.null(ari_file)){
     s_mean <- colMeans(selection_df)
 } else {
     if (is.null(smoothness_file)){
-      file_searched <- list.files(path = dirname(input_file), pattern = "smoothness", full.names = TRUE)
+      consensus_dir <- file.path(dirname(input_file), "consensus")
+      file_searched <- list.files(path = consensus_dir, pattern = "smoothness", 
+				  full.names = TRUE, ignore.case = TRUE)
       if (length(file_searched) == 0){
-        warning("No smoothness entropy file found or defined.")
+        stop("No smoothness entropy file found or defined.")
       }
       smoothness_file <- file_searched[1]
     }
@@ -77,13 +79,12 @@ if (!is.null(ari_file)){
 d_length <- max(lengths(label_lists))
 s_bc_list <- sapply(label_lists, function(nclu_names){
     s_n <- s_mean[names(s_mean) %in% nclu_names]
-    selected_names <- row.names(s_n)[order(s_n, decreasing = TRUE)]
+    selected_names <- names(sort(s_n, decreasing = TRUE))
     length(selected_names) <- d_length
     return(selected_names)
 })
 
 result_df <- as.data.frame(s_bc_list)
-
 dir.create(dirname(output_file), showWarnings = FALSE, recursive = TRUE)
 
 # Save the results

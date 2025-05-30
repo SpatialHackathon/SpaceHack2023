@@ -29,7 +29,7 @@ opt <- parse_args(opt_parser)
 input_file <- opt$input_file
 output_file <- opt$output_file
 
-set.seed(seed)
+#set.seed(seed)
 
 suppressPackageStartupMessages({
   library(mclust)

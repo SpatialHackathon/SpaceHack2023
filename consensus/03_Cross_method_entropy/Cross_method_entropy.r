@@ -118,6 +118,7 @@ cross_meth_entropy <- function(df){
     ent <- apply(ps, 1, calc_entropy)
     # attach it with same name
     names(ent) <- row.names(df)
+    return(ent)
   })
   # Take the mean of the entropy for each spot
   mean_ent <- rowMeans(as.data.frame(cm_ent_list))
@@ -130,12 +131,12 @@ label_df <- read.delim(input_file, stringsAsFactors = FALSE, row.names = 1, nume
 # Calculate point-wise entropy with its neighbor
 if (!is.null(bc_ranking)){
   if (file.exists(bc_ranking)){
-    bc_df <- read.delim(bc_ranking, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
-
+    bc_df <- read.delim(bc_ranking, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss", check.names=FALSE)
+    print(bc_df)
     if (!is.null(n_clust) && as.character(n_clust) %in% colnames(bc_df)){
       columns <- bc_df[[as.character(n_clust)]]
     } else {
-      waning(sprintf("%s is not in the column names of BC_ranking fiel, use the first column instead.", as.character(n_clust)))
+      warning(sprintf("%s is not in the column names of BC_ranking fiel, use the first column instead.", as.character(n_clust)))
       columns <- bc_df[,1]
     }
 
@@ -167,7 +168,7 @@ if (!is.null(bc_ranking)){
 }
 
 # Save the results
-result_df <- as.data.frame(result_list)
+result_df <- as.data.frame(result_ent)
 if (ncol(result_df)==1){colnames(result_df)<-c("entropy")}
 
 dir.create(dirname(output_file), showWarnings = FALSE, recursive = TRUE)

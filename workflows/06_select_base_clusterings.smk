@@ -49,7 +49,7 @@ rule Cross_method_ARI:
         ulimit -s unlimited
         {input.script} \
             -i {input.label_file} \
-            -o {output.file} 
+            -o {output.file}
         """
 
 rule Smoothness_entropy:

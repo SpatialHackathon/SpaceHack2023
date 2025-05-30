@@ -60,7 +60,7 @@ input_file <- opt$input_file
 output_file <- opt$output_file
 bc_file <- opt$base_clusterings
 n_bcs <- ifelse(is.null(opt$n_bcs), 8, opt$n_bcs)
-n_clust <- ifelse(is.null(opt$n_clusters), "7", opt$n_clusters)
+nclust <- ifelse(is.null(opt$n_clusters), "7", opt$n_clusters)
 seed <- opt$seed
 jar_file <- opt$jar_file
 lambda <- opt$lambda
@@ -165,6 +165,9 @@ solve_ensemble <- function(Results.clustering,
 
 JSD_Matrix <- function(X, Y, epi=1e-10){
   # Flatten the matrix, get probability, add a pseudo-count
+  if (inherits(X, "Matrix")) X <- as.matrix(X)
+  if (inherits(Y, "Matrix")) Y <- as.matrix(Y)
+
   x <- pmax(as.vector(X)/sum(X), epi)
   y <- pmax(as.vector(Y)/sum(Y), epi)
   m <- (x + y)/2
@@ -177,7 +180,7 @@ JSD_Matrix <- function(X, Y, epi=1e-10){
 
 #' Get binary similarity matrix from a cluster vector,
 get_binary_matrix <- function(cluster_vector){
-  suppressPackageStartupMessages(require(Matrix))
+  suppressMessages(require(Matrix))
   N <- length(cluster_vector)
 
   pairs <- which(outer(cluster_vector, cluster_vector, FUN = "=="), arr.ind = TRUE)
@@ -212,9 +215,10 @@ get_cluster_label <- function(binary_matrix,
                                        mode = "upper",
                                        weighted = TRUE,
                                        diag = FALSE)
-  write.table(as_data_frame(graph, what="edges") %>% sort("from"), 
-              "edgeList.txt", sep="\t", 
-              col.names=FALSE, row.names=FALSE)
+  edge_df <- as_data_frame(graph, what = "edges") %>% arrange(from)
+  write.table(edge_df, "edgeList.txt",
+            sep = "\t", col.names = FALSE, row.names = FALSE,
+            quote = FALSE, na = "")
   if (verbose){cat("Weighted neighborhood graph created... \n")}
 
   # Initialize boundaries
@@ -227,12 +231,12 @@ get_cluster_label <- function(binary_matrix,
 
   get_clusters <- function(graph, resolution, mt=min_target, jar_file=NULL){
     if (!is.null(jar_file) && file.exists(jar_file)){
-        system("cp %s networkanalysis-1.3.0.jar", jar_file)
+        system(sprintf("cp %s networkanalysis-1.3.0.jar", jar_file))
     } else{
         if (!file.exists("networkanalysis-1.3.0.jar")){
         system("wget https://repo1.maven.org/maven2/nl/cwts/networkanalysis/1.3.0/networkanalysis-1.3.0.jar")
         }
-    }
+    }	   
     system(sprintf("java -cp networkanalysis-1.3.0.jar nl.cwts.networkanalysis.run.RunNetworkClustering -w -m %1.0f -r %s -o cluster.txt edgeList.txt", mt, resolution))
 
     results <- read.table("cluster.txt", header=TRUE, row.names=NULL)[,2]
@@ -294,38 +298,38 @@ get_cluster_label <- function(binary_matrix,
   }
 
   cluster_vector <- result
-  file.remove("cluster.txt", "edgeList.txt", "networkanalysis-1.3.0.jar")
+  files_to_remove <- c("cluster.txt", "edgeList.txt", "networkanalysis-1.3.0.jar")
+  file.remove(files_to_remove[file.exists(files_to_remove)])
   return(cluster_vector)
 }
 
 ###################### Consensus calling begin ######################
 
 label_df <- read.delim(input_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")
-bc_list <- read.delim(bc_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss")[[as.character(n_clust)]]
+bc_list <- read.delim(bc_file, stringsAsFactors = FALSE, row.names = 1, numerals="no.loss", check.names = FALSE)[[as.character(nclust)]]
 bc_list <- bc_list[!is.na(bc_list)]
 
 if (length(bc_list) < n_bcs){
   warning(sprintf("Not enough (%s) base clusterings(BCs) are available, use %s BCs instead.", n_bcs, length(bc_list)))
 }
 bc_list <- bc_list[1:min(n_bcs, length(bc_list))]
-
-label_selected <- label_df[, bc_list]
-
+label_selected <- as.data.frame(label_df[, bc_list], stringsAsFactors = FALSE)
 
 # Make sure all the clusters are ranked 1 to n without jumping (SOTIP)
-label_selected <- apply(label_selected, 2, function(u){
+label_selected <- lapply(label_selected, function(u){
     unique_labels <- sort(unique(u))
     if (all(unique_labels==seq_along(unique_labels))) {
-        return(as.factor(u))
+        return(factor(u, levels = unique_labels))
     } else {
         # Count occurrences of each number
         freq <- table(u)
         rank_map <- rank(-freq, ties.method = "first") # Negative for descending order
-        new_vec <- rank_map[as.character(vec)]
+        new_vec <- rank_map[as.character(u)]
         new_vec <- as.factor(as.numeric(new_vec))
-        return(new_u)
+        return(new_vec)
     }
 })
+
 # Get binary matrix for individual clustering
 binary_matrices <- lapply(label_selected, get_binary_matrix)
 
@@ -339,12 +343,12 @@ binary_ensemble <- ensemble_result$H
 weight_vector <- ensemble_result$w
 
 if (is.null(nclust)){
-    nclust <- max(label_selected)
+    nclust <- max(as.numeric(as.character(unlist(label_selected))))
 }
 
 # Ensemble labelling
 ensemble_label <- get_cluster_label(binary_ensemble,
-                                    n_clust_target=nclust,
+                                    n_clust_target=as.numeric(nclust),
                                     jar_file = jar_file,
                                     verbose=FALSE)
 ensemble_df <- data.frame(consensus_weighted=ensemble_label, row.names = row.names(label_selected))

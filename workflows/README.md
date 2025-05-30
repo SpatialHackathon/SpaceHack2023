@@ -13,6 +13,8 @@ Running snakemake: download -> preprocessing -> methods -> metrics
 
 * Try not to kill snakemake when it's installing conda packages.
 
+* If you're using a server or any HPC environment to run the workflow, it's recommended to use customized Snakemake profiles for job scheduling. You can find [HPC-specific Snakemake profile here](https://github.com/Snakemake-Profiles).
+
 ## Example usage
 
 0. Use `excute_config_test.yaml` and `path_config_test.yaml` as your `excute_config.yaml` and `path_config_test.yaml` (just rename those files).

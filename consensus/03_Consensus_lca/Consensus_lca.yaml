@@ -5,3 +5,4 @@ dependencies:
   - r-base=4.4.2
   - r-optparse=1.7.5
   - r-dicer=2.2.0
+  - r-polca=1.6.0
