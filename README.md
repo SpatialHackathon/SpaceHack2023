@@ -135,26 +135,26 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/heylf">
+                    <img src="https://avatars.githubusercontent.com/u/8162688?v=4" width="75;" alt="heylf"/>
+                    <br />
+                    <sub><b>heylf</b></sub>
+                </a>
+            </td>
+		</tr>
+		<tr>
+            <td align="center">
                 <a href="https://github.com/naveedishaque">
                     <img src="https://avatars.githubusercontent.com/u/114547?v=4" width="75;" alt="naveedishaque"/>
                     <br />
                     <sub><b>Nav</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/pakiessling">
                     <img src="https://avatars.githubusercontent.com/u/104848590?v=4" width="75;" alt="pakiessling"/>
                     <br />
                     <sub><b>pakiessling</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/heylf">
-                    <img src="https://avatars.githubusercontent.com/u/8162688?v=4" width="75;" alt="heylf"/>
-                    <br />
-                    <sub><b>heylf</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -248,7 +248,6 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
 		</tr>
 	<tbody>
 </table>
-
 <!-- readme: contributors -end -->
 
 # Citation
