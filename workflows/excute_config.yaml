@@ -1,0 +1,121 @@
+# This yaml file contains all the parameters and settings for the workflow.
+# 1. Universal parameters: Used in all smk file, set once
+# 2. Process-specific parameters: some other parameters, if needed
+# 3. Dataset, methods and metrics: 
+#      select which one to be included in the workflow, comment out unwanted ones.
+#      For methods, you can also specify cluster numbers for specific datasets.
+
+###### Universal parameters #######
+# Directories, modify based on your own
+GIT_DIR: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/SpaceHack2023
+DATASET_DIR: /work/PRTNR/CHUV/DIR/rgottar1/spatial/Cluster_Benchmark/data
+SEED: 2023
+
+###### Dataset selected for excutation #######
+datasets_selected:
+#  - "xenium-mouse-brain-SergioSalas"
+  - "abc_atlas_wmb_thalamus"
+  - "libd_dlpfc"
+#  - "visium_breast_cancer_SEDR"
+#  - "visium_chicken_heart"
+#  - "mouse_brain_sagittal_anterior"
+#  - "mouse_brain_sagittal_posterior"
+#  - "STARmap_plus"
+#  - "stereoseq_mouse_embryo"
+#  - "cosmx_liver"
+#  - "cosmx_lung"
+#  - "merfish_devheart"
+#  - "stereoseq_liver"
+  - "visium_hd_cancer_colon"
+
+### Not used in this project
+#  - "stereoseq_developing_Drosophila_embryos_larvae"
+#  - "mouse_kidney_coronal"
+#  - "osmfish_Ssp"
+#  - "sotip_simulation"
+  - "spatialDLPFC"
+#  - "SEA_AD_data"                       #fetch data error get_SEA_AD_h5ad()
+#  - "STARmap-2018-mouse-cortex"         # group error
+#  - "xenium-breast-cancer"               # Some error
+
+###### Methods selected for excutation #######
+methods_selected:
+## Native Implementation Done 
+  - "BANKSY"
+  - "CellCharter"
+  - "DRSC"
+  - "precast"
+  - "SpaceFlow"
+  - "scanpy"
+  - "meringue"
+  - "seurat"
+#  - "Giotto"
+  - "spatialGE"
+  - "SpiceMix"
+  - "SCAN-IT"
+#  - "SOTIP"
+  - "maple"
+## memory or time consuming methods
+  - "SEDR"
+  - "bass"
+  - "stardust"
+  - "STAGATE"
+  - "spaGCN"
+#  - "GraphST"         # Only for Visium, Stereo-seq and Slideseq2
+#  - "BayesSpace"      # Only for Visium
+# - "SC_MEB"          # Only for Visium 
+
+## Implementation Error 
+#  - "conST"
+#  - "DeepST"         # Import error
+
+# If some datasets specify number of clusters. Add it here
+n_clusters:
+  abc_atlas_wmb_thalamus: [16, 19, 21, 23]
+  abc_atlas_wmb_thalamus: [16, 19, 20, 21, 24, 28, 32]
+  libd_dlpfc: [7, 9, 11, 13, 15]
+  spatialDLPFC: [5, 7, 9, 11, 13, 15]
+  visium_hd_cancer_colon: [5, 6, 7, 9, 11, 14]
+
+
+###### Metrics selected for excutation #######
+metrics_selected:
+  - "ARI"
+  - "Completeness"
+  - "Entropy"
+  - "FMI"
+#  - "Homogeneity"
+#  - "MCC"
+  - "NMI"
+  - "domain-specific-f1"
+#  - "jaccard"
+#  - "V_measure"                        #Config, GT
+#  - "LISI"                             #Config, embed, GT
+#  - "cluster-specific-silhouette"      #embed, no GT
+#  - "Calinski-Harabasz"
+#  - "Davies-Bouldin"
+#  - "CHAOS"                            #phyiscal coord only
+#  - "PAS"      
+
+###### Base clustering selection parameters #######
+selection_criteria:
+  - "Cross_method_ARI"
+  - "Smoothness_entropy"
+  - "Manual_selection"
+n_neighbors: 6
+
+###### Consensus Clustering parameters #######
+bc_numbers: [8]
+consensus_algorithms:
+  - "lca"
+  - "kmode"
+  - "weighted"
+# In case you need to re-define desired cluster number. Do it here. Otherwise n_clust value would be used
+n_clust_consensus:
+  abc_atlas_wmb_thalamus: [16, 19, 20, 21, 24, 28, 32]
+
+# For weighted clustering
+lambda: null
+
+# For cross-method entropy
+cross_method_entropy: true

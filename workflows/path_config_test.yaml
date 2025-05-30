@@ -1,0 +1,31 @@
+# The yaml file follows the following structure
+
+datasets:
+  libd_dlpfc:
+    env: data/libd_dlpfc/libd_dlpfc.yml
+    script: data/libd_dlpfc/libd_dlpfc.r
+    optargs: data/libd_dlpfc/libd_dlpfc_optargs.json
+
+neighbors_infos:
+  delaunay_triangulation:
+    script: preprocessing/neighbors/delaunay_triangulation/delaunay_triangulation.py
+    env: preprocessing/neighbors/delaunay_triangulation/delaunay_triangulation.yml
+
+# Make sure the methods name is the same as the folder name
+methods:
+  CellCharter:
+    env: method/CellCharter/CellCharter.yml
+    script: method/CellCharter/CellCharter.py
+    optargs: method/CellCharter/CellCharter_optargs.json
+
+# All metrics as of 14.02.2024
+metrics:
+  ARI:
+    env: metric/ARI/ARI.yml
+    script: metric/ARI/ARI.py
+    optargs: metric/ARI/ARI_optargs.json
+
+# make sure the config_files name is the same as methods name
+config_files:
+  CellCharter:
+    config_default: "config/config_default.json"

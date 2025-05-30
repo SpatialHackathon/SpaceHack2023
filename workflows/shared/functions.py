@@ -3,8 +3,8 @@ import pandas as pd
 
 
 def get_git_directory(config):
-    if config.get("git_dir") is not None:
-        git_dir = config["git_dir"]
+    if config.get("GIT_DIR") is not None:
+        git_dir = config["GIT_DIR"]
     else:
         # Should change the SpaceHack directory.
         git_dir = os.getenv("GIT_DIR", "/home/ubuntu/workspace/SpaceHack2023")
