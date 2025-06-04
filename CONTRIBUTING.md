@@ -15,7 +15,7 @@ This repository contains some templates and examples of how to implement your mo
 
  - data: LIBD Visium DLPFC dataset (4 samples, each with 3 replicates)
  - methods: BayesSpace and SpaGCN
- - evaluation metrics: ARI and V
+ - evaluation metrics: ARI and V_measure
 
  ## How to contribute a module
 
