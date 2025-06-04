@@ -1,34 +1,71 @@
-# SpaceHack - metric modules
+# Metric modules
 
-### Implementing a new dataset module
+## Implementing a new dataset module
 
-1. Create or claim a **GitHub issue** from the [SpaceHack issue board.](https://github.com/SpatialHackathon/SpaceHack2023/issues) that describes the dataset module you want to implement. There are currently around 20 evaluation metrics to implement, but if you come up with a new idea, please **create** a new issue, add the appropriate **tags**, and **assign** the task to yourself.
- 2. Add **metadata** to our metadata [spreadsheet on the metrics tab](https://docs.google.com/spreadsheets/d/1QCeAF4yQG4bhZSGPQwwVBj_XF7ADY_2mK5xivAIfHsc/edit#gid=4776337). Please fill in as much as you can as metadata is helpful! If you feel the need, please also add new columns or add additional notes.
- 3. Now you are ready to create a new git **[branch](https://learngitbranching.js.org/)**. Try to give your new branch an intuitive prefix such as `metric...`. You can create a new branch in several ways: (i) [create a branch directly from the issue board](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-a-branch-for-an-issue) and then `git checkout` that branch, or (ii) via the command line:
+To implement a new metric follow the [Contribution guide](../contributing.md) and make sure you adopt all the necessary conventions specified in this document.
+
+For examples have a look 
+[here for a method in Python]({{ repo_branch_url }}/metric/ARI/) or 
+[here for a method in R]({{ repo_branch_url }}/metric/LISI/).
+
+## Metric module layout and interface
+
+Metric modules require 3 files (see templates). '{metric}' in the file names should be
+replaced by the name of your module and all files placed in a subfolder of the same name.
+
+* `{metric}.yml`: dependencies of the metric module script following the format:
+```yaml
+channels:
+- conda-forge
+dependencies:
+- anndata=0.10.3
+- gitpython=3.1.40
 ```
-# clone the template repository
-git clone https://github.com/SpatialHackathon/SpaceHack2023.git
-# create and switch to a new branch for your e.g. metric "Correx"
-git branch metric_correx_naveedishaque # try to make the branch name unique!
-git checkout metric_correx_naveedishaque
-# link the branch to the issue via the issue board: https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue
+
+* `{metric}_optargs.json`: defining optional arguments for the workflow following the format:
+```json
+{
+    "groundtruth": true,   # Does the metric need groundtruth labels? (boolean)
+    "embedding": false,    # Does the metric need embeddings? (boolean)
+    "config_file": true    # Does the metric take an additional config file? (boolean)
+}
 ```
- 4. Modify the files, filenames, and code in `template/`, referring to the examples in the `metric` (for the ARI and V measure metrics).
- 5. Test. Before you make a pull request make sure that you (... do something...?). You should try to run your metric on the default method outputs (either SpaGCN or BayesSpace). We are currently working on validators and automatic testing scripts... but this is tricky. Reach out to Niklas Muller-Botticher when you are ready to test!
- 6. Create a [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request?tool=cli)
- 7. Code review (by whom?) and merge your contributed module into the GitHub main branch!
 
-For examples have a look [here for ARI](ARI/) or [here for the V measure](V_measure/).
+It is optional to add when your metric requires this:
 
-### Metric module layout and interface
+```
+physical_coordinate:
+description: Does the metric take physcial coordination of the sample?
+type: boolean
+```
 
-Please define a conda recipe as a `yml` file for all the dependencies required for your methods script. This should list all the dependencies and also explicitly define the versions.
+* `{metric}.py/.r`: metric module script. 
+   * Check the TODOs in the `metric.py` or `metric.r` [template]({{ repo_branch_url }}/templates/).
+   * The command line arguments are fixed and should not be modified.
+   * see further instruction below.
 
-Input:
- - Predicted labels
- - Groundtruth or embedding
- - Optional parameters (as config file)
- - …
 
-Output:
- - Scalar
+### Input Format
+
+* `Labels File (-l, --labels)`: Path to a file containing cluster labels. Format: Text file where each row corresponds to a label for a specific observation.
+
+Optional Files:
+
+* `Ground Truth File (-g, --ground_truth)`: Path to a file containing ground truth labels. Use this for metrics requiring true labels for comparison.
+* `Embedding File (-e, --embedding)`: Path to a file containing latent space embeddings. Useful for metrics that do not rely on ground truth labels.
+* `Config File (-c, --config)`: Path to an optional JSON file with additional parameters for metric calculation.
+
+### Output Format
+
+The script writes the calculated metric to the specified output file (`-o, --out_file`) in scientific notation with five decimal places.
+
+### Example usage of module scripts (Testing)
+
+```sh
+python metric.py -l labels.txt -g ground_truth.txt -o result.txt
+```
+
+### Add to workflow
+
+* Add your metric to the excute_config.yaml under `Metrics selected for execution`.
+* Add your metric scripts to the path_config.yaml under `metrics`.

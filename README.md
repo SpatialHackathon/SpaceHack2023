@@ -8,7 +8,7 @@ In light of these issues, we adopt a flexible expert-in-the-loop consensus-drive
 
 # General setup
 
-This framework has established (and allows users to contribute)  "modules" in their preferred programming language (.. as long as that is either R or Python). A module is a set of scripts set up something in one of the following categories: a dataset, a computational method, or an evaluation metric. Interfaces between each category enable seamless integration of new data, methods, or metrics, thus enabling an extensible and community-driven framework. 
+This framework has established (and allows users to contribute) "modules" in their preferred programming language (.. as long as that is either R or Python). A module is a set of scripts set up something in one of the following categories: a dataset, a computational method, or an evaluation metric. Interfaces between each category enable seamless integration of new data, methods, or metrics, thus enabling an extensible and community-driven framework. 
 
 ![image](https://github.com/user-attachments/assets/ed55184d-d43f-4546-bee5-7b12e9ff8154)
 
@@ -34,7 +34,7 @@ The existing modules are:
    - osmfish_Ssp
    - pachter_simulation
    - slideseq2_olfactory_bulb
-   -  sotip_simulation
+   - sotip_simulation
    - spatialDLPFC
    - stereoseq_developing_Drosophila_embryos_larvae
    - stereoseq_liver
@@ -89,11 +89,25 @@ The existing modules are:
    - domain-specific-f1
    - jaccard
 
-# Contributing and Code of Conduct
+
+# Contributions
+
+Our workflow is set up to allow everyone to contribute "modules", whether it is a dataset, a computational method, or an evaluation metric.
+![image](https://github.com/SpatialHackathon/SpaceHack2023/assets/114547/7c002916-0a90-4fe7-8745-489313bc0192)
+
+This repository contains some templates and examples of how to implement your module so that it interfaces seamlessly with other modules in the workflow. 
+Please refer to our 
+[Contribution guide](https://spatialhackathon.github.io/SpaceHack2023/contributing/) and the 
+[Module documentation](https://spatialhackathon.github.io/SpaceHack2023/modules/) 
+for more details.
+
+
+## Contributing and Code of Conduct
 
 Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
 
-# Contributors
+
+## Contributors
 
 <!-- readme: contributors -start -->
 <table>

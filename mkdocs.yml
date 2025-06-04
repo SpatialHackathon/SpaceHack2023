@@ -1,5 +1,6 @@
-site_name: SpaceHack 2.0
-repo_url: https://github.com/SpatialHackathon/SpaceHack2023/
+site_name: SACCELERATOR
+repo_url: https://github.com/SpatialHackathon/SACCELERATOR/
+edit_uri: blob/native/docs/
 copyright: Copyright 2025 SpaceHack 2.0 Organizing Committee
 
 nav: 
@@ -10,11 +11,21 @@ nav:
     - Data: modules/data.md
     - Method: modules/method.md
     - Metric: modules/metric.md
-  - Contributing: contributing.md
+  - Extending & Contributing: contributing.md
   - About:
+    - SpaceHack: https://spatialhackathon.github.io/
+    - Repository: https://github.com/SpatialHackathon/SACCELERATOR
     - License: about/license.md
 
 theme:
   name: mkdocs
+  highlightjs: true
   color_mode: auto
   user_color_mode_toggle: true
+
+plugins:
+  - search
+  - macros
+
+extra:
+  repo_branch_url: https://github.com/SpatialHackathon/SACCELERATOR/tree/native
