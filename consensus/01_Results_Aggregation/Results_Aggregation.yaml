@@ -1,0 +1,5 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9.21
+  - pandas=2.2.3
