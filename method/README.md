@@ -5,8 +5,8 @@
 To implement a new method follow the [Contribution guide](../contributing.md) and make sure you adopt all the necessary conventions specified in this document.
 
 For examples have a look 
-[here for a method in Python]({{ repo_branch_url }}/method/spaGCN/) or 
-[here for a method in R]({{ repo_branch_url }}/method/BayesSpace/).
+[here for a method in Python](./spaGCN/) or 
+[here for a method in R](./BayesSpace/).
 
 ## Layout and interface
 
