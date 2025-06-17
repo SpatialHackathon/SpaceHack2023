@@ -2,7 +2,7 @@
 
 ## Implementing a new method
 
-To implement a new method follow the [Contribution guide](../contributing.md) and make sure you adopt all the necessary conventions specified in this document.
+To implement a new method follow the [Contribution guide](../CONTRIBUTING.md) and make sure you adopt all the necessary conventions specified in this document.
 
 For examples have a look 
 [here for a method in Python](./spaGCN/) or 
@@ -83,7 +83,7 @@ For example for conST:
 
 
 * `{method}.py/.r`: method module script. 
-   * Check the TODOs in the `method.py` or `method.r` [template]({{ repo_branch_url }}/templates/).
+   * Check the TODOs in the `method.py` or `method.r` [template](../templates/).
    * The command line arguments are fixed and should not be modified. Further arguments can be passed using the `config/config_{name}.json` files.
    * see further instruction below.
 

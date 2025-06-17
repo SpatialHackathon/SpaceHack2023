@@ -2,9 +2,9 @@
 
 ## Implementing a new dataset
 
-To implement a new dataset follow the [Contribution guide](../contributing.md) and make sure you adopt all the necessary conventions specified in this document.
+To implement a new dataset follow the [Contribution guide](../CONTRIBUTING.md) and make sure you adopt all the necessary conventions specified in this document.
 
-For an example have a look [here]({{ repo_branch_url }}/data/libd_dlpfc/).
+For an example have a look [here](./libd_dlpfc/).
 
 
 ## Layout and interface
@@ -33,7 +33,7 @@ dependencies:
 ```
 
 * `{data}.py/.r`: data module script. 
-   * Check the TODOs in the `data.py` or `data.r` [template]({{ repo_branch_url }}/templates/).
+   * Check the TODOs in the `data.py` or `data.r` [template](../templates/).
    * The command line arguments are fixed and should not be modified.
    * see further instruction below.
 

@@ -23,7 +23,7 @@ Module contribution will be managed via GitHub. The steps to contribute a module
 
 1. Fork (or if you are part of the SpaceHack community branch) the latest version of the [SpaceHack repository](https://github.com/SpatialHackathon/SpaceHack2023)
 
-2. Make a copy of a [template]({{ repo_branch_url }}/templates/) depending on whether you are implementing a data, method, or metric module. You can have a look at existing modules if you are unsure what to do.
+2. Make a copy of a [template](./templates/) depending on whether you are implementing a data, method, metric, or consensus module. You can have a look at existing modules if you are unsure what to do.
 
 3. Modify the files, filenames, and code in your copied template and move it to the correct module directory.
 

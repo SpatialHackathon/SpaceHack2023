@@ -2,11 +2,11 @@
 
 ## Implementing a new dataset module
 
-To implement a new metric follow the [Contribution guide](../contributing.md) and make sure you adopt all the necessary conventions specified in this document.
+To implement a new metric follow the [Contribution guide](../CONTRIBUTING.md) and make sure you adopt all the necessary conventions specified in this document.
 
 For examples have a look 
-[here for a method in Python]({{ repo_branch_url }}/metric/ARI/) or 
-[here for a method in R]({{ repo_branch_url }}/metric/LISI/).
+[here for a method in Python](./ARI/) or 
+[here for a method in R](./LISI/).
 
 ## Metric module layout and interface
 
@@ -40,7 +40,7 @@ type: boolean
 ```
 
 * `{metric}.py/.r`: metric module script. 
-   * Check the TODOs in the `metric.py` or `metric.r` [template]({{ repo_branch_url }}/templates/).
+   * Check the TODOs in the `metric.py` or `metric.r` [template](../templates/).
    * The command line arguments are fixed and should not be modified.
    * see further instruction below.
 
