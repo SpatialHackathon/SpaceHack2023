@@ -9,6 +9,6 @@ The Spacehack 2.0 workflow consists of multiple module types:
 
 If you want to generate a new module you have to make sure to follow the format and 
 specification as defined in their respective sections. 
-Also, it might be worth having a look at the [Contribution guide](../contributing.md).
+Also, it might be worth having a look at the [Contribution guide](../CONTRIBUTING.md).
 
 ![Workflow](../img/workflow.svg)
