@@ -12,7 +12,7 @@ nav:
     - Method: modules/method.md
     - Metric: modules/metric.md
     - Consensus: modules/consensus.md
-  - Extending & Contributing: contributing.md
+  - Extending & Contributing: CONTRIBUTING.md
   - About:
     - SpaceHack: https://spatialhackathon.github.io/
     - Repository: https://github.com/SpatialHackathon/SACCELERATOR
