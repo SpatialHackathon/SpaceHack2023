@@ -1,7 +1,12 @@
-name: Deploy MkDocs to GitHub Pages 
+name: Build and deploy MkDocs to GitHub Pages 
 
 on:
+  pull_request:
+    # Test build for PRs targeting default branch
+    branches:
+      - native
   push:
+    # Deploy on push to default branch
     branches:
       - native
 
@@ -9,7 +14,7 @@ permissions:
   contents: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,5 +25,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
-      - name: Build and deploy MkDocs
+
+      - name: Build MkDocs site (strict)
+        # Test build on PR to native branch
+        if: github.event_name == 'pull_request'
+        run: mkdocs build --strict
+
+      - name: Deploy to GitHub Pages
+        # Deploy on push to native branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/native'
         run: mkdocs gh-deploy --force
