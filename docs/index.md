@@ -14,6 +14,6 @@ In light of these issues, we adopt a flexible expert-in-the-loop consensus-drive
 
 ## Citation
 
-We are close to releasing a preprint. Until then, please cite us as follows:
+If you are using SACCELERATOR please cite
 
-> SpaceHack 2.0. Participants. SpaceHack 2.0: an expert in the loop consensus driven framework for spatially aware clustering [Computer software]. https://github.com/SpatialHackathon/SpaceHack2023
+> Sun, J. et al. Beyond benchmarking: an expert-guided consensus approach to spatially aware clustering. bioRxiv https://doi.org/10.1101/2025.06.23.660861 (2025).
