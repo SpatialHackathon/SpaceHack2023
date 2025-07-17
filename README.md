@@ -266,9 +266,22 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
 
 # Citation
 
-We are close to releasing a preprint. Until then, please cite us as follows:
+If you are using SACCELERATOR please cite
 
-> SpaceHack 2.0. Participants. SpaceHack 2.0: an expert in the loop consensus driven framework for spatially aware clustering [Computer software]. https://github.com/SpatialHackathon/SpaceHack2023
+> Sun, J. et al. Beyond benchmarking: an expert-guided consensus approach to spatially aware clustering. bioRxiv https://doi.org/10.1101/2025.06.23.660861 (2025).
+
+```
+@article {saccelerator2025,
+	author = {Sun, Jieran and Biharie, Kirti and Cai, Peiying and M{\"u}ller-B{\"o}tticher, Niklas and Kiessling, Paul and Turner, Meghan A. and Dam, S{\o}ren H. and Heyl, Florian and Kathirchelvan, Sarusan and Emons, Martin and Gunz, Samuel and Twardziok, Sven and El-Heliebi, Amin and Zacharias, Martin and SpaceHack 2.0 participants and Eils, Roland and Reinders, Marcel and Gottardo, Raphael and Kuppe, Christoph and Long, Brian and Mahfouz, Ahmed and Robinson, Mark D. and Ishaque, Naveed},
+	title = {Beyond benchmarking: an expert-guided consensus approach to spatially aware clustering},
+	year = {2025},
+	doi = {10.1101/2025.06.23.660861},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2025/06/27/2025.06.23.660861},
+	journal = {bioRxiv}
+}
+```
+
 
 # License
 
