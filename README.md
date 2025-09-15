@@ -6,6 +6,9 @@ Our framework comprises a community-driven benchmark-like platform that streamli
 
 In light of these issues, we adopt a flexible expert-in-the-loop consensus-driven approach. This goes beyond traditional ensemble/consensus methods, and allows researchers to interact with intermediate results to determine which tools should be used to generate a consensus. We believe that the inclusion of an expert-in-the-loop is critical to ensure that the computational analysis matches the biological question at hand, and we believe that when the focus of the analysis is to uncover novel biological discoveries, tissue experts are accessible more often than not.
 
+<img width="1225" height="1545" alt="SACCELERATOR_workflow" src="https://github.com/user-attachments/assets/c1c7f632-d204-4b7f-a58e-9e5e292153a4" />
+
+
 # General setup
 
 This framework has established (and allows users to contribute) "modules" in their preferred programming language (.. as long as that is either R or Python). A module is a set of scripts set up something in one of the following categories: a dataset, a computational method, or an evaluation metric. Interfaces between each category enable seamless integration of new data, methods, or metrics, thus enabling an extensible and community-driven framework. 
