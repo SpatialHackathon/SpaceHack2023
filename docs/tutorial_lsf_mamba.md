@@ -34,7 +34,7 @@ mamba activate snakemake
 
 You need to edit two config files in the `workflows/` directory.
 
-#### `workflows/excute_config.yaml`
+#### `workflows/excute_config.yaml` (note: the filename uses "excute" — this is intentional, matching the repo's naming)
 
 ```yaml
 ###### Universal parameters #######
@@ -252,7 +252,7 @@ ENV_DIR="/path/to/shared/conda_envs"
 mkdir -p "$ENV_DIR"
 
 # Dataset environments
-for yml in "$GIT_DIR"/data/*//*.yml "$GIT_DIR"/data/*/*.yaml; do
+for yml in "$GIT_DIR"/data/*/*.yml "$GIT_DIR"/data/*/*.yaml; do
     [ -f "$yml" ] || continue
     name=$(basename "$(dirname "$yml")")
     echo "Creating env: data_${name}"
@@ -447,11 +447,12 @@ from pypdl import Downloader
 from spatialdata_io import xenium
 
 
-# Update these URLs from the 10x Genomics dataset page.
-# Go to the dataset page and find the direct download links for the output bundle.
+# UPDATE THESE URLs: Visit the 10x Genomics dataset page and copy the direct download links.
+# You MUST populate this dict before running the script, otherwise it will fail.
+# Example format:
+#   "https://cf.10xgenomics.com/samples/xenium/.../Xenium_..._outs.zip": "md5_checksum_or_empty_string",
 LINKS = {
-    # "https://cf.10xgenomics.com/samples/xenium/.../_outs.zip": "md5_checksum",
-    # Add the actual download URL once you retrieve it from the 10x dataset page
+    # TODO: Add actual download URLs from https://www.10xgenomics.com/datasets/xenium-prime-ffpe-human-ovarian-cancer
 }
 
 
@@ -531,7 +532,7 @@ def write_experiment_json(out_path):
 
 def write_samples_tsv(out_path, samples_info):
     df = pd.DataFrame(samples_info)
-    df.to_csv(f"{out_path}/samples.tsv", sep="\t", index_label=False)
+    df.to_csv(f"{out_path}/samples.tsv", sep="\t", index=False)
 
 
 def main():
