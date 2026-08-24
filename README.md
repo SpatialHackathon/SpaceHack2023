@@ -271,17 +271,17 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
 
 If you are using SACCELERATOR please cite
 
-> Sun, J. et al. Beyond benchmarking: an expert-guided consensus approach to spatially aware clustering. bioRxiv https://doi.org/10.1101/2025.06.23.660861 (2025).
+> Sun, J. et al. Beyond benchmarking: an expert-guided consensus approach to spatially aware clustering. Nature Methods (2026) https://doi.org/10.1038/s41592-026-03194-8.
 
 ```
-@article {saccelerator2025,
+@article {saccelerator2026,
 	author = {Sun, Jieran and Biharie, Kirti and Cai, Peiying and M{\"u}ller-B{\"o}tticher, Niklas and Kiessling, Paul and Turner, Meghan A. and Dam, S{\o}ren H. and Heyl, Florian and Kathirchelvan, Sarusan and Emons, Martin and Gunz, Samuel and Twardziok, Sven and El-Heliebi, Amin and Zacharias, Martin and SpaceHack 2.0 participants and Eils, Roland and Reinders, Marcel and Gottardo, Raphael and Kuppe, Christoph and Long, Brian and Mahfouz, Ahmed and Robinson, Mark D. and Ishaque, Naveed},
 	title = {Beyond benchmarking: an expert-guided consensus approach to spatially aware clustering},
-	year = {2025},
-	doi = {10.1101/2025.06.23.660861},
-	publisher = {Cold Spring Harbor Laboratory},
-	URL = {https://www.biorxiv.org/content/early/2025/06/27/2025.06.23.660861},
-	journal = {bioRxiv}
+	year = {2026},
+	doi = {10.1038/s41592-026-03194-8},
+	publisher = {Nature Publishing Group},
+	URL = {https://www.nature.com/articles/s41592-026-03194-8},
+	journal = {Nature Methods}
 }
 ```
 
