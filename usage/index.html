@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Usage - SACCELERATOR</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" disabled>
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">SACCELERATOR</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href=".." class="nav-link">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="./" class="nav-link active" aria-current="page">Usage</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Modules</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../modules/" class="dropdown-item">Overview</a>
+</li>
+                                    
+<li>
+    <a href="../modules/data/" class="dropdown-item">Data</a>
+</li>
+                                    
+<li>
+    <a href="../modules/method/" class="dropdown-item">Method</a>
+</li>
+                                    
+<li>
+    <a href="../modules/metric/" class="dropdown-item">Metric</a>
+</li>
+                                    
+<li>
+    <a href="../modules/consensus/" class="dropdown-item">Consensus</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../CONTRIBUTING/" class="nav-link">Extending & Contributing</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">About</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="https://spatialhackathon.github.io/" class="dropdown-item">SpaceHack</a>
+</li>
+                                    
+<li>
+    <a href="https://github.com/SpatialHackathon/SACCELERATOR" class="dropdown-item">Repository</a>
+</li>
+                                    
+<li>
+    <a href="../about/license/" class="dropdown-item">License</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href=".." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../modules/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/SpatialHackathon/SACCELERATOR/blob/native/docs/usage.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                              <button id="theme-menu" aria-expanded="false" data-bs-toggle="dropdown" data-bs-display="static" aria-label="Toggle theme" class="nav-link dropdown-toggle">
+                                <i class="fa-solid fa-circle-half-stroke fa-fw"></i>
+                                <span class="d-lg-none ms-2">Toggle theme</span>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+                                    <i class="fa-solid fa-sun fa-fw"></i>
+                                    <span class="ms-2">Light</span>
+                                    <i class="fa-solid fa-check ms-auto d-none"></i>
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+                                    <i class="fa-solid fa-moon fa-fw"></i>
+                                    <span class="ms-2">Dark</span>
+                                    <i class="fa-solid fa-check ms-auto d-none"></i>
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto" aria-pressed="true">
+                                    <i class="fa-solid fa-circle-half-stroke fa-fw"></i>
+                                    <span class="ms-2">Auto</span>
+                                    <i class="fa-solid fa-check ms-auto"></i>
+                                  </button>
+                                </li>
+                              </ul>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <script src="../js/darkmode.js"></script>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="2"><a href="#workflow-modification" class="nav-link">Workflow modification</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="2"><a href="#how-to-run-snakemake" class="nav-link">How to run snakemake</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="2"><a href="#example-usage" class="nav-link">Example usage</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="2"><a href="#execute_configyaml" class="nav-link">execute_config.yaml</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="2"><a href="#path_configyaml" class="nav-link">path_config.yaml</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h2 id="workflow-modification">Workflow modification</h2>
+<ul>
+<li>git_dir and data_dir/result_dir in every config file</li>
+</ul>
+<h2 id="how-to-run-snakemake">How to run snakemake</h2>
+<p>Running snakemake: download -&gt; preprocessing -&gt; methods -&gt; metrics</p>
+<ul>
+<li>
+<p>dry run: <code>snakemake -s &lt;process&gt;.smk -nf</code></p>
+</li>
+<li>
+<p>actual run <code>snakemake -s &lt;process&gt;.smk --cores &lt;n_of_cores&gt; --use-conda --ri</code></p>
+<ul>
+<li><code>ri</code>: in case you use keyboard interruption to quit the previous job. This will make sure snakemake rereun those incomplete job.</li>
+</ul>
+</li>
+<li>
+<p>Try not to kill snakemake when it's installing conda packages.</p>
+</li>
+<li>
+<p>If you're using a server or any HPC environment to run the workflow, it's recommended to use customized Snakemake profiles for job scheduling. You can find <a href="https://github.com/Snakemake-Profiles">HPC-specific Snakemake profile here</a>.</p>
+</li>
+</ul>
+<h2 id="example-usage">Example usage</h2>
+<ol>
+<li>Use <code>excute_config_test.yaml</code> and <code>path_config_test.yaml</code> as your <code>excute_config.yaml</code> and <code>path_config_test.yaml</code> (just rename those files).</li>
+<li>Download data</li>
+</ol>
+<pre><code>snakemake -s 01_download.smk --cores &lt;n_of_cores&gt; --use-conda --ri
+</code></pre>
+<ol>
+<li>Preprocess the data</li>
+</ol>
+<pre><code>snakemake -s 02_preprocessing.smk --cores &lt;n_of_cores&gt; --use-conda --ri
+</code></pre>
+<ol>
+<li>Execute method</li>
+</ol>
+<pre><code>snakemake -s 03_methods.smk --cores &lt;n_of_cores&gt; --use-conda --ri
+</code></pre>
+<ol>
+<li>Calculate metric</li>
+</ol>
+<pre><code>snakemake -s 04_metrics.smk --cores &lt;n_of_cores&gt; --use-conda --ri
+</code></pre>
+<ol>
+<li>Aggregate all the results</li>
+</ol>
+<pre><code>snakemake -s 05_aggregation.smk --cores &lt;n_of_cores&gt; --use-conda --ri
+</code></pre>
+<ol>
+<li>Create consensus</li>
+</ol>
+<pre><code>snakemake -s 06_consensus.smk --cores &lt;n_of_cores&gt; --use-conda --ri
+</code></pre>
+<h2 id="execute_configyaml">execute_config.yaml</h2>
+<p>You can use the file excute_config_test.yaml as a template for the execution of the workflow. The config follows the following structure: </p>
+<pre><code>###### Universal parameters #######
+# Directories, modify based on your own
+GIT_DIR: path/for/github/repo
+DATASET_DIR: path/to/datasets
+SEED: 2023     # for the individual methods
+
+###### Dataset selected for excutation #######
+datasets_selected:
+  - &quot;list_datasets_you_want_to_analyse_and_are_placed_in_DATASET_DIR&quot;
+
+### Not used in this project
+  - &quot;list_datasets_you_do_not_want_to_use&quot;
+
+###### Methods selected for excutation #######
+methods_selected:
+## Native Implementation Done 
+  - &quot;list_methods_you_want_to_consider_for_the_consensus&quot;
+
+# If some datasets specify number of clusters. Add it here
+n_clusters:
+  visium_hd_cancer_colon: [5, 6, 7, 9, 11, 14]
+
+###### Metrics selected for excutation #######
+metrics_selected:
+  - &quot;list_implemented_metrices_that_you_want_to_consider_to_analyse_methods&quot;
+
+###### Base clustering selection parameters #######
+# As used by scanpy (sc.pp.neighbors()).
+selection_criteria:
+  - &quot;Cross_method_ARI&quot;
+  - &quot;Smoothness_entropy&quot;
+  - &quot;Manual_selection&quot;
+n_neighbors: 6
+
+###### Consensus Clustering parameters #######
+bc_numbers: [8]     # number of base clustering results
+consensus_algorithms:
+  - &quot;lca&quot;
+  - &quot;kmode&quot;
+  - &quot;weighted&quot;
+# In case you need to re-define desired cluster number. Do it here. Otherwise n_clust value would be used
+n_clust_consensus:
+  abc_atlas_wmb_thalamus: [16, 19, 20, 21, 24, 28, 32]
+
+# For weighted clustering
+lambda: null
+
+# For cross-method entropy
+cross_method_entropy: true
+</code></pre>
+<h2 id="path_configyaml">path_config.yaml</h2>
+<p>You can use the file path_config_test.yaml as a template for the execution of the workflow. The config follows the following structure: </p>
+<pre><code># The yaml file follows the following structure
+
+# * categories (datasets/methods/metrics)
+#   - {name}
+#     - env: path/to/conda/env/.yaml
+#     - script: path/to/script/.{py|r}
+#     - env_additional: (optional)path/to/installation/script/.sh
+#     - optargs: path/to/input/parameters/.json
+
+# * config_files (for methods/metrics)
+#   - {name} # MUST BE THE SAME AS THE METHOD/METRIC NAME
+#     - {config_name}: path/to/config
+#     - script: path to the excutation script
+#     - env_additional: Only for certain methods, need installation shell script (.sh)
+#     - optargs: optional arguments file (for input control/quality control)
+
+# Notice for new addition:
+# - name must be the same as the folder name!
+# - All identation is 2 spaces!
+# - When adding methods/metrics, remember to also add config_files if avaliable! 
+# - Comment out configs that you don't want to run.
+</code></pre>
+<h3 id="you-can-generate-the-path_config-also-with-generate_path_configsh">You can generate the path_config also with generate_path_config.sh</h3></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>Copyright 2025 SpaceHack 2.0 Organizing Committee</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

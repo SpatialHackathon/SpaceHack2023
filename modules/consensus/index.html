@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Consensus - SACCELERATOR</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../../css/brands.min.css" rel="stylesheet">
+        <link href="../../css/solid.min.css" rel="stylesheet">
+        <link href="../../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" disabled>
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">SACCELERATOR</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../.." class="nav-link">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../usage/" class="nav-link">Usage</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle active" aria-current="page" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Modules</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../" class="dropdown-item">Overview</a>
+</li>
+                                    
+<li>
+    <a href="../data/" class="dropdown-item">Data</a>
+</li>
+                                    
+<li>
+    <a href="../method/" class="dropdown-item">Method</a>
+</li>
+                                    
+<li>
+    <a href="../metric/" class="dropdown-item">Metric</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active" aria-current="page">Consensus</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../CONTRIBUTING/" class="nav-link">Extending & Contributing</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">About</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="https://spatialhackathon.github.io/" class="dropdown-item">SpaceHack</a>
+</li>
+                                    
+<li>
+    <a href="https://github.com/SpatialHackathon/SACCELERATOR" class="dropdown-item">Repository</a>
+</li>
+                                    
+<li>
+    <a href="../../about/license/" class="dropdown-item">License</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../metric/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../../CONTRIBUTING/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/SpatialHackathon/SACCELERATOR/blob/native/docs/modules/consensus.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                              <button id="theme-menu" aria-expanded="false" data-bs-toggle="dropdown" data-bs-display="static" aria-label="Toggle theme" class="nav-link dropdown-toggle">
+                                <i class="fa-solid fa-circle-half-stroke fa-fw"></i>
+                                <span class="d-lg-none ms-2">Toggle theme</span>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+                                    <i class="fa-solid fa-sun fa-fw"></i>
+                                    <span class="ms-2">Light</span>
+                                    <i class="fa-solid fa-check ms-auto d-none"></i>
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+                                    <i class="fa-solid fa-moon fa-fw"></i>
+                                    <span class="ms-2">Dark</span>
+                                    <i class="fa-solid fa-check ms-auto d-none"></i>
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto" aria-pressed="true">
+                                    <i class="fa-solid fa-circle-half-stroke fa-fw"></i>
+                                    <span class="ms-2">Auto</span>
+                                    <i class="fa-solid fa-check ms-auto"></i>
+                                  </button>
+                                </li>
+                              </ul>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <script src="../../js/darkmode.js"></script>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#consensus-modules" class="nav-link">Consensus modules</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#implementing-a-new-consensus-method" class="nav-link">Implementing a new consensus method</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#layout-and-interface" class="nav-link">Layout and interface</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#example-usage-of-module-scripts-testing" class="nav-link">Example usage of module scripts (Testing)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#add-to-workflow" class="nav-link">Add to workflow</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="consensus-modules">Consensus modules</h1>
+<h2 id="implementing-a-new-consensus-method">Implementing a new consensus method</h2>
+<p>To implement a new method follow the <a href="../../CONTRIBUTING/">Contribution guide</a> and make sure you adopt all the necessary conventions specified in this document.</p>
+<p>For examples, have a look at <a href="./02_BC_ranking/">select base clusterings</a> and
+<a href="./03_Consensus_kmode/">calculate consensus</a>.</p>
+<h2 id="layout-and-interface">Layout and interface</h2>
+<p>Consensus module contains 3 steps:</p>
+<ol>
+<li>Aggregate all label results into a single tsv file; see <a href="./01_Results_Aggregation/">here</a>.</li>
+<li>Select the base-clusterings for consensus, either <strong>automatically</strong> or <strong>manually</strong>.</li>
+<li>Run the consensus algorithm to obtain the final consensus labels.</li>
+</ol>
+<h3 id="base-clusterings-selection">Base-clusterings selection</h3>
+<h4 id="manual-selection">Manual Selection</h4>
+<p>For manual selection, create a TSV file specifying which base clusterings to use. Name the file <strong><code>BC_rankings.tsv</code></strong> and place it in results of the dataset: <code>/dataset/consensus/base_clusterings/Manual_selection/</code>.</p>
+<p>The file should have number of clusters as column headers, and clustering label names as values. Each row corresponds to a method result.</p>
+<pre><code>7                          8
+method1_default_7_label    method1_default_8_label  
+method2_default_7_label    method2_default_8_label
+method3_default_7_label    method3_default_8_label
+</code></pre>
+<h4 id="automatic-selection">Automatic Selection</h4>
+<p>The base-clusterings step requires 2 files (see templates). Replace <code>{consensus_BC}</code> in the file names with your method name, and place the files in the <code>consensus</code> folder.
+* <code>{consensus_BC}.yaml</code>: a conda recipe defining the dependencies of the method module script following the format:</p>
+<pre><code class="language-yaml">channels:
+  - r
+  - conda-forge
+dependencies:
+  - r-base=4.4.2
+  - r-optparse=1.7.5
+</code></pre>
+<ul>
+<li><code>{consensus_BC}.py/.r</code>: method module script. </li>
+<li>Check the TODOs in the <code>consensus_BC.py</code> or <code>consensus_BC.r</code> <a href="../templates/">template</a>.</li>
+<li>The command line arguments can be modified. Further arguments can be passed using the <code>../workflows/excute_config.yaml</code> files.</li>
+<li>see further instruction below.</li>
+</ul>
+<h5 id="input-format">Input Format</h5>
+<ul>
+<li>
+<p><code>Aggregated Labels File (-i, --input_file)</code>: Path to a TSV file containing the aggregated labels for observations. Index: Observation ID or barcode. Columns: Clustering results named using the pattern <code>{method}_{config}_{n_clusters}_label</code>.</p>
+</li>
+<li>
+<p>Include any additional files required for selecting base clusterings.</p>
+</li>
+</ul>
+<h5 id="output-format">Output Format</h5>
+<p>The script generates the following output file in the specified output directory and file name (<code>-o, --output_file</code>):</p>
+<ul>
+<li>Contains selected clustering label names for the specified number of clusters.</li>
+<li>Format: TSV with numbers of clusters as column headers and method configurations as rows (same format as manual annotation).</li>
+</ul>
+<h3 id="consensus-calculation">Consensus calculation</h3>
+<p>Consensus calculation requires 2 files (see templates). Replace <code>{consensus}</code> in the file names with your method name, and place the files in the <code>consensus</code> folder.</p>
+<ul>
+<li>
+<p><code>{consensus}.yaml</code>: a conda recipe defining the dependencies of the method module script.</p>
+</li>
+<li>
+<p><code>{consensus}.py/.r</code>: method module script. </p>
+</li>
+<li>Check the TODOs in the <code>consensus.py</code> or <code>consensus.r</code> <a href="../templates/">template</a>.</li>
+<li>The command line arguments are fixed and should not be modified. Further arguments can be passed using the <code>../workflows/excute_config.yaml</code> files.</li>
+<li>see further instruction below.</li>
+</ul>
+<h4 id="input-format_1">Input Format</h4>
+<ul>
+<li><code>Aggregated Labels File (-i, --input_file)</code>: Path to a TSV file containing the aggregated labels for observations. Index: Observation ID or barcode. Columns: Clustering results named using the pattern <code>{method}_{config}_{n_clusters}_label</code>. Output from the first <code>Aggregation</code> step.</li>
+<li><code>Base Clusterings File (-b, --base_clusterings)</code>: Path to a TSV file containing the chosen base clusterings for consensus calculation. Index: Method and config (e.g.,<code>scanpy_default_10_label</code>). Columns: Number of clusters. Output from the <code>Base-clusterings selection</code> step.</li>
+</ul>
+<p>Parameters:</p>
+<ul>
+<li><code>--n_clusters</code>: Number of clusters to return.</li>
+<li><code>--n_bcs</code>: Number of base clustering results feed into the algorithm.</li>
+<li><code>--seed</code>: Seed for random operations.</li>
+</ul>
+<h4 id="output-format_1">Output Format</h4>
+<p>The script generates the following output file in the specified output directory and file name (<code>-o, --output_file</code>):</p>
+<ul>
+<li>Contains labels for observations.</li>
+<li>Format: TSV with observation IDs as the index and a single label column.</li>
+</ul>
+<h2 id="example-usage-of-module-scripts-testing">Example usage of module scripts (Testing)</h2>
+<pre><code class="language-sh">Rscript consensus_BC.r -i combined_methods.tsv -o BC_rankings.tsv 
+# TODO: add any parameters required
+
+Rscript consensus.r -i combined_methods.tsv -b BC_rankings.tsv -o consensus.tsv \
+    --n_clusters 8 --n_bcs 5 --seed 42
+</code></pre>
+<h2 id="add-to-workflow">Add to workflow</h2>
+<ul>
+<li>Please request one of the organisers to add your algorithm scripts to the <code>06_select_base_clusterings.smk</code> and/or <code>07_consensus.smk</code> file.</li>
+<li>Add your consensus algorithm to the excute_config.yaml under <code>Consensus Clustering parameters</code>.</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>Copyright 2025 SpaceHack 2.0 Organizing Committee</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
