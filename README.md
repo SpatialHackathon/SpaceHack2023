@@ -124,13 +124,6 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/shdam">
-                    <img src="https://avatars.githubusercontent.com/u/49019552?v=4" width="75;" alt="shdam"/>
-                    <br />
-                    <sub><b>Søren Helweg Dam</b></sub>
-                </a>
-            </td>
-            <td align="center">
                 <a href="https://github.com/niklasmueboe">
                     <img src="https://avatars.githubusercontent.com/u/42138117?v=4" width="75;" alt="niklasmueboe"/>
                     <br />
@@ -158,8 +151,6 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
                     <sub><b>heylf</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/naveedishaque">
                     <img src="https://avatars.githubusercontent.com/u/114547?v=4" width="75;" alt="naveedishaque"/>
@@ -167,6 +158,8 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
                     <sub><b>Nav</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/pakiessling">
                     <img src="https://avatars.githubusercontent.com/u/104848590?v=4" width="75;" alt="pakiessling"/>
@@ -179,6 +172,13 @@ Read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CON
                     <img src="https://avatars.githubusercontent.com/u/57286623?v=4" width="75;" alt="Qirongmao97"/>
                     <br />
                     <sub><b>Qirong Mao</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/shdam">
+                    <img src="https://avatars.githubusercontent.com/u/49019552?v=4" width="75;" alt="shdam"/>
+                    <br />
+                    <sub><b>Søren Helweg Dam</b></sub>
                 </a>
             </td>
             <td align="center">
